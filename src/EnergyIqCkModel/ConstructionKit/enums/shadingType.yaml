@@ -1,0 +1,14 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+enums:
+- enumId: ShadingType
+  values:
+  - key: 0
+    name: Blind
+  - key: 1
+    name: Shutter
+  - key: 2
+    name: Awning
+  - key: 3
+    name: Screen
+  - key: 4
+    name: Curtain

@@ -1,0 +1,4 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-meta.schema.json
+dependencies:
+- Basic-[2.0,3.0)
+modelId: EnergyIQ-1.0.0

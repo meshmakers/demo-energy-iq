@@ -1,0 +1,24 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: Door
+  derivedFromCkTypeId: ${this}/BuildingElement
+  description: "Door with state attributes (IFC: IfcDoor)"
+  attributes:
+  - id: ${this}/OverallHeight
+    name: OverallHeight
+    isOptional: true
+  - id: ${this}/OverallWidth
+    name: OverallWidth
+    isOptional: true
+  - id: ${this}/IsExternal
+    name: IsExternal
+    isOptional: true
+  - id: ${this}/IsOpen
+    name: IsOpen
+    isOptional: true
+  - id: ${this}/IsLocked
+    name: IsLocked
+    isOptional: true
+  associations:
+  - id: ${this}/SpaceElements
+    targetCkTypeId: ${this}/Space

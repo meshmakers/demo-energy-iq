@@ -1,0 +1,30 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: TechnicalSystem
+  derivedFromCkTypeId: ${Basic}/TreeNode
+  isAbstract: true
+  description: "Abstract base class for technical building systems (VDI 3814: Anlagenautomation)"
+  # Parent (Building) via inherited System/ParentChild
+  attributes:
+  # Technical system identification
+  - id: ${this}/Identifier
+    name: Identifier
+  - id: ${this}/SystemTypeValue
+    name: SystemType
+    isOptional: true
+  - id: ${this}/IsRunning
+    name: IsRunning
+    isOptional: true
+  - id: ${this}/FaultState
+    name: FaultState
+    isOptional: true
+  # Haystack compatibility
+  - id: ${this}/HaystackTags
+    name: HaystackTags
+    isOptional: true
+  - id: ${this}/HaystackRefs
+    name: HaystackRefs
+    isOptional: true
+  - id: ${this}/HaystackMeta
+    name: HaystackMeta
+    isOptional: true

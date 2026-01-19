@@ -1,0 +1,96 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+attributes:
+# PV String attributes
+- id: RatedPowerKWp
+  valueType: Double
+  description: "Rated power in kWp (kilowatt peak)"
+- id: CurrentPowerKW
+  valueType: Double
+  description: "Current power output in kW"
+- id: EnergyProducedKWh
+  valueType: Double
+  description: "Total energy produced in kWh"
+- id: Orientation
+  valueType: Double
+  description: "Panel orientation in degrees (0=North, 90=East, 180=South, 270=West)"
+- id: Tilt
+  valueType: Double
+  description: "Panel tilt angle in degrees (0=horizontal, 90=vertical)"
+- id: ModuleCount
+  valueType: Int
+  description: "Number of PV modules in string"
+- id: ModuleType
+  valueType: String
+  description: "Module type description (e.g. 'Mono-Si 400W')"
+
+# Inverter attributes
+- id: RatedPowerKVA
+  valueType: Double
+  description: "Rated power in kVA"
+- id: DcPower
+  valueType: Double
+  description: "DC input power in kW"
+- id: AcPower
+  valueType: Double
+  description: "AC output power in kW"
+- id: DcVoltage
+  valueType: Double
+  description: "DC voltage in V"
+- id: AcVoltage
+  valueType: Double
+  description: "AC voltage in V"
+- id: Frequency
+  valueType: Double
+  description: "AC frequency in Hz"
+- id: InverterEfficiency
+  valueType: Double
+  description: "Inverter efficiency in %"
+
+# Battery attributes
+- id: RatedCapacityKWh
+  valueType: Double
+  description: "Rated battery capacity in kWh"
+- id: StateOfCharge
+  valueType: Double
+  description: "State of charge in % (0-100)"
+- id: ChargingPower
+  valueType: Double
+  description: "Current charging power in kW"
+- id: DischargingPower
+  valueType: Double
+  description: "Current discharging power in kW"
+- id: MaxChargePower
+  valueType: Double
+  description: "Maximum charging power in kW"
+- id: MaxDischargePower
+  valueType: Double
+  description: "Maximum discharging power in kW"
+- id: CycleCount
+  valueType: Int
+  description: "Number of charge/discharge cycles"
+- id: BatteryTemperature
+  valueType: Double
+  description: "Battery temperature in °C"
+- id: IsCharging
+  valueType: Boolean
+  description: "Battery is currently charging"
+- id: IsDischarging
+  valueType: Boolean
+  description: "Battery is currently discharging"
+
+# PhotovoltaicSystem aggregate attributes
+- id: TotalRatedPowerKWp
+  valueType: Double
+  description: "Total rated power of all strings in kWp"
+- id: TotalCurrentPowerKW
+  valueType: Double
+  description: "Total current power output in kW"
+- id: TotalEnergyProducedKWh
+  valueType: Double
+  description: "Total energy produced by all strings in kWh"
+- id: GridFeedIn
+  valueType: Double
+  description: "Power fed into grid in kW"
+- id: SelfConsumption
+  valueType: Double
+  description: "Self-consumption power in kW"

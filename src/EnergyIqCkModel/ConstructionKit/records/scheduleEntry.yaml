@@ -1,0 +1,12 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+records:
+- recordId: ScheduleEntry
+  attributes:
+  - id: ${this}/DaysOfWeek
+    name: DaysOfWeek
+  - id: ${this}/StartTime
+    name: StartTime
+  - id: ${this}/EndTime
+    name: EndTime
+  - id: ${this}/OperatingModeValue
+    name: Mode

@@ -1,0 +1,19 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "EnergyIqCkModel", "src\EnergyIqCkModel\EnergyIqCkModel.csproj", "{7596B3B9-83DC-464D-BF48-89586FC27CBF}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+		DebugL|Any CPU = DebugL|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{7596B3B9-83DC-464D-BF48-89586FC27CBF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7596B3B9-83DC-464D-BF48-89586FC27CBF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7596B3B9-83DC-464D-BF48-89586FC27CBF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7596B3B9-83DC-464D-BF48-89586FC27CBF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7596B3B9-83DC-464D-BF48-89586FC27CBF}.DebugL|Any CPU.ActiveCfg = DebugL|Any CPU
+		{7596B3B9-83DC-464D-BF48-89586FC27CBF}.DebugL|Any CPU.Build.0 = DebugL|Any CPU
+	EndGlobalSection
+EndGlobal

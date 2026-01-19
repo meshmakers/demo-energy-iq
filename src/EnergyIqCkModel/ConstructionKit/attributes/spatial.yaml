@@ -1,0 +1,119 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+attributes:
+# Site attributes
+- id: RefLatitude
+  valueType: Double
+  description: "Latitude coordinate (WGS84)"
+- id: RefLongitude
+  valueType: Double
+  description: "Longitude coordinate (WGS84)"
+- id: RefElevation
+  valueType: Double
+  description: "Elevation above sea level (m)"
+
+# Building attributes
+- id: ElevationOfRefHeight
+  valueType: Double
+  description: "Reference height elevation (m)"
+- id: YearOfConstruction
+  valueType: Int
+  description: "Year the building was constructed"
+- id: GrossFloorArea
+  valueType: Double
+  description: "Gross floor area (m²)"
+- id: NetFloorArea
+  valueType: Double
+  description: "Net floor area (m²)"
+
+# BuildingStorey attributes
+- id: Elevation
+  valueType: Double
+  description: "Elevation above building reference (m)"
+- id: AboveGround
+  valueType: Boolean
+  description: "True if storey is above ground level"
+# ISO 4157-1: Storey designation
+- id: StoreyNumber
+  valueType: Int
+  description: "ISO 4157-1 storey number (consecutively from bottom, starting with 1)"
+- id: FloorDesignation
+  valueType: String
+  description: "National floor designation (e.g., EG, 1.OG, UG, DG)"
+
+# Space attributes - Master data
+- id: CeilingHeight
+  valueType: Double
+  description: "Room ceiling height (m)"
+- id: DesignOccupancy
+  valueType: Int
+  description: "Planned occupancy count"
+# ISO 4157-2: Room names and numbers (daily use)
+- id: RoomNumber
+  valueType: String
+  description: "ISO 4157-2 room number (floor prefix + 2-digit number, e.g., G01, 101, UG03)"
+# ISO 4157-3: Room identifiers (lifecycle management)
+- id: RoomIdentifier
+  valueType: String
+  description: "ISO 4157-3 room identifier (format: I#n001, immutable throughout building lifecycle)"
+
+# Space attributes - Actual values (TimeSeries)
+- id: Humidity
+  valueType: Double
+  description: "Relative humidity (%)"
+- id: CO2Level
+  valueType: Double
+  description: "CO2 concentration (ppm)"
+- id: Illuminance
+  valueType: Double
+  description: "Illuminance level (lux)"
+- id: PresenceDetected
+  valueType: Boolean
+  description: "Presence detected by sensor"
+- id: WindowOpen
+  valueType: Boolean
+  description: "Window open state"
+
+# Space attributes - Setpoints
+- id: TemperatureSetpointHeating
+  valueType: Double
+  description: "Heating temperature setpoint (°C)"
+- id: TemperatureSetpointCooling
+  valueType: Double
+  description: "Cooling temperature setpoint (°C)"
+- id: IlluminanceSetpoint
+  valueType: Double
+  description: "Illuminance setpoint (lux)"
+- id: CO2Setpoint
+  valueType: Double
+  description: "CO2 concentration setpoint (ppm)"
+
+# Space attributes - Control signals
+- id: HeatingValvePosition
+  valueType: Double
+  description: "Heating valve position (0-100%)"
+- id: CoolingValvePosition
+  valueType: Double
+  description: "Cooling valve position (0-100%)"
+- id: VentilationLevel
+  valueType: Double
+  description: "Ventilation level (0-100%)"
+- id: LightingLevel
+  valueType: Double
+  description: "Lighting level (0-100%)"
+- id: ShadingPosition
+  valueType: Double
+  description: "Shading position (0-100%)"
+
+# Space attributes - Energy consumption
+- id: EnergyConsumptionHeating
+  valueType: Double
+  description: "Heating energy consumption (kWh)"
+- id: EnergyConsumptionCooling
+  valueType: Double
+  description: "Cooling energy consumption (kWh)"
+- id: EnergyConsumptionLighting
+  valueType: Double
+  description: "Lighting energy consumption (kWh)"
+- id: EnergyConsumptionTotal
+  valueType: Double
+  description: "Total energy consumption (kWh)"

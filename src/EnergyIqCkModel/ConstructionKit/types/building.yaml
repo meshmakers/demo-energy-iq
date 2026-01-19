@@ -1,0 +1,37 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: Building
+  derivedFromCkTypeId: ${Basic}/TreeNode
+  description: "Building (IFC: IfcBuilding)"
+  attributes:
+  # IFC identification
+  - id: ${this}/GlobalId
+    name: GlobalId
+    isOptional: true
+  - id: ${this}/LongName
+    name: LongName
+    isOptional: true
+  # Building-specific (IFC)
+  - id: ${this}/ElevationOfRefHeight
+    name: ElevationOfRefHeight
+    isOptional: true
+  - id: ${this}/AddressValue
+    name: BuildingAddress
+    isOptional: true
+  - id: ${this}/YearOfConstruction
+    name: YearOfConstruction
+    isOptional: true
+  - id: ${this}/GrossFloorArea
+    name: GrossFloorArea
+    isOptional: true
+  # Haystack compatibility
+  - id: ${this}/HaystackTags
+    name: HaystackTags
+    isOptional: true
+  - id: ${this}/HaystackRefs
+    name: HaystackRefs
+    isOptional: true
+  - id: ${this}/HaystackMeta
+    name: HaystackMeta
+    isOptional: true
+  # Parent (Site), Children (BuildingStorey, TechnicalSystem) via inherited System/ParentChild

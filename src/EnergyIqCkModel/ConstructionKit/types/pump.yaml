@@ -1,0 +1,21 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: Pump
+  derivedFromCkTypeId: ${this}/TechnicalSystem
+  description: "Pump (IFC: IfcPump, VDI 3814)"
+  attributes:
+  - id: ${this}/FlowRate
+    name: FlowRate
+    isOptional: true
+  - id: ${this}/Pressure
+    name: Pressure
+    isOptional: true
+  - id: ${this}/SpeedSetpoint
+    name: SpeedSetpoint
+    isOptional: true
+  - id: ${this}/PowerConsumption
+    name: PowerConsumption
+    isOptional: true
+  associations:
+  - id: ${this}/SystemSpaces
+    targetCkTypeId: ${this}/Space

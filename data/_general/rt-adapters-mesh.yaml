@@ -1,0 +1,14 @@
+$schema: https://schemas.meshmakers.cloud/runtime-model.schema.json
+dependencies: []
+entities:
+  - rtId: 67e10c0bfe3e19891bbfd261
+    ckTypeId: System.Communication/MeshAdapter-1
+    associations: []
+    attributes:
+      - id: System/Name-1
+        value: Mesh Adapter
+      - id: System/Description-1
+      - id: System.Communication/Deployment.ImageName-1
+      - id: System.Communication/Deployment.ImageVersion-1
+      - id: System.Communication/AdapterConfiguration-1
+      - id: System.Communication/StatusMessage-1

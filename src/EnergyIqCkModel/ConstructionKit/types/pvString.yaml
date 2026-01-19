@@ -1,0 +1,52 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: PVString
+  derivedFromCkTypeId: ${Basic}/TreeNode
+  description: "PV string - group of connected PV modules (IFC: IfcSolarDevice)"
+  # Parent (PhotovoltaicSystem) via System/ParentChild
+  attributes:
+  - id: ${this}/Identifier
+    name: Identifier
+  # Installation parameters
+  - id: ${this}/RatedPowerKWp
+    name: RatedPower
+    isOptional: true
+  - id: ${this}/Orientation
+    name: Orientation
+    isOptional: true
+  - id: ${this}/Tilt
+    name: Tilt
+    isOptional: true
+  - id: ${this}/ModuleCount
+    name: ModuleCount
+    isOptional: true
+  - id: ${this}/ModuleType
+    name: ModuleType
+    isOptional: true
+  # Current values (TimeSeries)
+  - id: ${this}/CurrentPowerKW
+    name: CurrentPower
+    isOptional: true
+  - id: ${this}/EnergyProducedKWh
+    name: EnergyProduced
+    isOptional: true
+  - id: ${this}/DcVoltage
+    name: DcVoltage
+    isOptional: true
+  # Status
+  - id: ${this}/IsRunning
+    name: IsRunning
+    isOptional: true
+  - id: ${this}/FaultState
+    name: FaultState
+    isOptional: true
+  # Haystack compatibility
+  - id: ${this}/HaystackTags
+    name: HaystackTags
+    isOptional: true
+  - id: ${this}/HaystackRefs
+    name: HaystackRefs
+    isOptional: true
+  - id: ${this}/HaystackMeta
+    name: HaystackMeta
+    isOptional: true

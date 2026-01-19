@@ -1,0 +1,29 @@
+<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <Version>3.3.4.0</Version>
+        <Authors>meshmakers GmbH and Contributors</Authors>
+        <Company>meshmakers GmbH</Company>
+        <Product>r3.3.4 - 2fdf220514b892680f36b785f85cb332f84550e5 (release)</Product>
+        <Copyright>(c) 2022-2025 meshmakers GmbH</Copyright>
+        <AssemblyVersion>3.3.0.0</AssemblyVersion>
+        <FileVersion>3.3.4.0</FileVersion>
+        <InformationalVersion>3.3.4.0</InformationalVersion>
+        <Configurations>Debug;Release;DebugL</Configurations>
+        <Platforms>AnyCPU</Platforms>
+    </PropertyGroup>
+    <PropertyGroup>
+        <TargetFramework>net10.0</TargetFramework>
+        <LangVersion>latestmajor</LangVersion>
+        <Nullable>enable</Nullable>
+        <ImplicitUsings>true</ImplicitUsings>
+    </PropertyGroup>
+    <ItemGroup>
+        <PackageReference Include="Meshmakers.Octo.Runtime.Contracts" Version="999.0.0.0"/>
+        <PackageReference Include="Meshmakers.Octo.ConstructionKit.SourceGeneration" OutputItemType="Analyzer" ReferenceOutputAssembly="false" Version="999.0.0.0"/>
+        <PackageReference Include="Meshmakers.Octo.ConstructionKit.MsBuildTasks" Version="999.0.0.0" PrivateAssets="all"/>
+        <PackageReference Include="Meshmakers.Octo.Sdk.Packages.Basic" Version="999.0.0"/>
+    </ItemGroup>
+    <ItemGroup>
+        <ConstructionKitFolder Visible="false" Include="$(MSBuildProjectDirectory)\ConstructionKit"/>
+    </ItemGroup>
+</Project>

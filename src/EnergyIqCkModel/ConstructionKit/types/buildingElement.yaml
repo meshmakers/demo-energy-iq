@@ -1,0 +1,24 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: BuildingElement
+  derivedFromCkTypeId: ${Basic}/NamedEntity
+  isAbstract: true
+  description: "Abstract base class for building elements (IFC: IfcBuildingElement)"
+  attributes:
+  # IFC identification
+  - id: ${this}/GlobalId
+    name: GlobalId
+    isOptional: true
+  - id: ${this}/ObjectType
+    name: ObjectType
+    isOptional: true
+  # Haystack compatibility
+  - id: ${this}/HaystackTags
+    name: HaystackTags
+    isOptional: true
+  - id: ${this}/HaystackRefs
+    name: HaystackRefs
+    isOptional: true
+  - id: ${this}/HaystackMeta
+    name: HaystackMeta
+    isOptional: true

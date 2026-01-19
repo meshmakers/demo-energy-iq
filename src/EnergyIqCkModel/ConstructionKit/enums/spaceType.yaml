@@ -1,0 +1,34 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+enums:
+- enumId: SpaceType
+  values:
+  - key: 0
+    name: Office
+  - key: 1
+    name: MeetingRoom
+  - key: 2
+    name: Corridor
+  - key: 3
+    name: Toilet
+  - key: 4
+    name: Kitchen
+  - key: 5
+    name: TechnicalRoom
+  - key: 6
+    name: Storage
+  - key: 7
+    name: Parking
+  - key: 8
+    name: Lobby
+  - key: 9
+    name: Staircase
+  - key: 10
+    name: Elevator
+  - key: 11
+    name: ServerRoom
+  - key: 12
+    name: Laboratory
+  - key: 13
+    name: Workshop
+  - key: 14
+    name: Other

@@ -1,0 +1,16 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+enums:
+- enumId: OperatingMode
+  values:
+  - key: 0
+    name: Comfort
+  - key: 1
+    name: Economy
+  - key: 2
+    name: Standby
+  - key: 3
+    name: Protection
+  - key: 4
+    name: Off
+  - key: 5
+    name: Auto

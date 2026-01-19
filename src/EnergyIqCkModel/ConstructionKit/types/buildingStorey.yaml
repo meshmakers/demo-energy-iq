@@ -1,0 +1,43 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: BuildingStorey
+  derivedFromCkTypeId: ${Basic}/TreeNode
+  description: "Building storey/floor (IFC: IfcBuildingStorey)"
+  attributes:
+  # IFC identification
+  - id: ${this}/GlobalId
+    name: GlobalId
+    isOptional: true
+  - id: ${this}/LongName
+    name: LongName
+    isOptional: true
+  # Storey-specific (IFC)
+  - id: ${this}/Elevation
+    name: Elevation
+  - id: ${this}/AboveGround
+    name: AboveGround
+    isOptional: true
+  - id: ${this}/GrossFloorArea
+    name: GrossFloorArea
+    isOptional: true
+  - id: ${this}/NetFloorArea
+    name: NetFloorArea
+    isOptional: true
+  # ISO 4157-1: Storey designation
+  - id: ${this}/StoreyNumber
+    name: StoreyNumber
+    isOptional: true
+  - id: ${this}/FloorDesignation
+    name: FloorDesignation
+    isOptional: true
+  # Haystack compatibility
+  - id: ${this}/HaystackTags
+    name: HaystackTags
+    isOptional: true
+  - id: ${this}/HaystackRefs
+    name: HaystackRefs
+    isOptional: true
+  - id: ${this}/HaystackMeta
+    name: HaystackMeta
+    isOptional: true
+  # Parent (Building) and Children (Space) via inherited System/ParentChild

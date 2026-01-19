@@ -1,0 +1,42 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: PhotovoltaicSystem
+  derivedFromCkTypeId: ${Basic}/TreeNode
+  description: "Photovoltaic system - container for PV strings, inverters and battery (IFC: IfcSystem)"
+  # Parent (Building) and Children (PVString, Inverter, BatteryStorage) via System/ParentChild
+  attributes:
+  - id: ${this}/Identifier
+    name: Identifier
+  # Aggregate values
+  - id: ${this}/TotalRatedPowerKWp
+    name: TotalRatedPower
+    isOptional: true
+  - id: ${this}/TotalCurrentPowerKW
+    name: TotalCurrentPower
+    isOptional: true
+  - id: ${this}/TotalEnergyProducedKWh
+    name: TotalEnergyProduced
+    isOptional: true
+  - id: ${this}/GridFeedIn
+    name: GridFeedIn
+    isOptional: true
+  - id: ${this}/SelfConsumption
+    name: SelfConsumption
+    isOptional: true
+  # Status
+  - id: ${this}/IsRunning
+    name: IsRunning
+    isOptional: true
+  - id: ${this}/FaultState
+    name: FaultState
+    isOptional: true
+  # Haystack compatibility
+  - id: ${this}/HaystackTags
+    name: HaystackTags
+    isOptional: true
+  - id: ${this}/HaystackRefs
+    name: HaystackRefs
+    isOptional: true
+  - id: ${this}/HaystackMeta
+    name: HaystackMeta
+    isOptional: true

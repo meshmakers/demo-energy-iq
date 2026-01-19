@@ -1,0 +1,22 @@
+$schema: https://schemas.meshmakers.cloud/runtime-model.schema.json
+dependencies: []
+entities:
+- rtId: 682f0020af1fe4dd0f346f3c
+  ckTypeId: System/Query
+  associations: []
+  attributes:
+  - id: System/Query.Types
+    value: 0
+  - id: System/Query.CkTypeId
+    value: Basic/Tree
+  - id: System/Query.Columns
+    value:
+    - rtId
+    - name
+    - description
+  - id: System/Query.Sorting
+    value: []
+  - id: System/Query.FieldFilter
+    value: []
+  - id: System/Name
+    value: _trees

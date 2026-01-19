@@ -1,0 +1,24 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: Luminaire
+  derivedFromCkTypeId: ${this}/BuildingElement
+  description: "Light fixture (IFC: IfcLightFixture, VDI 3814)"
+  attributes:
+  - id: ${this}/LuminaireTypeValue
+    name: LuminaireType
+    isOptional: true
+  - id: ${this}/RatedPower
+    name: RatedPower
+    isOptional: true
+  - id: ${this}/IsOn
+    name: IsOn
+    isOptional: true
+  - id: ${this}/DimmingLevel
+    name: DimmingLevel
+    isOptional: true
+  - id: ${this}/DimmingLevelSetpoint
+    name: DimmingLevelSetpoint
+    isOptional: true
+  associations:
+  - id: ${this}/SpaceElements
+    targetCkTypeId: ${this}/Space

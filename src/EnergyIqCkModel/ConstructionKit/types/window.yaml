@@ -1,0 +1,21 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: Window
+  derivedFromCkTypeId: ${this}/BuildingElement
+  description: "Window with state attributes (IFC: IfcWindow)"
+  attributes:
+  - id: ${this}/OverallHeight
+    name: OverallHeight
+    isOptional: true
+  - id: ${this}/OverallWidth
+    name: OverallWidth
+    isOptional: true
+  - id: ${this}/IsOpen
+    name: IsOpen
+    isOptional: true
+  - id: ${this}/OpeningPosition
+    name: OpeningPosition
+    isOptional: true
+  associations:
+  - id: ${this}/SpaceElements
+    targetCkTypeId: ${this}/Space

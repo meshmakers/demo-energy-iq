@@ -1,0 +1,52 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: Inverter
+  derivedFromCkTypeId: ${Basic}/TreeNode
+  description: "Inverter - converts DC to AC power (IFC: IfcUnitaryEquipment)"
+  # Parent (PhotovoltaicSystem) via System/ParentChild
+  attributes:
+  - id: ${this}/Identifier
+    name: Identifier
+  # Rated values
+  - id: ${this}/RatedPowerKVA
+    name: RatedPower
+    isOptional: true
+  # Current values (TimeSeries)
+  - id: ${this}/DcPower
+    name: DcPower
+    isOptional: true
+  - id: ${this}/AcPower
+    name: AcPower
+    isOptional: true
+  - id: ${this}/DcVoltage
+    name: DcVoltage
+    isOptional: true
+  - id: ${this}/AcVoltage
+    name: AcVoltage
+    isOptional: true
+  - id: ${this}/Frequency
+    name: Frequency
+    isOptional: true
+  - id: ${this}/InverterEfficiency
+    name: Efficiency
+    isOptional: true
+  - id: ${this}/Temperature
+    name: Temperature
+    isOptional: true
+  # Status
+  - id: ${this}/IsRunning
+    name: IsRunning
+    isOptional: true
+  - id: ${this}/FaultState
+    name: FaultState
+    isOptional: true
+  # Haystack compatibility
+  - id: ${this}/HaystackTags
+    name: HaystackTags
+    isOptional: true
+  - id: ${this}/HaystackRefs
+    name: HaystackRefs
+    isOptional: true
+  - id: ${this}/HaystackMeta
+    name: HaystackMeta
+    isOptional: true

@@ -1,0 +1,24 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: ShadingDevice
+  derivedFromCkTypeId: ${this}/BuildingElement
+  description: "Shading device - blind, shutter, awning (IFC: IfcShadingDevice, VDI 3814)"
+  attributes:
+  - id: ${this}/ShadingTypeValue
+    name: ShadingType
+    isOptional: true
+  - id: ${this}/Position
+    name: Position
+    isOptional: true
+  - id: ${this}/SlatAngle
+    name: SlatAngle
+    isOptional: true
+  - id: ${this}/PositionSetpoint
+    name: PositionSetpoint
+    isOptional: true
+  - id: ${this}/SlatAngleSetpoint
+    name: SlatAngleSetpoint
+    isOptional: true
+  associations:
+  - id: ${this}/SpaceElements
+    targetCkTypeId: ${this}/Space

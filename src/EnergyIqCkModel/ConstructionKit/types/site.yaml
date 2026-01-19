@@ -1,0 +1,34 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: Site
+  derivedFromCkTypeId: ${Basic}/Tree
+  description: "Site/location - root of spatial hierarchy (IFC: IfcSite)"
+  attributes:
+  # IFC identification
+  - id: ${this}/GlobalId
+    name: GlobalId
+    isOptional: true
+  - id: ${this}/LongName
+    name: LongName
+    isOptional: true
+  # Site-specific (IFC)
+  - id: ${this}/RefLatitude
+    name: RefLatitude
+    isOptional: true
+  - id: ${this}/RefLongitude
+    name: RefLongitude
+    isOptional: true
+  - id: ${this}/RefElevation
+    name: RefElevation
+    isOptional: true
+  # Haystack compatibility
+  - id: ${this}/HaystackTags
+    name: HaystackTags
+    isOptional: true
+  - id: ${this}/HaystackRefs
+    name: HaystackRefs
+    isOptional: true
+  - id: ${this}/HaystackMeta
+    name: HaystackMeta
+    isOptional: true
+  # Children (Building) via inherited System/ParentChild from Basic/Tree

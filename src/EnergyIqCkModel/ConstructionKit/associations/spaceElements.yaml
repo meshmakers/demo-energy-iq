@@ -1,0 +1,7 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+associationRoles:
+- id: SpaceElements
+  inboundName: containedElements
+  outboundName: containedInSpace
+  inboundMultiplicity: N
+  outboundMultiplicity: ZeroOrOne

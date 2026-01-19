@@ -1,0 +1,58 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+attributes:
+# Common BuildingElement attributes
+- id: ObjectType
+  valueType: String
+  description: "Type description of the element"
+
+# Door/Window dimensions
+- id: OverallHeight
+  valueType: Double
+  description: "Overall height (mm)"
+- id: OverallWidth
+  valueType: Double
+  description: "Overall width (mm)"
+
+# Door attributes
+- id: IsExternal
+  valueType: Boolean
+  description: "True if external door/window"
+- id: IsOpen
+  valueType: Boolean
+  description: "Open state (TimeSeries)"
+- id: IsLocked
+  valueType: Boolean
+  description: "Locked state (TimeSeries)"
+
+# Window attributes
+- id: OpeningPosition
+  valueType: Double
+  description: "Opening position (0-100%)"
+
+# ShadingDevice attributes
+- id: Position
+  valueType: Double
+  description: "Current position (0-100%)"
+- id: SlatAngle
+  valueType: Double
+  description: "Slat angle (degrees)"
+- id: PositionSetpoint
+  valueType: Double
+  description: "Position setpoint (0-100%)"
+- id: SlatAngleSetpoint
+  valueType: Double
+  description: "Slat angle setpoint (degrees)"
+
+# Luminaire attributes
+- id: RatedPower
+  valueType: Double
+  description: "Rated power (W)"
+- id: IsOn
+  valueType: Boolean
+  description: "On/Off state (TimeSeries)"
+- id: DimmingLevel
+  valueType: Double
+  description: "Dimming level (0-100%)"
+- id: DimmingLevelSetpoint
+  valueType: Double
+  description: "Dimming level setpoint (0-100%)"

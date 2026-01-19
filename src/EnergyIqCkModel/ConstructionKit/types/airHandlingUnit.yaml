@@ -1,0 +1,42 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: AirHandlingUnit
+  derivedFromCkTypeId: ${this}/TechnicalSystem
+  description: "Air handling unit - HVAC ventilation system (IFC: IfcUnitaryEquipment, VDI 3814)"
+  attributes:
+  - id: ${this}/SupplyAirTemp
+    name: SupplyAirTemp
+    isOptional: true
+  - id: ${this}/ReturnAirTemp
+    name: ReturnAirTemp
+    isOptional: true
+  - id: ${this}/OutdoorAirTemp
+    name: OutdoorAirTemp
+    isOptional: true
+  - id: ${this}/SupplyAirTempSetpoint
+    name: SupplyAirTempSetpoint
+    isOptional: true
+  - id: ${this}/SupplyAirFlow
+    name: SupplyAirFlow
+    isOptional: true
+  - id: ${this}/FanSpeedSupply
+    name: FanSpeedSupply
+    isOptional: true
+  - id: ${this}/FanSpeedReturn
+    name: FanSpeedReturn
+    isOptional: true
+  - id: ${this}/FilterDifferentialPressure
+    name: FilterDifferentialPressure
+    isOptional: true
+  - id: ${this}/HeatRecoveryEfficiency
+    name: HeatRecoveryEfficiency
+    isOptional: true
+  - id: ${this}/HeatingCoilPosition
+    name: HeatingCoilPosition
+    isOptional: true
+  - id: ${this}/CoolingCoilPosition
+    name: CoolingCoilPosition
+    isOptional: true
+  associations:
+  - id: ${this}/SystemSpaces
+    targetCkTypeId: ${this}/Space

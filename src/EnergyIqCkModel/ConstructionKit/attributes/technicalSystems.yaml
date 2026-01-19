@@ -1,0 +1,81 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+attributes:
+# Common TechnicalSystem attributes
+- id: Identifier
+  valueType: String
+  description: "System identifier/tag"
+- id: IsRunning
+  valueType: Boolean
+  description: "Running state (TimeSeries)"
+- id: FaultState
+  valueType: Boolean
+  description: "Fault/alarm state (TimeSeries)"
+
+# AirHandlingUnit attributes
+- id: SupplyAirTemp
+  valueType: Double
+  description: "Supply air temperature (°C)"
+- id: ReturnAirTemp
+  valueType: Double
+  description: "Return air temperature (°C)"
+- id: OutdoorAirTemp
+  valueType: Double
+  description: "Outdoor air temperature (°C)"
+- id: SupplyAirTempSetpoint
+  valueType: Double
+  description: "Supply air temperature setpoint (°C)"
+- id: SupplyAirFlow
+  valueType: Double
+  description: "Supply air flow rate (m³/h)"
+- id: FanSpeedSupply
+  valueType: Double
+  description: "Supply fan speed (0-100%)"
+- id: FanSpeedReturn
+  valueType: Double
+  description: "Return fan speed (0-100%)"
+- id: FilterDifferentialPressure
+  valueType: Double
+  description: "Filter differential pressure (Pa)"
+- id: HeatRecoveryEfficiency
+  valueType: Double
+  description: "Heat recovery efficiency (0-100%)"
+- id: HeatingCoilPosition
+  valueType: Double
+  description: "Heating coil valve position (0-100%)"
+- id: CoolingCoilPosition
+  valueType: Double
+  description: "Cooling coil valve position (0-100%)"
+
+# Boiler attributes
+- id: SupplyTemp
+  valueType: Double
+  description: "Supply/flow temperature (°C)"
+- id: ReturnTemp
+  valueType: Double
+  description: "Return temperature (°C)"
+- id: SupplyTempSetpoint
+  valueType: Double
+  description: "Supply temperature setpoint (°C)"
+- id: ModulationLevel
+  valueType: Double
+  description: "Modulation level (0-100%)"
+- id: FuelConsumption
+  valueType: Double
+  description: "Fuel consumption (kWh)"
+- id: Efficiency
+  valueType: Double
+  description: "Efficiency (0-100%)"
+
+# Pump attributes
+- id: FlowRate
+  valueType: Double
+  description: "Flow rate (m³/h)"
+- id: Pressure
+  valueType: Double
+  description: "Pressure (bar)"
+- id: SpeedSetpoint
+  valueType: Double
+  description: "Speed setpoint (0-100%)"
+- id: PowerConsumption
+  valueType: Double
+  description: "Power consumption (kW)"

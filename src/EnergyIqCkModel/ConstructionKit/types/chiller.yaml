@@ -1,0 +1,27 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: Chiller
+  derivedFromCkTypeId: ${this}/TechnicalSystem
+  description: "Cooling chiller (IFC: IfcChiller, VDI 3814)"
+  attributes:
+  - id: ${this}/SupplyTemp
+    name: SupplyTemp
+    isOptional: true
+  - id: ${this}/ReturnTemp
+    name: ReturnTemp
+    isOptional: true
+  - id: ${this}/SupplyTempSetpoint
+    name: SupplyTempSetpoint
+    isOptional: true
+  - id: ${this}/ModulationLevel
+    name: ModulationLevel
+    isOptional: true
+  - id: ${this}/PowerConsumption
+    name: PowerConsumption
+    isOptional: true
+  - id: ${this}/Efficiency
+    name: Efficiency
+    isOptional: true
+  associations:
+  - id: ${this}/SystemSpaces
+    targetCkTypeId: ${this}/Space

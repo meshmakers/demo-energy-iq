@@ -1,0 +1,58 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: BatteryStorage
+  derivedFromCkTypeId: ${Basic}/TreeNode
+  description: "Battery storage system (IFC: IfcElectricFlowStorageDevice)"
+  # Parent (PhotovoltaicSystem) via System/ParentChild
+  attributes:
+  - id: ${this}/Identifier
+    name: Identifier
+  # Rated values
+  - id: ${this}/RatedCapacityKWh
+    name: RatedCapacity
+    isOptional: true
+  - id: ${this}/MaxChargePower
+    name: MaxChargePower
+    isOptional: true
+  - id: ${this}/MaxDischargePower
+    name: MaxDischargePower
+    isOptional: true
+  # Current values (TimeSeries)
+  - id: ${this}/StateOfCharge
+    name: StateOfCharge
+    isOptional: true
+  - id: ${this}/ChargingPower
+    name: ChargingPower
+    isOptional: true
+  - id: ${this}/DischargingPower
+    name: DischargingPower
+    isOptional: true
+  - id: ${this}/BatteryTemperature
+    name: Temperature
+    isOptional: true
+  - id: ${this}/CycleCount
+    name: CycleCount
+    isOptional: true
+  # Status
+  - id: ${this}/IsCharging
+    name: IsCharging
+    isOptional: true
+  - id: ${this}/IsDischarging
+    name: IsDischarging
+    isOptional: true
+  - id: ${this}/IsRunning
+    name: IsRunning
+    isOptional: true
+  - id: ${this}/FaultState
+    name: FaultState
+    isOptional: true
+  # Haystack compatibility
+  - id: ${this}/HaystackTags
+    name: HaystackTags
+    isOptional: true
+  - id: ${this}/HaystackRefs
+    name: HaystackRefs
+    isOptional: true
+  - id: ${this}/HaystackMeta
+    name: HaystackMeta
+    isOptional: true

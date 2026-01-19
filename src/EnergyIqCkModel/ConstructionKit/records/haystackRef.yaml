@@ -1,0 +1,8 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+records:
+- recordId: HaystackRef
+  attributes:
+  - id: ${this}/RefName
+    name: RefName
+  - id: ${this}/TargetId
+    name: TargetId

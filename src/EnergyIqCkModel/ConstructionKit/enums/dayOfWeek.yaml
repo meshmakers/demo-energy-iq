@@ -1,0 +1,18 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+enums:
+- enumId: DayOfWeek
+  values:
+  - key: 0
+    name: Monday
+  - key: 1
+    name: Tuesday
+  - key: 2
+    name: Wednesday
+  - key: 3
+    name: Thursday
+  - key: 4
+    name: Friday
+  - key: 5
+    name: Saturday
+  - key: 6
+    name: Sunday

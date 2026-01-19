@@ -1,0 +1,16 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+enums:
+- enumId: SystemType
+  values:
+  - key: 0
+    name: Heating
+  - key: 1
+    name: Cooling
+  - key: 2
+    name: Ventilation
+  - key: 3
+    name: Combined
+  - key: 4
+    name: Lighting
+  - key: 5
+    name: Shading

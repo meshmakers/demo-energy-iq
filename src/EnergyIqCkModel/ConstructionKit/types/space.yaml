@@ -1,0 +1,122 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: Space
+  derivedFromCkTypeId: ${Basic}/TreeNode
+  description: "Room - central object for energy optimization (IFC: IfcSpace + VDI 3814 room automation)"
+  attributes:
+  # IFC identification
+  - id: ${this}/GlobalId
+    name: GlobalId
+    isOptional: true
+  - id: ${this}/LongName
+    name: LongName
+    isOptional: true
+  # ISO 4157-2/3: Room designation
+  - id: ${this}/RoomNumber
+    name: RoomNumber
+    isOptional: true
+  - id: ${this}/RoomIdentifier
+    name: RoomIdentifier
+    isOptional: true
+  # Master data (IFC + VDI 3814)
+  - id: ${this}/SpaceTypeValue
+    name: SpaceType
+    isOptional: true
+  - id: ${this}/NetFloorArea
+    name: NetFloorArea
+    isOptional: true
+  - id: ${this}/GrossFloorArea
+    name: GrossFloorArea
+    isOptional: true
+  - id: ${this}/CeilingHeight
+    name: CeilingHeight
+    isOptional: true
+  - id: ${this}/DesignOccupancy
+    name: DesignOccupancy
+    isOptional: true
+  # Actual values (VDI 3814 - TimeSeries)
+  - id: ${this}/Temperature
+    name: Temperature
+    isOptional: true
+  - id: ${this}/Humidity
+    name: Humidity
+    isOptional: true
+  - id: ${this}/CO2Level
+    name: CO2Level
+    isOptional: true
+  - id: ${this}/Illuminance
+    name: Illuminance
+    isOptional: true
+  - id: ${this}/PresenceDetected
+    name: PresenceDetected
+    isOptional: true
+  - id: ${this}/WindowOpen
+    name: WindowOpen
+    isOptional: true
+  # Setpoints (VDI 3814)
+  - id: ${this}/TemperatureSetpointHeating
+    name: TemperatureSetpointHeating
+    isOptional: true
+  - id: ${this}/TemperatureSetpointCooling
+    name: TemperatureSetpointCooling
+    isOptional: true
+  - id: ${this}/IlluminanceSetpoint
+    name: IlluminanceSetpoint
+    isOptional: true
+  - id: ${this}/CO2Setpoint
+    name: CO2Setpoint
+    isOptional: true
+  # Control signals (VDI 3814)
+  - id: ${this}/HeatingValvePosition
+    name: HeatingValvePosition
+    isOptional: true
+  - id: ${this}/CoolingValvePosition
+    name: CoolingValvePosition
+    isOptional: true
+  - id: ${this}/VentilationLevel
+    name: VentilationLevel
+    isOptional: true
+  - id: ${this}/LightingLevel
+    name: LightingLevel
+    isOptional: true
+  - id: ${this}/ShadingPosition
+    name: ShadingPosition
+    isOptional: true
+  # Operating mode (VDI 3814)
+  - id: ${this}/OperatingModeValue
+    name: OperatingMode
+    isOptional: true
+  - id: ${this}/ScheduleEntries
+    name: OccupancySchedule
+    isOptional: true
+  # Energy consumption
+  - id: ${this}/EnergyConsumptionHeating
+    name: EnergyConsumptionHeating
+    isOptional: true
+  - id: ${this}/EnergyConsumptionCooling
+    name: EnergyConsumptionCooling
+    isOptional: true
+  - id: ${this}/EnergyConsumptionLighting
+    name: EnergyConsumptionLighting
+    isOptional: true
+  - id: ${this}/EnergyConsumptionTotal
+    name: EnergyConsumptionTotal
+    isOptional: true
+  # Haystack compatibility
+  - id: ${this}/HaystackTags
+    name: HaystackTags
+    isOptional: true
+  - id: ${this}/HaystackRefs
+    name: HaystackRefs
+    isOptional: true
+  - id: ${this}/HaystackMeta
+    name: HaystackMeta
+    isOptional: true
+  associations:
+  # Parent (BuildingStorey) via inherited System/ParentChild
+  # Building elements contained in this space
+  - id: ${this}/SpaceElements
+    targetCkTypeId: ${this}/BuildingElement
+  # Technical systems serving this space
+  - id: ${this}/SystemSpaces
+    targetCkTypeId: ${this}/TechnicalSystem
