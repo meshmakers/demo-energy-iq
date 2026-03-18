@@ -1,24 +1,24 @@
-# Standards-Referenz
+# Standards Reference
 
-## Übersicht: Standards-Landschaft
+## Overview: Standards Landscape
 
 ```
-                    BIM / Planung                    Betrieb / IoT
+                    BIM / Planning                    Operations / IoT
                          │                                │
               ┌──────────┴──────────┐         ┌──────────┴──────────┐
               │                     │         │                     │
          ISO 16739              VDI 3814              Project
-           (IFC)                  (GA)               Haystack
+           (IFC)                  (BA)               Haystack
               │                     │                    │
-         "Struktur"           "Funktionen"          "Semantik"
-         Was ist wo?          Wie wird geregelt?    Was bedeutet
-         (Räume, Wände)       (Regler, Zeitprog.)   der Datenpunkt?
+         "Structure"           "Functions"          "Semantics"
+         What is where?        How is it controlled? What does the
+         (Rooms, Walls)        (Controllers, Sched.) data point mean?
               │                     │                    │
               └──────────┬──────────┴────────────────────┘
                          │
                          ▼
                     ┌─────────┐
-                    │EnergyIQ │  ← Kombiniert alle drei
+                    │EnergyIQ │  ← Combines all three
                     └─────────┘
 ```
 
@@ -26,19 +26,19 @@
 
 ## ISO 16739-1:2024 (IFC 4.3)
 
-### Übersicht
+### Overview
 
-**Industry Foundation Classes (IFC)** ist ein offener internationaler Standard für Building Information Modeling (BIM). Die aktuelle Version IFC 4.3 (ISO 16739-1:2024) erweitert den Scope auf Infrastruktur (Brücken, Straßen, Schienen).
+**Industry Foundation Classes (IFC)** is an open international standard for Building Information Modeling (BIM). The current version IFC 4.3 (ISO 16739-1:2024) extends the scope to infrastructure (bridges, roads, railways).
 
-**Herkunft:** Architektur/Bauwesen (buildingSMART)  
-**Fokus:** Planung & Bau ("As-Built")  
-**Daten:** Statisch (Geometrie, Struktur, Eigenschaften)
+**Origin:** Architecture/Construction (buildingSMART)
+**Focus:** Planning & Construction ("As-Built")
+**Data:** Static (geometry, structure, properties)
 
-### Relevante Konzepte für EnergyIQ
+### Relevant Concepts for EnergyIQ
 
-#### Räumliche Struktur (Spatial Structure)
+#### Spatial Structure
 
-IFC definiert eine hierarchische räumliche Gliederung:
+IFC defines a hierarchical spatial decomposition:
 
 ```
 IfcProject
@@ -48,11 +48,11 @@ IfcProject
             └── IfcSpace       → Space
 ```
 
-Die Beziehungen werden über `IfcRelAggregates` hergestellt.
+The relationships are established via `IfcRelAggregates`.
 
 #### Spatial Containment
 
-Bauelemente werden Räumen zugeordnet über `IfcRelContainedInSpatialStructure`:
+Building elements are assigned to spaces via `IfcRelContainedInSpatialStructure`:
 
 ```
 IfcSpace ◄── IfcRelContainedInSpatialStructure ──► IfcWall, IfcDoor, IfcWindow, ...
@@ -60,12 +60,12 @@ IfcSpace ◄── IfcRelContainedInSpatialStructure ──► IfcWall, IfcDoor,
 
 #### Property Sets
 
-IFC verwendet PropertySets für zusätzliche Eigenschaften:
-- `Pset_SpaceCommon` – allgemeine Raumeigenschaften
-- `Pset_SpaceThermalRequirements` – thermische Anforderungen
-- `Pset_SpaceOccupancyRequirements` – Belegungsanforderungen
+IFC uses PropertySets for additional properties:
+- `Pset_SpaceCommon` – General space properties
+- `Pset_SpaceThermalRequirements` – Thermal requirements
+- `Pset_SpaceOccupancyRequirements` – Occupancy requirements
 
-**Mapping zu OctoMesh:** PropertySets → Records oder direkte Attribute
+**Mapping to OctoMesh:** PropertySets → Records or direct attributes
 
 #### Building Elements
 
@@ -87,7 +87,7 @@ IFC verwendet PropertySets für zusätzliche Eigenschaften:
 | IfcBoiler | Boiler |
 | IfcPump | Pump |
 
-### Quellen
+### Sources
 
 - [buildingSMART IFC Specification](https://technical.buildingsmart.org/standards/ifc/)
 - [IFC 4.3 Documentation](https://ifc43-docs.standards.buildingsmart.org/)
@@ -95,159 +95,159 @@ IFC verwendet PropertySets für zusätzliche Eigenschaften:
 
 ---
 
-## VDI 3814 (Gebäudeautomation)
+## VDI 3814 (Building Automation)
 
-### Übersicht
+### Overview
 
-Die **VDI-Richtlinie 3814** beschreibt den Stand der Technik bei Planung und Errichtung von Gebäudeautomation (GA). Sie wurde 2019 grundlegend überarbeitet und integriert die frühere VDI 3813.
+The **VDI Guideline 3814** describes the state of the art for planning and implementing building automation (BA) systems. It was fundamentally revised in 2019 and integrates the former VDI 3813.
 
-**Herkunft:** TGA-Planung Deutschland (VDI)  
-**Fokus:** Planung & Dokumentation von GA-Systemen  
-**Daten:** Funktionsbeschreibungen, Datenpunktlisten
+**Origin:** Building services planning, Germany (VDI)
+**Focus:** Planning & documentation of BA systems
+**Data:** Function descriptions, data point lists
 
-### Struktur der Richtlinienreihe
+### Guideline Series Structure
 
-| Blatt | Inhalt |
-|-------|--------|
-| 1 | Grundlagen |
-| 2.1 | Bedarfsplanung |
-| 2.2 | Planungsinhalte, Systemintegration |
-| 3.1 | GA-Funktionen (Automationsfunktionen) |
-| 3.2 | Makros aus Grundfunktionen |
-| 4.1 | Kennzeichnungssysteme |
-| 4.2 | Checklisten |
-| 4.3 | GA-Automationsschema, Funktionsliste |
+| Part | Content |
+|------|---------|
+| 1 | Fundamentals |
+| 2.1 | Requirements planning |
+| 2.2 | Planning content, system integration |
+| 3.1 | BA functions (automation functions) |
+| 3.2 | Macros from basic functions |
+| 4.1 | Identification systems |
+| 4.2 | Checklists |
+| 4.3 | BA automation schema, function list |
 
-### Gliederung der Gebäudeautomation
+### Building Automation Classification
 
 ```
-Gebäudeautomation (GA)
-├── Raumautomation (RA)
-│   ├── Temperaturregelung
-│   ├── Beleuchtungssteuerung
-│   ├── Sonnenschutzsteuerung
-│   └── Präsenzerfassung
-├── Anlagenautomation (AA)
-│   ├── HLK-Anlagen (Heizung, Lüftung, Klima)
-│   ├── Sanitäranlagen
-│   └── Elektrotechnik
-└── GA-Management
-    ├── Überwachung
-    ├── Bedienung
-    └── Optimierung
+Building Automation (BA)
+├── Room Automation (RA)
+│   ├── Temperature control
+│   ├── Lighting control
+│   ├── Sun protection control
+│   └── Presence detection
+├── Plant Automation (PA)
+│   ├── HVAC systems (Heating, Ventilation, Air Conditioning)
+│   ├── Sanitary systems
+│   └── Electrical engineering
+└── BA Management
+    ├── Monitoring
+    ├── Operation
+    └── Optimization
 ```
 
-### GA-Funktionen (Blatt 3.1)
+### BA Functions (Part 3.1)
 
-Grundfunktionen der Gebäudeautomation als Funktionsblöcke:
+Basic building automation functions as function blocks:
 
-#### Allgemeine Funktionen
-- **Schalten** – Ein/Aus-Steuerung
-- **Grenzwertüberwachung** – Alarm bei Über-/Unterschreitung
-- **Zeitschaltprogramm** – Zeitgesteuerte Aktionen
-- **Zähler** – Betriebsstunden, Energie
+#### General Functions
+- **Switching** – On/off control
+- **Limit monitoring** – Alarm on threshold violation
+- **Time schedule** – Time-controlled actions
+- **Counter** – Operating hours, energy
 
-#### Raumautomation
-- **Temperaturregelung** – PI/PID-Regelung für Heizen/Kühlen
-- **Beleuchtungssteuerung** – Schalt-/Dimmfunktion
-- **Sonnenschutzsteuerung** – Position und Lamellen
-- **Präsenzerfassung** – Bewegungsmelder-Logik
+#### Room Automation
+- **Temperature control** – PI/PID control for heating/cooling
+- **Lighting control** – Switching/dimming function
+- **Sun protection control** – Position and slats
+- **Presence detection** – Motion sensor logic
 
-#### Anlagenautomation
-- **PID-Regler** – Universeller Regler
-- **Sequenzsteuerung** – Ablaufsteuerung
-- **Pumpensteuerung** – Ein/Aus mit Verriegelung
-- **Ventilsteuerung** – Auf/Zu/Modulierend
+#### Plant Automation
+- **PID controller** – Universal controller
+- **Sequence control** – Sequential control
+- **Pump control** – On/off with interlock
+- **Valve control** – Open/close/modulating
 
-### Datenpunkttypen
+### Data Point Types
 
-| Typ | Richtung | Signal | Beispiel |
-|-----|----------|--------|----------|
-| Binäreingang | Input | Binary | Fensterkontakt |
-| Binärausgang | Output | Binary | Pumpe Ein/Aus |
-| Analogeingang | Input | Analog | Temperatur |
-| Analogausgang | Output | Analog | Ventilstellung |
-| Zählereingang | Input | Counter | Energiezähler |
+| Type | Direction | Signal | Example |
+|------|-----------|--------|---------|
+| Binary input | Input | Binary | Window contact |
+| Binary output | Output | Binary | Pump on/off |
+| Analog input | Input | Analog | Temperature |
+| Analog output | Output | Analog | Valve position |
+| Counter input | Input | Counter | Energy meter |
 
-**Mapping zu OctoMesh:** 
-- In VDI 3814 sind Datenpunkte eigenständige Objekte
-- In EnergyIQ/OctoMesh: Datenpunkte = Attribute am Objekt (OO-Ansatz)
+**Mapping to OctoMesh:**
+- In VDI 3814, data points are standalone objects
+- In EnergyIQ/OctoMesh: Data points = attributes on the object (OO approach)
 
-### GA-Kennzeichnung (Blatt 4.1)
+### BA Identification (Part 4.1)
 
-Schema für Anlagenkennzeichen:
+System identification schema:
 ```
-+Standort=Gebäude-Geschoss-Raum.Anlage:Bauteil%Signal
-```
-
-Beispiel:
-```
-+Wien=GebA-EG-B001.HZG:VL%Temp
++Site=Building-Storey-Room.System:Component%Signal
 ```
 
-### Quellen
+Example:
+```
++Vienna=BldgA-GF-B001.HTG:SL%Temp
+```
 
-- [VDI 3814 Übersicht](https://www.vdi.de/richtlinien/unsere-richtlinien-highlights/vdi-3814)
-- [VDI 3814 Blatt 1 – Grundlagen](https://www.vdi.de/richtlinien/details/vdi-3814-blatt-1-gebaeudeautomation-ga-grundlagen)
-- [VDI 3814 Blatt 3.1 – GA-Funktionen](https://www.vdi.de/richtlinien/details/vdi-3814-blatt-31-gebaeudeautomation-ga-ga-funktionen-automationsfunktionen)
+### Sources
+
+- [VDI 3814 Overview](https://www.vdi.de/richtlinien/unsere-richtlinien-highlights/vdi-3814)
+- [VDI 3814 Part 1 – Fundamentals](https://www.vdi.de/richtlinien/details/vdi-3814-blatt-1-gebaeudeautomation-ga-grundlagen)
+- [VDI 3814 Part 3.1 – BA Functions](https://www.vdi.de/richtlinien/details/vdi-3814-blatt-31-gebaeudeautomation-ga-ga-funktionen-automationsfunktionen)
 
 ---
 
 ## Project Haystack
 
-### Übersicht
+### Overview
 
-**Project Haystack** ist eine Open-Source-Initiative (seit 2014) zur Standardisierung von semantischem Tagging für IoT- und Gebäudedaten. Es löst das Problem, dass GA-Datenpunkte oft kryptische Namen haben und Maschinen deren Bedeutung nicht verstehen.
+**Project Haystack** is an open-source initiative (since 2014) for standardizing semantic tagging of IoT and building data. It solves the problem that BA data points often have cryptic names and machines cannot understand their meaning.
 
-**Herkunft:** GA-Betrieb USA (Industrie-Konsortium)  
-**Fokus:** Runtime-Daten, Interoperabilität  
-**Daten:** Semantische Tags für Datenpunkte
+**Origin:** BA operations, USA (industry consortium)
+**Focus:** Runtime data, interoperability
+**Data:** Semantic tags for data points
 
-**Gründungsmitglieder:** Siemens, Intel, J2 Innovations, SkyFoundry, Lynxspring, Legrand
+**Founding members:** Siemens, Intel, J2 Innovations, SkyFoundry, Lynxspring, Legrand
 
-### Das Problem
+### The Problem
 
 ```
-BACnet-Datenpunkt:
+BACnet data point:
   Name: "AHU1.SF.SPD"
   Value: 75.0
-  
-→ Was bedeutet das? Mensch weiß es, Maschine nicht.
+
+→ What does that mean? A human knows, a machine does not.
 ```
 
-### Die Lösung: Semantisches Tagging
+### The Solution: Semantic Tagging
 
 ```
-Mit Haystack-Tags:
+With Haystack tags:
   Name: "AHU1.SF.SPD"
   Value: 75.0
   Tags: { ahu, supply, fan, speed, sensor, unit:"%" }
           │     │      │    │      │
-          │     │      │    │      └── Typ: Messwert
-          │     │      │    └── Was: Drehzahl
-          │     │      └── Komponente: Ventilator
-          │     └── Luftseite: Zuluft
-          └── Equipment: Lüftungsgerät
+          │     │      │    │      └── Type: Measurement
+          │     │      │    └── What: Speed
+          │     │      └── Component: Fan
+          │     └── Air side: Supply
+          └── Equipment: Air handling unit
 ```
 
-### Kernkonzepte
+### Core Concepts
 
-#### 1. Tags (Vokabular)
-Standardisierte Begriffe wie `temp`, `humidity`, `ahu`, `vav`, `pump`, `sensor`, `cmd`, `sp` (setpoint).
+#### 1. Tags (Vocabulary)
+Standardized terms such as `temp`, `humidity`, `ahu`, `vav`, `pump`, `sensor`, `cmd`, `sp` (setpoint).
 
 #### 2. Marker Tags vs. Value Tags
 ```
-Marker:  { hot, water, pump }           ← Nur Präsenz
-Value:   { unit: "°C", maxVal: 100 }    ← Mit Wert
+Marker:  { hot, water, pump }           ← Presence only
+Value:   { unit: "°C", maxVal: 100 }    ← With value
 ```
 
-#### 3. Conjuncts (Zusammengesetzte Tags)
+#### 3. Conjuncts (Compound Tags)
 ```
 chilled-water    ← chilled + water
 hot-water-plant  ← hot + water + plant
 ```
 
-#### 4. Taxonomie (Vererbung)
+#### 4. Taxonomy (Inheritance)
 ```
 equip
 ├── hvac
@@ -260,54 +260,54 @@ equip
 └── pump
 ```
 
-#### 5. Referenzen (Beziehungen)
+#### 5. References (Relationships)
 ```
 VAV-01:
   tags: { vav, hvac, equip }
-  equipRef: @ahu-01           ← Gehört zu AHU-01
-  spaceRef: @room-101         ← Versorgt Raum 101
+  equipRef: @ahu-01           ← Belongs to AHU-01
+  spaceRef: @room-101         ← Serves room 101
 ```
 
 ### Haystack 5 + Xeto (2024/25)
 
-Die aktuelle Version erweitert Haystack von "flachem Tagging" zu einer vollständigen Ontologie:
+The current version extends Haystack from "flat tagging" to a complete ontology:
 
-| Version | Konzept |
+| Version | Concept |
 |---------|---------|
-| Haystack 1-4 | Flache Tags, lose Konventionen |
-| Haystack 5 | Formale Ontologie mit Typ-Hierarchie |
-| Xeto | Schema-Sprache für Validierung |
+| Haystack 1-4 | Flat tags, loose conventions |
+| Haystack 5 | Formal ontology with type hierarchy |
+| Xeto | Schema language for validation |
 
 ```
-Haystack 5 = Semantik ("Was bedeutet es?")
-Xeto       = Struktur ("Wie muss es aussehen?")
+Haystack 5 = Semantics ("What does it mean?")
+Xeto       = Structure ("What must it look like?")
 ```
 
 ### Haystack vs. OctoMesh CK
 
-| Aspekt | Haystack | OctoMesh CK |
+| Aspect | Haystack | OctoMesh CK |
 |--------|----------|-------------|
-| Modell | Tag-basiert (flach) | Objektorientiert |
-| Typisierung | Implizit durch Tags | Explizite Klassen |
-| Vererbung | Taxonomie | Echte Klassenhierarchie |
-| Beziehungen | Referenz-Tags | Typisierte Associations |
-| Validierung | Xeto (neu) | Schema-basiert |
-| Zeitreihen | Extern (SkySpark etc.) | Integriert |
+| Model | Tag-based (flat) | Object-oriented |
+| Typing | Implicit via tags | Explicit classes |
+| Inheritance | Taxonomy | True class hierarchy |
+| Relationships | Reference tags | Typed associations |
+| Validation | Xeto (new) | Schema-based |
+| Time series | External (SkySpark etc.) | Integrated |
 
-**OctoMesh CK ist ausdrucksstärker**, aber Haystack hat breite Industrie-Adoption.
+**OctoMesh CK is more expressive**, but Haystack has broad industry adoption.
 
 ### Integration in EnergyIQ
 
-#### Option 1: Haystack-Tags als Attribut (empfohlen)
+#### Option 1: Haystack Tags as Attribute (Recommended)
 
 ```yaml
 Space:
-  name: "Besprechung 1"
+  name: "Meeting Room 1"
   temperature: 22.3
   haystackTags: ["space", "room", "meetingRoom", "hvacZone"]
-  
+
 AirHandlingUnit:
-  name: "RLT-01"
+  name: "AHU-01"
   supplyAirTemp: 18.5
   haystackTags: ["ahu", "hvac", "equip"]
   haystackRefs:
@@ -315,7 +315,7 @@ AirHandlingUnit:
     spaceRef: ["@space-001", "@space-002"]
 ```
 
-#### Option 2: Automatisches Tag-Mapping
+#### Option 2: Automatic Tag Mapping
 
 ```
 EnergyIQ Type    →  Haystack Tags
@@ -326,28 +326,28 @@ Boiler           →  boiler, hvac, equip, hot, water
 Temperature      →  temp, sensor, point
 ```
 
-#### Option 3: Haystack-Export
+#### Option 3: Haystack Export
 
-EnergyIQ-Modell → Haystack JSON/Zinc für externe Tools (SkySpark, FIN Framework).
+EnergyIQ model → Haystack JSON/Zinc for external tools (SkySpark, FIN Framework).
 
-### Verwandte Standards & Konvergenz
+### Related Standards & Convergence
 
 ```
 ┌─────────────────────────────────────────────────────┐
-│              ASHRAE 223P (in Entwicklung)           │
+│              ASHRAE 223P (in development)            │
 │                                                     │
 │     Haystack + Brick Schema + BACnet = Unified      │
 └─────────────────────────────────────────────────────┘
 ```
 
-| Standard | Fokus | Status |
+| Standard | Focus | Status |
 |----------|-------|--------|
-| **Haystack** | Tagging für GA/IoT | Aktiv, Version 5 |
-| **Brick Schema** | Ontologie für Gebäude | Akademisch, UC Berkeley |
-| **ASHRAE 223P** | Vereinheitlichung | In Entwicklung |
-| **SAREF4BLDG** | EU Smart Appliances | EU-Standard |
+| **Haystack** | Tagging for BA/IoT | Active, Version 5 |
+| **Brick Schema** | Ontology for buildings | Academic, UC Berkeley |
+| **ASHRAE 223P** | Unification | In development |
+| **SAREF4BLDG** | EU Smart Appliances | EU standard |
 
-### Quellen
+### Sources
 
 - [Project Haystack](https://project-haystack.org/)
 - [Haystack Documentation](https://project-haystack.org/doc)
@@ -356,42 +356,42 @@ EnergyIQ-Modell → Haystack JSON/Zinc für externe Tools (SkySpark, FIN Framewo
 
 ---
 
-## Vergleich der Standards
+## Standards Comparison
 
-| Aspekt | IFC | VDI 3814 | Haystack | EnergyIQ |
+| Aspect | IFC | VDI 3814 | Haystack | EnergyIQ |
 |--------|-----|----------|----------|----------|
-| **Herkunft** | BIM/Architektur | TGA Deutschland | GA/IoT USA | OctoMesh |
-| **Fokus** | Planung & Bau | Planung & Doku | Betrieb & Runtime | Energie & Optimierung |
-| **Datenmodell** | OO (EXPRESS) | Funktionsblöcke | Tags (flach→Ontologie) | OO (CK) |
-| **Struktur** | Räumlich | Funktional | Semantisch | Kombiniert |
-| **Zeitreihen** | Nein | Teilweise | Extern | Integriert |
-| **Beziehungen** | Explizit | Implizit | Referenz-Tags | Associations |
-| **Format** | STEP/XML | Proprietär | JSON/Zinc | GraphQL/YAML |
+| **Origin** | BIM/Architecture | Building services, Germany | BA/IoT, USA | OctoMesh |
+| **Focus** | Planning & Construction | Planning & Documentation | Operations & Runtime | Energy & Optimization |
+| **Data Model** | OO (EXPRESS) | Function blocks | Tags (flat→ontology) | OO (CK) |
+| **Structure** | Spatial | Functional | Semantic | Combined |
+| **Time Series** | No | Partially | External | Integrated |
+| **Relationships** | Explicit | Implicit | Reference tags | Associations |
+| **Format** | STEP/XML | Proprietary | JSON/Zinc | GraphQL/YAML |
 
 ---
 
 ## Integration in EnergyIQ
 
-### Von IFC übernommen
-- Räumliche Hierarchie (Site → Building → Storey → Space)
-- Building Elements (Door, Window, etc.)
-- Eindeutige GlobalIds
-- PropertySet-Konzept → Records
+### Adopted from IFC
+- Spatial hierarchy (Site → Building → Storey → Space)
+- Building elements (Door, Window, etc.)
+- Unique GlobalIds
+- PropertySet concept → Records
 
-### Von VDI 3814 übernommen
-- Gliederung in Raum-/Anlagenautomation
-- Funktionale Beschreibung (Soll/Ist/Stell)
-- Kennzeichnungsschemata
-- Betriebsmodi
+### Adopted from VDI 3814
+- Classification into room/plant automation
+- Functional description (actual/setpoint/control output)
+- Identification schemas
+- Operating modes
 
-### Von Haystack übernommen (optional)
-- Semantische Tags für Interoperabilität
-- Referenz-Konzept für Equipment-Beziehungen
-- Industrie-Vokabular für Analytics-Tools
+### Adopted from Haystack (Optional)
+- Semantic tags for interoperability
+- Reference concept for equipment relationships
+- Industry vocabulary for analytics tools
 
-### EnergyIQ-Erweiterungen
-- TimeSeries als First-Class-Citizen
-- KI-Optimierungsschicht
-- Energieaggregation
-- OO-Modellierung (Attribute statt Datenpunkte)
-- Validierung über CK-Schema
+### EnergyIQ Extensions
+- TimeSeries as first-class citizen
+- AI optimization layer
+- Energy aggregation
+- OO modeling (attributes instead of data points)
+- Validation via CK schema

@@ -1,8 +1,8 @@
-# Implementierungsplan EnergyIQ Construction Kit
+# EnergyIQ Construction Kit Implementation Plan
 
-## Phase 1: Basis-Typen ✓
+## Phase 1: Base Types ✓
 
-### 1.1 Enums erstellen
+### 1.1 Create Enums
 - [x] `enums/spaceType.yaml` – SpaceTypeEnum
 - [x] `enums/operatingMode.yaml` – OperatingModeEnum
 - [x] `enums/shadingType.yaml` – ShadingTypeEnum
@@ -10,11 +10,11 @@
 - [x] `enums/systemType.yaml` – SystemTypeEnum
 - [x] `enums/dayOfWeek.yaml` – DayOfWeekEnum
 
-### 1.2 Records erstellen
+### 1.2 Create Records
 - [x] `records/address.yaml` – Address
 - [x] `records/scheduleEntry.yaml` – ScheduleEntry
 
-### 1.3 Basis-Attribute erstellen
+### 1.3 Create Base Attributes
 - [x] `attributes/globalId.yaml` – String
 - [x] `attributes/name.yaml` – String
 - [x] `attributes/description.yaml` – String (optional)
@@ -35,7 +35,7 @@
 - [x] `types/site.yaml` – Site
 - [x] `types/building.yaml` – Building
 - [x] `types/buildingStorey.yaml` – BuildingStorey
-- [x] `types/space.yaml` – Space (mit allen Attributen)
+- [x] `types/space.yaml` – Space (with all attributes)
 
 ### 2.3 Associations
 - [x] `associations/siteBuildings.yaml` – Site → Building (1:N)
@@ -78,186 +78,186 @@
 
 ---
 
-## Phase 5: Haystack-Kompatibilität ✓
+## Phase 5: Haystack Compatibility ✓
 
 - [x] `records/haystackRef.yaml` – HaystackRef Record
 - [x] `attributes/haystack.yaml` – HaystackTags, HaystackMeta
 - [x] `attributes/haystackRefs.yaml` – HaystackRefs (RecordArray)
-- [x] Haystack-Attribute zu Abstract Base Types hinzugefügt (SpatialElement, BuildingElement, TechnicalSystem)
+- [x] Haystack attributes added to abstract base types (SpatialElement, BuildingElement, TechnicalSystem)
 
 ---
 
-## Phase 6: Validierung & Test
+## Phase 6: Validation & Testing
 
-- [x] `ckModel.yaml` aktualisiert (modelId: EnergyIQ-1.0.0)
-- [x] Build ausgeführt – erfolgreich
-- [x] Sample-Daten erstellen – `data/bim/rt-firmianstrasse.yaml` (Firmianstraße 31A, Salzburg)
-- [ ] GraphQL-Queries testen
+- [x] `ckModel.yaml` updated (modelId: EnergyIQ-1.0.0)
+- [x] Build executed – successful
+- [x] Sample data created – `data/bim/rt-firmianstrasse.yaml` (Firmianstraße 31A, Salzburg)
+- [ ] Test GraphQL queries
 
 ---
 
-## Phase 7: TreeNode-Umstellung ✓
+## Phase 7: TreeNode Migration ✓
 
-Umstellung auf OctoMesh Basic Package für standardisierte Baumstrukturen (entspricht IFC IfcRelAggregates):
+Migration to OctoMesh Basic Package for standardized tree structures (corresponds to IFC IfcRelAggregates):
 
-### 7.1 Dependencies aktualisiert
-- [x] `ckModel.yaml` – Dependency auf `Basic-[2.0,3.0)` hinzugefügt
-- [x] `EnergyIqCkModel.csproj` – PackageReference auf `Meshmakers.Octo.Sdk.Packages.Basic`
+### 7.1 Dependencies Updated
+- [x] `ckModel.yaml` – Added dependency on `Basic-[2.0,3.0)`
+- [x] `EnergyIqCkModel.csproj` – PackageReference to `Meshmakers.Octo.Sdk.Packages.Basic`
 - [x] `GlobalUsings.cs` – `using Meshmakers.Octo.Sdk.Packages.Basic.Generated.Basic.v2`
 
-### 7.2 Spatial Types auf TreeNode umgestellt
-- [x] `types/spatialElement.yaml` – ENTFERNT (ersetzt durch TreeNode-Ableitung)
-- [x] `types/site.yaml` – leitet jetzt von `Basic/Tree` ab
-- [x] `types/building.yaml` – leitet jetzt von `Basic/TreeNode` ab (ParentChild geerbt)
-- [x] `types/buildingStorey.yaml` – leitet jetzt von `Basic/TreeNode` ab
-- [x] `types/space.yaml` – leitet jetzt von `Basic/TreeNode` ab
+### 7.2 Spatial Types Migrated to TreeNode
+- [x] `types/spatialElement.yaml` – REMOVED (replaced by TreeNode inheritance)
+- [x] `types/site.yaml` – Now derives from `Basic/Tree`
+- [x] `types/building.yaml` – Now derives from `Basic/TreeNode` (ParentChild inherited)
+- [x] `types/buildingStorey.yaml` – Now derives from `Basic/TreeNode`
+- [x] `types/space.yaml` – Now derives from `Basic/TreeNode`
 
-### 7.3 Andere Typen auf NamedEntity umgestellt
-- [x] `types/buildingElement.yaml` – leitet jetzt von `Basic/NamedEntity` ab
-- [x] `types/technicalSystem.yaml` – leitet jetzt von `Basic/NamedEntity` ab
+### 7.3 Other Types Migrated to NamedEntity
+- [x] `types/buildingElement.yaml` – Now derives from `Basic/NamedEntity`
+- [x] `types/technicalSystem.yaml` – Now derives from `Basic/NamedEntity`
 
-### 7.4 Attributes bereinigt
-- [x] `attributes/name.yaml` – ENTFERNT (von NamedEntity geerbt)
-- [x] `attributes/description.yaml` – ENTFERNT (von NamedEntity geerbt)
+### 7.4 Attributes Cleaned Up
+- [x] `attributes/name.yaml` – REMOVED (inherited from NamedEntity)
+- [x] `attributes/description.yaml` – REMOVED (inherited from NamedEntity)
 
-### 7.5 RT Sample aktualisiert
+### 7.5 RT Sample Updated
 - [x] `EnergyIQ/Name` → `System/Name`
 - [x] `EnergyIQ/Description` → `System/Description`
-- [x] rtIds korrigiert: Schema erfordert exakt 24 hexadezimale Zeichen (`^[0-9a-fA-F]{24}$`)
-  - Alte IDs wie `6789a000000000000000site` enthielten ungültige Zeichen (s, i, t, e)
-  - Neue IDs sind rein hexadezimal: `6789a00000000000000000a1`
+- [x] rtIds corrected: Schema requires exactly 24 hexadecimal characters (`^[0-9a-fA-F]{24}$`)
+  - Old IDs like `6789a000000000000000site` contained invalid characters (s, i, t, e)
+  - New IDs are purely hexadecimal: `6789a00000000000000000a1`
 
-### 7.6 Redundante Associations entfernt
-- [x] `associations/siteBuildings.yaml` – ENTFERNT (System/ParentChild reicht)
-- [x] `associations/buildingStoreys.yaml` – ENTFERNT (System/ParentChild reicht)
-- [x] `associations/storeySpaces.yaml` – ENTFERNT (System/ParentChild reicht)
-- [x] `associations/buildingSystems.yaml` – ENTFERNT (System/ParentChild reicht)
-- [x] `types/technicalSystem.yaml` – leitet jetzt von `Basic/TreeNode` ab (statt NamedEntity)
-- [x] RT Sample: alle Hierarchie-Associations → `System/ParentChild`
+### 7.6 Redundant Associations Removed
+- [x] `associations/siteBuildings.yaml` – REMOVED (System/ParentChild suffices)
+- [x] `associations/buildingStoreys.yaml` – REMOVED (System/ParentChild suffices)
+- [x] `associations/storeySpaces.yaml` – REMOVED (System/ParentChild suffices)
+- [x] `associations/buildingSystems.yaml` – REMOVED (System/ParentChild suffices)
+- [x] `types/technicalSystem.yaml` – Now derives from `Basic/TreeNode` (instead of NamedEntity)
+- [x] RT Sample: all hierarchy associations → `System/ParentChild`
 
 ---
 
 ## Phase 8: Renewable Energy Systems ✓
 
-### 8.1 Neue Attribute
-- [x] `attributes/photovoltaic.yaml` – PV, Inverter, Battery Attribute
+### 8.1 New Attributes
+- [x] `attributes/photovoltaic.yaml` – PV, Inverter, Battery attributes
 
-### 8.2 Neue Types (alle TreeNode)
-- [x] `types/photovoltaicSystem.yaml` – PV-Anlage Container
-- [x] `types/pvString.yaml` – PV-String (Modulgruppe)
-- [x] `types/inverter.yaml` – Wechselrichter
-- [x] `types/batteryStorage.yaml` – Batteriespeicher
+### 8.2 New Types (all TreeNode)
+- [x] `types/photovoltaicSystem.yaml` – PV system container
+- [x] `types/pvString.yaml` – PV string (module group)
+- [x] `types/inverter.yaml` – Inverter
+- [x] `types/batteryStorage.yaml` – Battery storage
 
-### 8.3 RT Sample erweitert
-- [x] PV-Anlage mit 18.4 kWp Gesamtleistung
-- [x] 4 Strings: Hauptdach Ost (4.8 kWp), Hauptdach Süd (6.0 kWp), Nebengebäude (4.0 kWp), PV-Zaun (3.6 kWp)
-- [x] 2 Wechselrichter (10 kVA + 8 kVA)
-- [x] Batteriespeicher 15 kWh (LiFePO4)
+### 8.3 RT Sample Extended
+- [x] PV system with 18.4 kWp total capacity
+- [x] 4 strings: Main roof east (4.8 kWp), Main roof south (6.0 kWp), Annex (4.0 kWp), PV fence (3.6 kWp)
+- [x] 2 inverters (10 kVA + 8 kVA)
+- [x] Battery storage 15 kWh (LiFePO4)
 
 ---
 
-## Phase 9: Haystack Adapter (geplant)
+## Phase 9: Haystack Adapter (Planned)
 
-Siehe Konzept: [`docs/haystack-adapter-concept.md`](haystack-adapter-concept.md)
+See concept: [`docs/haystack-adapter-concept.md`](haystack-adapter-concept.md)
 
-### 9.1 Basis (MVP)
-- [ ] ASP.NET Core Projekt Setup
-- [ ] `about`, `ops`, `formats` Endpoints
-- [ ] `read` Endpoint mit Filter-Support
+### 9.1 Basics (MVP)
+- [ ] ASP.NET Core project setup
+- [ ] `about`, `ops`, `formats` endpoints
+- [ ] `read` endpoint with filter support
 - [ ] JSON Grid Builder
-- [ ] EnergyIQ → Haystack Tag Mapping
+- [ ] EnergyIQ → Haystack tag mapping
 
 ### 9.2 Navigation & History
-- [ ] `nav` Endpoint (ParentChild Traversal)
-- [ ] `hisRead` Endpoint (OctoMesh TimeSeries)
-- [ ] Haystack Filter Parser
-- [ ] Zinc Format Support
+- [ ] `nav` endpoint (ParentChild traversal)
+- [ ] `hisRead` endpoint (OctoMesh TimeSeries)
+- [ ] Haystack filter parser
+- [ ] Zinc format support
 
-### 9.3 Schreiben & Echtzeit
-- [ ] `hisWrite`, `pointWrite` Endpoints
-- [ ] Watch-Mechanismus (WebSocket)
-- [ ] SCRAM Authentication
+### 9.3 Write & Real-Time
+- [ ] `hisWrite`, `pointWrite` endpoints
+- [ ] Watch mechanism (WebSocket)
+- [ ] SCRAM authentication
 
 ---
 
-## Phase 10: ISO 4157 Raumbezeichnung ✓
+## Phase 10: ISO 4157 Room Designation ✓
 
-Implementierung der ISO 4157 Norm für standardisierte Raum- und Geschossbezeichnung.
+Implementation of the ISO 4157 standard for standardized room and storey designation.
 
-### 10.1 BuildingStorey Attribute
-- [x] `storeyNumber` (Int) – ISO 4157-1 Geschossnummer von unten
-- [x] `floorDesignation` (String) – Nationaler Etagencode (EG, 1.OG, DG)
+### 10.1 BuildingStorey Attributes
+- [x] `storeyNumber` (Int) – ISO 4157-1 storey number from bottom
+- [x] `floorDesignation` (String) – National floor code (GF, 1F, TF)
 
-### 10.2 Space Attribute
-- [x] `roomNumber` (String) – ISO 4157-2 Raumnummer (EG01, 1OG02, DG03)
-- [x] `roomIdentifier` (String) – ISO 4157-3 Raumkennzeichen (I#1001, I#2015)
+### 10.2 Space Attributes
+- [x] `roomNumber` (String) – ISO 4157-2 room number (GF01, 1F02, TF03)
+- [x] `roomIdentifier` (String) – ISO 4157-3 room identifier (I#1001, I#2015)
 
-### 10.3 RT Sample aktualisiert
-- [x] Alle Geschosse mit storeyNumber und floorDesignation
-- [x] Alle Räume mit roomNumber und roomIdentifier
-- [x] Deutsche Konvention: EG, 1.OG, DG
+### 10.3 RT Sample Updated
+- [x] All storeys with storeyNumber and floorDesignation
+- [x] All rooms with roomNumber and roomIdentifier
+- [x] German convention: EG, 1.OG, DG
 
-### 10.4 Dokumentation
-- [x] Developer Guide aktualisiert mit ISO 4157 Abschnitt
+### 10.4 Documentation
+- [x] Developer guide updated with ISO 4157 section
 
 ---
 
 ## Phase 11: Simulation Pipelines ✓
 
-Implementierung von Simulations-Pipelines für das EnergyIQ-Modell basierend auf dem OctoMesh Simulator-Framework.
+Implementation of simulation pipelines for the EnergyIQ model based on the OctoMesh Simulator framework.
 
-### 11.1 Infrastruktur
-- [x] `data/_pipelines/` Verzeichnis für Pipelines
-- [x] `rt-simulation-adapters.yaml` erstellt
+### 11.1 Infrastructure
+- [x] `data/_pipelines/` directory for pipelines
+- [x] `rt-simulation-adapters.yaml` created
 
-### 11.2 Pipeline-Komponenten
+### 11.2 Pipeline Components
 - [x] Pool Entity (Simulation Pool)
 - [x] EdgeAdapter Entity (meshmakers/octo-communication-adapter-simulation)
 - [x] DataPipeline Entity (Container)
-- [x] EdgePipeline mit Simulation@1 (10s Polling-Intervall)
-- [x] MeshPipeline mit CreateUpdateInfo@1 und ApplyChanges@1
+- [x] EdgePipeline with Simulation@1 (10s polling interval)
+- [x] MeshPipeline with CreateUpdateInfo@1 and ApplyChanges@1
 
-### 11.3 Simulierte Entitäten
+### 11.3 Simulated Entities
 
-**Räume (6 Haupträume):**
-- [x] Wohnbereich EG (6789a00000000000000011d1)
-- [x] Büro EG (6789a00000000000000012d2)
-- [x] Schlafzimmer OG (6789a00000000000000021d8)
-- [x] Kinderzimmer OG (6789a00000000000000023da)
-- [x] Aufenthaltsraum DG (6789a00000000000000031de)
-- [x] Büro DG 1 (6789a00000000000000032df)
+**Rooms (6 main rooms):**
+- [x] Living area GF (6789a00000000000000011d1)
+- [x] Office GF (6789a00000000000000012d2)
+- [x] Bedroom 1F (6789a00000000000000021d8)
+- [x] Children's room 1F (6789a00000000000000023da)
+- [x] Lounge TF (6789a00000000000000031de)
+- [x] Office TF 1 (6789a00000000000000032df)
 
-**PV-System:**
+**PV System:**
 - [x] PhotovoltaicSystem (totalCurrentPowerKW, gridFeedIn, selfConsumption)
 - [x] PVString 1-4 (currentPowerKW)
 - [x] Inverter 1-2 (dcPower, acPower)
 - [x] BatteryStorage (stateOfCharge, chargingPower)
 
 **HVAC:**
-- [x] Boiler/Wärmepumpe (supplyTemp, returnTemp, modulationLevel)
+- [x] Boiler/Heat pump (supplyTemp, returnTemp, modulationLevel)
 - [x] AirHandlingUnit (supplyAirTemp, fanSpeedSupply)
 
-### 11.4 Simulations-Profile
+### 11.4 Simulation Profiles
 
-| Attribut | Simulator | Bereich | Beschreibung |
-|----------|-----------|---------|--------------|
-| temperature | Math.Sinus | 18-24°C | Tagesgang um Sollwert |
-| humidity | Math.Sinus | 35-65% | Phasenversetzt |
-| co2Level | Math.Triangle | 500-900 ppm | Anstieg bei Belegung |
-| illuminance | Math.Sinus | 100-700 lux | Tageslichtverlauf |
-| heatingValvePosition | Math.Sinus | 20-70% | Folgt Temperatur |
-| ventilationLevel | Math.Sinus | 30-70% | Folgt CO2 |
-| pvStringPower | Math.Sinus | 0-6 kW | Sonnenverlauf |
-| stateOfCharge | Math.Triangle | 30-90% | Lade/Entladezyklus |
+| Attribute | Simulator | Range | Description |
+|-----------|-----------|-------|-------------|
+| temperature | Math.Sinus | 18-24°C | Diurnal cycle around setpoint |
+| humidity | Math.Sinus | 35-65% | Phase-shifted |
+| co2Level | Math.Triangle | 500-900 ppm | Rise during occupancy |
+| illuminance | Math.Sinus | 100-700 lux | Daylight progression |
+| heatingValvePosition | Math.Sinus | 20-70% | Follows temperature |
+| ventilationLevel | Math.Sinus | 30-70% | Follows CO2 |
+| pvStringPower | Math.Sinus | 0-6 kW | Solar progression |
+| stateOfCharge | Math.Triangle | 30-90% | Charge/discharge cycle |
 
-### 11.5 Dokumentation
-- [x] Developer Guide mit Simulation-Abschnitt aktualisiert
+### 11.5 Documentation
+- [x] Developer guide updated with simulation section
 
 ---
 
-## CK YAML Beispiel-Struktur
+## CK YAML Example Structure
 
-### Enum Beispiel
+### Enum Example
 ```yaml
 # enums/spaceType.yaml
 $schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
@@ -273,7 +273,7 @@ enums:
   # ...
 ```
 
-### Attribute Beispiel
+### Attribute Example
 ```yaml
 # attributes/temperature.yaml
 $schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
@@ -282,13 +282,13 @@ attributes:
   valueType: Double
 ```
 
-### Type Beispiel (TreeNode)
+### Type Example (TreeNode)
 ```yaml
 # types/space.yaml
 $schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
 types:
 - typeId: Space
-  derivedFromCkTypeId: ${Basic}/TreeNode  # Erbt ParentChild, Name, Description
+  derivedFromCkTypeId: ${Basic}/TreeNode  # Inherits ParentChild, Name, Description
   associations:
   # ParentChild inherited from TreeNode - enables: Space → BuildingStorey
   - id: ${this}/SpaceElements
@@ -301,7 +301,7 @@ types:
   # ...
 ```
 
-### Association Beispiel
+### Association Example
 ```yaml
 # associations/spaceElements.yaml
 $schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
@@ -315,40 +315,40 @@ associationRoles:
 
 ---
 
-## Hinweise für Claude Code
+## Notes for Claude Code
 
-1. **Schema immer angeben:** `$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json`
+1. **Always specify schema:** `$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json`
 
-2. **Referenzen:**
-   - `${this}` = aktuelles Modell (EnergyIQ)
-   - `${Basic}` = Basic-Paket (NamedEntity, Tree, TreeNode)
-   - `${System}` = System-Modell (Basis-Typen)
+2. **References:**
+   - `${this}` = current model (EnergyIQ)
+   - `${Basic}` = Basic package (NamedEntity, Tree, TreeNode)
+   - `${System}` = System model (base types)
 
 3. **Value Types:** String, Boolean, DateTime, Int, Double, StringArray, IntArray, Record, RecordArray, TimeSpan, Enum, Int64, DateTimeOffset, Binary, BinaryLinked, GeospatialPoint
 
-4. **Vererbung von Basic:**
-   - Spatial Types (hierarchisch): von `${Basic}/Tree` oder `${Basic}/TreeNode` ableiten
-   - Andere Types: von `${Basic}/NamedEntity` ableiten (gibt Name + Description)
-   - TreeNode erbt automatisch ParentChild Association für Baumstruktur
+4. **Inheritance from Basic:**
+   - Spatial types (hierarchical): derive from `${Basic}/Tree` or `${Basic}/TreeNode`
+   - Other types: derive from `${Basic}/NamedEntity` (provides Name + Description)
+   - TreeNode automatically inherits ParentChild association for tree structure
 
-5. **Enum-Attribute:**
+5. **Enum Attributes:**
    ```yaml
    - id: SpaceTypeValue
      valueType: Enum
      valueCkEnumId: ${this}/SpaceType
    ```
 
-6. **Record-Attribute:**
+6. **Record Attributes:**
    ```yaml
    - id: AddressValue
      valueType: Record
      valueCkRecordId: ${this}/Address
    ```
 
-7. **Abstract Types:** Mit `isAbstract: true` markieren
+7. **Abstract Types:** Mark with `isAbstract: true`
 
-8. **TimeSeries:** Werden durch OctoMesh automatisch unterstützt, keine spezielle Markierung im CK nötig
+8. **TimeSeries:** Automatically supported by OctoMesh, no special marking in CK required
 
-9. **Reihenfolge:** Erst Enums/Records/Attributes, dann Types, dann Associations
+9. **Order:** First Enums/Records/Attributes, then Types, then Associations
 
-10. **Dokumentation:** Nach jeder strukturellen Änderung `docs/developer-guide.md` aktualisieren!
+10. **Documentation:** Update `docs/developer-guide.md` after every structural change!

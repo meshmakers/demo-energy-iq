@@ -1,92 +1,92 @@
-# EnergyIQ - Intelligente Gebäude-Energieoptimierung
+# EnergyIQ - Intelligent Building Energy Optimization
 
-**EnergyIQ** ist eine OctoMesh-basierte Lösung zur Energieoptimierung von Gebäuden. Sie kombiniert standardisierte Gebäudedatenmodelle (IFC, VDI 3814) mit KI-gestützter Optimierung.
+**EnergyIQ** is an OctoMesh-based solution for building energy optimization. It combines standardized building data models (IFC, VDI 3814) with AI-powered optimization.
 
 ## Getting Started
 
-### Voraussetzungen
+### Prerequisites
 
-1. **OctoMesh Platform** - Folge der Installationsanleitung:
+1. **OctoMesh Platform** - Follow the installation guide:
    [OctoMesh Getting Started Locally](https://docs.meshmakers.cloud/docs/technologyGuide/gettingStartedLocally/prerequisites)
 
-2. **OctoMesh CLI** (`octo-cli`) - Wird mit der Platform installiert
+2. **OctoMesh CLI** (`octo-cli`) - Installed with the platform
 
-3. **.NET SDK 10.0** - Für das Bauen des Construction Kit
+3. **.NET SDK 10.0** - For building the Construction Kit
 
-4. **PowerShell** - Für die Ausführung der Setup-Skripte
+4. **PowerShell** - For running the setup scripts
 
 ### Installation
 
-#### 1. Projekt bauen
+#### 1. Build the project
 
 ```bash
 cd demo-energy-iq
 dotnet build -c Release
 ```
 
-#### 2. Bei OctoMesh anmelden
+#### 2. Log in to OctoMesh
 
 ```powershell
 cd scripts
 ./om_login_local.ps1
 ```
 
-Das Skript konfiguriert die lokale OctoMesh-Instanz und öffnet den Browser zur Anmeldung.
+The script configures the local OctoMesh instance and opens the browser for authentication.
 
-#### 3. Tenant erstellen
+#### 3. Create tenant
 
 ```powershell
 ./om_create_tenants.ps1
 ```
 
-Erstellt den Tenant `energyiqdemo` mit einer eigenen Datenbank.
+Creates the tenant `energyiqdemo` with its own database.
 
-#### 4. Construction Kit importieren
+#### 4. Import Construction Kit
 
 ```powershell
 ./om_importck.ps1
 ```
 
-Importiert die folgenden Construction Kits:
-- **Basic** - Basis-Typen (NamedEntity, Tree, TreeNode)
-- **EnergyIQ** - Domänenmodell (Space, Building, TechnicalSystem, etc.)
+Imports the following Construction Kits:
+- **Basic** - Base types (NamedEntity, Tree, TreeNode)
+- **EnergyIQ** - Domain model (Space, Building, TechnicalSystem, etc.)
 
-#### 5. Runtime-Daten importieren
+#### 5. Import runtime data
 
 ```powershell
 ./om_importrt.ps1
 ```
 
-Importiert:
-- **Adapter** - Mesh Adapter Konfiguration
-- **Pipelines** - Simulations-Pipeline für Demo-Daten
-- **Queries** - Vordefinierte Abfragen
-- **BIM-Daten** - Demo-Gebäude "Firmianstraße 31A" mit:
-  - 2 Gebäude (Hauptgebäude + Nebengebäude)
-  - 3 Stockwerke mit 12 Räumen
-  - PV-Anlage (4 Strings, 2 Wechselrichter, Batteriespeicher)
-  - HVAC-Systeme (Wärmepumpe, Lüftungsanlage)
+Imports:
+- **Adapter** - Mesh Adapter configuration
+- **Pipelines** - Simulation pipeline for demo data
+- **Queries** - Predefined queries
+- **BIM Data** - Demo building "Firmianstraße 31A" with:
+  - 2 buildings (main building + annex)
+  - 3 storeys with 12 rooms
+  - PV system (4 strings, 2 inverters, battery storage)
+  - HVAC systems (heat pump, air handling unit)
 
-### Simulation starten
+### Starting the Simulation
 
-Nach dem Import läuft automatisch die Simulations-Pipeline, die alle 10 Sekunden realistische Sensordaten generiert:
+After import, the simulation pipeline runs automatically, generating realistic sensor data every 10 seconds:
 
-| Datentyp | Bereich | Beschreibung |
-|----------|---------|--------------|
-| Temperatur | 18-24°C | Tagesgang (Sinus) |
-| Luftfeuchtigkeit | 35-65% | Phasenversetzt |
-| CO2-Level | 500-900 ppm | Dreieckskurve |
-| Beleuchtung | 100-700 lux | Tageslichtverlauf |
-| PV-Leistung | 0-18.4 kW | Sonnenverlauf |
-| Batterieladung | 30-90% | Lade-/Entladezyklus |
+| Data Type | Range | Description |
+|-----------|-------|-------------|
+| Temperature | 18-24°C | Diurnal cycle (sine) |
+| Humidity | 35-65% | Phase-shifted |
+| CO2 Level | 500-900 ppm | Triangle wave |
+| Illuminance | 100-700 lux | Daylight progression |
+| PV Power | 0-18.4 kW | Solar progression |
+| Battery Charge | 30-90% | Charge/discharge cycle |
 
-### Zugriff auf die Daten
+### Accessing the Data
 
-Nach der Installation sind die Daten über die OctoMesh GraphQL API verfügbar:
+After installation, the data is available via the OctoMesh GraphQL API:
 - **GraphQL Playground**: `https://localhost:5001/graphql`
 - **Tenant**: `energyiqdemo`
 
-Beispiel-Query für alle Räume mit aktuellen Messwerten:
+Example query for all rooms with current measurements:
 ```graphql
 query {
   spaces: rtEntitiesByCkTypeId(ckTypeId: "EnergyIQ/Space") {
@@ -102,13 +102,13 @@ query {
 
 ## Vision
 
-Eine Plattform, die:
-- Gebäude als **Digital Twin** abbildet (Räume, TGA, Sensoren)
-- **Energiedaten** erfasst, aggregiert und analysiert
-- **KI-Optimierung** für Heizung, Kühlung, Lüftung, Beleuchtung bietet
-- **Standards-konform** ist (ISO 16739-1 IFC, VDI 3814)
+A platform that:
+- Represents buildings as a **Digital Twin** (rooms, building services, sensors)
+- Captures, aggregates, and analyzes **energy data**
+- Provides **AI optimization** for heating, cooling, ventilation, and lighting
+- Is **standards-compliant** (ISO 16739-1 IFC, VDI 3814)
 
-## Architektur
+## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
@@ -125,70 +125,70 @@ Eine Plattform, die:
 └─────────────────────────────────────────────────────────────┘
 ```
 
-## Standards-Referenz
+## Standards Reference
 
 ### ISO 16739-1:2024 (IFC 4.3)
-Industry Foundation Classes für BIM-Datenaustausch. Liefert die **räumliche Struktur**:
+Industry Foundation Classes for BIM data exchange. Provides the **spatial structure**:
 - Site → Building → BuildingStorey → Space
 - BuildingElements (Wall, Door, Window, etc.)
 
-### VDI 3814 (Gebäudeautomation)
-Deutsche Richtlinie für GA-Systeme. Liefert das **Automations-Modell**:
-- Raumautomation (RA) / Anlagenautomation (AA)
-- GA-Funktionen (Regler, Scheduler, etc.)
-- Datenpunkt-Struktur
+### VDI 3814 (Building Automation)
+German guideline for building automation systems. Provides the **automation model**:
+- Room automation (RA) / Plant automation (AA)
+- BA functions (controllers, schedulers, etc.)
+- Data point structure
 
-## Construction Kit Modell
+## Construction Kit Model
 
-Siehe [docs/construction-kit.md](docs/construction-kit.md) für die vollständige CK-Spezifikation.
+See [docs/construction-kit.md](docs/construction-kit.md) for the complete CK specification.
 
-### Kernkonzept: OO statt Datenpunkt-zentriert
+### Core Concept: OO Instead of Data-Point-Centric
 
-Messwerte sind **Attribute am Objekt**, nicht separate Entitäten:
+Measurements are **attributes on the object**, not separate entities:
 
 ```
 Space
-├── Temperature: number        ← TimeSeries (Istwert)
-├── TemperatureSetpoint: number ← Sollwert
-├── HeatingValvePosition: number ← Stellgröße
+├── Temperature: number        ← TimeSeries (actual value)
+├── TemperatureSetpoint: number ← Setpoint
+├── HeatingValvePosition: number ← Control output
 └── ...
 ```
 
-Nicht:
+Not:
 ```
-Space ──► DataPoint("Temperature")  ← Indirektion vermeiden
+Space ──► DataPoint("Temperature")  ← Avoid indirection
 ```
 
-## Projektstruktur
+## Project Structure
 
 ```
 demo-energy-iq/
 ├── docs/
 │   ├── developer-guide.md     # Developer Guide (EN)
-│   ├── construction-kit.md    # CK Spezifikation
+│   ├── construction-kit.md    # CK Specification
 │   └── standards-reference.md # IFC & VDI 3814 Details
 ├── src/
 │   └── EnergyIqCkModel/
-│       └── ConstructionKit/   # CK-Definitionen (YAML)
-│           ├── ckModel.yaml   # Modell-Metadaten
-│           ├── types/         # 18 Entity-Typen
-│           ├── attributes/    # 30 Attribut-Definitionen
-│           ├── associations/  # 7 Assoziationen
-│           ├── records/       # 3 Record-Typen
-│           └── enums/         # 6 Enumerationen
+│       └── ConstructionKit/   # CK definitions (YAML)
+│           ├── ckModel.yaml   # Model metadata
+│           ├── types/         # 18 entity types
+│           ├── attributes/    # 30 attribute definitions
+│           ├── associations/  # 7 associations
+│           ├── records/       # 3 record types
+│           └── enums/         # 6 enumerations
 ├── data/
-│   ├── bim/                   # RT-Modell Beispiele
+│   ├── bim/                   # RT model examples
 │   │   └── rt-firmianstrasse.yaml
-│   ├── _pipelines/            # Simulations-Adapter
+│   ├── _pipelines/            # Simulation adapters
 │   │   └── rt-simulation-adapters.yaml
-│   ├── _general/              # Allgemeine Adapter
-│   └── _queries/              # Vordefinierte Abfragen
-├── scripts/                   # Setup-Skripte
-│   ├── om_login_local.ps1     # OctoMesh Login
-│   ├── om_create_tenants.ps1  # Tenant erstellen
-│   ├── om_importck.ps1        # CK importieren
-│   ├── om_importrt.ps1        # RT-Daten importieren
-│   └── om_delete_tenants.ps1  # Tenant löschen
+│   ├── _general/              # General adapters
+│   └── _queries/              # Predefined queries
+├── scripts/                   # Setup scripts
+│   ├── om_login_local.ps1     # OctoMesh login
+│   ├── om_create_tenants.ps1  # Create tenant
+│   ├── om_importck.ps1        # Import CK
+│   ├── om_importrt.ps1        # Import RT data
+│   └── om_delete_tenants.ps1  # Delete tenant
 └── README.md
 ```
 
@@ -198,11 +198,11 @@ demo-energy-iq/
 - [x] **Building Elements** - Wall, Door, Window, ShadingDevice, Luminaire
 - [x] **Technical Systems** - Boiler, AirHandlingUnit, Chiller, Pump
 - [x] **PV System** - PhotovoltaicSystem, PVString, Inverter, BatteryStorage
-- [x] **VDI 3814 Attributes** - Istwerte, Sollwerte, Stellgrößen, Betriebsmodi
-- [x] **Simulation Pipeline** - Realistische Sensordaten-Simulation
-- [ ] **Energy Aggregation** - Verbrauchsberechnung pro Raum/Gebäude
-- [ ] **AI Optimization** - KI-gestützte Optimierung
+- [x] **VDI 3814 Attributes** - Actual values, setpoints, control outputs, operating modes
+- [x] **Simulation Pipeline** - Realistic sensor data simulation
+- [ ] **Energy Aggregation** - Consumption calculation per room/building
+- [ ] **AI Optimization** - AI-powered optimization
 
-## Lizenz
+## License
 
-Siehe [LICENSE](LICENSE)
+See [LICENSE](LICENSE)

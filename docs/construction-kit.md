@@ -1,14 +1,14 @@
-# EnergyIQ Construction Kit Spezifikation
+# EnergyIQ Construction Kit Specification
 
-## Übersicht
+## Overview
 
-Das CK-Modell basiert auf:
-- **ISO 16739-1:2024 (IFC 4.3)** für räumliche Struktur
-- **VDI 3814** für Gebäudeautomation
-- **Project Haystack** für semantische Interoperabilität (optional)
-- **OO-Prinzip**: Messwerte als Attribute, nicht als separate Entitäten
+The CK model is based on:
+- **ISO 16739-1:2024 (IFC 4.3)** for spatial structure
+- **VDI 3814** for building automation
+- **Project Haystack** for semantic interoperability (optional)
+- **OO principle**: Measurements as attributes, not as separate entities
 
-## Typ-Hierarchie
+## Type Hierarchy
 
 ```
 Entity (System)
@@ -37,270 +37,270 @@ Entity (System)
 
 ### SpatialElement (abstract)
 
-Basisklasse für alle räumlichen Elemente.
+Base class for all spatial elements.
 
-| Attribute | Type | Beschreibung |
-|-----------|------|--------------|
-| GlobalId | String | Eindeutige ID (UUID) |
-| Name | String | Kurzname |
-| Description | String? | Beschreibung |
-| LongName | String? | Ausführlicher Name |
+| Attribute | Type | Description |
+|-----------|------|-------------|
+| GlobalId | String | Unique ID (UUID) |
+| Name | String | Short name |
+| Description | String? | Description |
+| LongName | String? | Full name |
 
 ---
 
 ### Site
 
-Grundstück/Standort. Wurzel der räumlichen Hierarchie.
+Site/property. Root of the spatial hierarchy.
 
-| Attribute | Type | Beschreibung |
-|-----------|------|--------------|
-| RefLatitude | Float? | Breitengrad |
-| RefLongitude | Float? | Längengrad |
-| RefElevation | Float? | Höhe über NN |
+| Attribute | Type | Description |
+|-----------|------|-------------|
+| RefLatitude | Float? | Latitude |
+| RefLongitude | Float? | Longitude |
+| RefElevation | Float? | Elevation above sea level |
 
-| Association | Target | Multiplicity | Beschreibung |
-|-------------|--------|--------------|--------------|
-| buildings | Building | 1:N | Gebäude auf dem Grundstück |
+| Association | Target | Multiplicity | Description |
+|-------------|--------|--------------|-------------|
+| buildings | Building | 1:N | Buildings on the site |
 
 ---
 
 ### Building
 
-Gebäude.
+Building.
 
-| Attribute | Type | Beschreibung |
-|-----------|------|--------------|
-| ElevationOfRefHeight | Float? | Referenzhöhe |
-| BuildingAddress | Address (Record) | Adresse |
-| YearOfConstruction | Int? | Baujahr |
-| GrossFloorArea | Float? | BGF gesamt |
+| Attribute | Type | Description |
+|-----------|------|-------------|
+| ElevationOfRefHeight | Float? | Reference height |
+| BuildingAddress | Address (Record) | Address |
+| YearOfConstruction | Int? | Year of construction |
+| GrossFloorArea | Float? | Total gross floor area |
 
-| Association | Target | Multiplicity | Beschreibung |
-|-------------|--------|--------------|--------------|
-| storeys | BuildingStorey | 1:N (ordered) | Stockwerke |
-| systems | TechnicalSystem | 1:N | TGA-Systeme |
+| Association | Target | Multiplicity | Description |
+|-------------|--------|--------------|-------------|
+| storeys | BuildingStorey | 1:N (ordered) | Storeys |
+| systems | TechnicalSystem | 1:N | Building services systems |
 
 ---
 
 ### BuildingStorey
 
-Stockwerk/Geschoss.
+Storey/floor.
 
-| Attribute | Type | Beschreibung |
-|-----------|------|--------------|
-| Elevation | Float | Höhe über Gebäude-Referenz |
-| AboveGround | Boolean | Oberirdisch? |
-| GrossFloorArea | Float? | BGF Geschoss |
-| NetFloorArea | Float? | NGF Geschoss |
+| Attribute | Type | Description |
+|-----------|------|-------------|
+| Elevation | Float | Height above building reference |
+| AboveGround | Boolean | Above ground? |
+| GrossFloorArea | Float? | Gross floor area of storey |
+| NetFloorArea | Float? | Net floor area of storey |
 
-| Association | Target | Multiplicity | Beschreibung |
-|-------------|--------|--------------|--------------|
-| spaces | Space | 1:N | Räume im Geschoss |
+| Association | Target | Multiplicity | Description |
+|-------------|--------|--------------|-------------|
+| spaces | Space | 1:N | Rooms on the storey |
 
 ---
 
 ### Space
 
-Raum – zentrales Objekt für Energieoptimierung.
+Room – the central object for energy optimization.
 
-**Stammdaten:**
+**Master Data:**
 
-| Attribute | Type | Beschreibung |
-|-----------|------|--------------|
-| SpaceType | SpaceTypeEnum | Raumtyp |
-| NetFloorArea | Float? | Nettofläche m² |
-| GrossFloorArea | Float? | Bruttofläche m² |
-| CeilingHeight | Float? | Raumhöhe m |
-| DesignOccupancy | Int? | Geplante Belegung |
+| Attribute | Type | Description |
+|-----------|------|-------------|
+| SpaceType | SpaceTypeEnum | Room type |
+| NetFloorArea | Float? | Net floor area m² |
+| GrossFloorArea | Float? | Gross floor area m² |
+| CeilingHeight | Float? | Room height m |
+| DesignOccupancy | Int? | Planned occupancy |
 
-**Istwerte (TimeSeries):**
+**Actual Values (TimeSeries):**
 
-| Attribute | Type | Unit | Beschreibung |
-|-----------|------|------|--------------|
-| Temperature | Float? | °C | Raumtemperatur |
-| Humidity | Float? | % | Relative Feuchte |
-| CO2Level | Float? | ppm | CO₂-Konzentration |
-| Illuminance | Float? | lx | Beleuchtungsstärke |
-| PresenceDetected | Boolean? | - | Präsenz erkannt |
-| WindowOpen | Boolean? | - | Fenster offen |
+| Attribute | Type | Unit | Description |
+|-----------|------|------|-------------|
+| Temperature | Float? | °C | Room temperature |
+| Humidity | Float? | % | Relative humidity |
+| CO2Level | Float? | ppm | CO₂ concentration |
+| Illuminance | Float? | lx | Illuminance level |
+| PresenceDetected | Boolean? | - | Presence detected |
+| WindowOpen | Boolean? | - | Window open |
 
-**Sollwerte:**
+**Setpoints:**
 
-| Attribute | Type | Unit | Beschreibung |
-|-----------|------|------|--------------|
-| TemperatureSetpointHeating | Float? | °C | Heiz-Sollwert |
-| TemperatureSetpointCooling | Float? | °C | Kühl-Sollwert |
-| IlluminanceSetpoint | Float? | lx | Beleuchtungs-Sollwert |
-| CO2Setpoint | Float? | ppm | CO₂-Sollwert |
+| Attribute | Type | Unit | Description |
+|-----------|------|------|-------------|
+| TemperatureSetpointHeating | Float? | °C | Heating setpoint |
+| TemperatureSetpointCooling | Float? | °C | Cooling setpoint |
+| IlluminanceSetpoint | Float? | lx | Illuminance setpoint |
+| CO2Setpoint | Float? | ppm | CO₂ setpoint |
 
-**Stellgrößen (TimeSeries):**
+**Control Outputs (TimeSeries):**
 
-| Attribute | Type | Unit | Beschreibung |
-|-----------|------|------|--------------|
-| HeatingValvePosition | Float? | % | Heizventil 0-100 |
-| CoolingValvePosition | Float? | % | Kühlventil 0-100 |
-| VentilationLevel | Float? | % | Lüftungsstufe |
-| LightingLevel | Float? | % | Beleuchtung 0-100 |
-| ShadingPosition | Float? | % | Beschattung 0-100 |
+| Attribute | Type | Unit | Description |
+|-----------|------|------|-------------|
+| HeatingValvePosition | Float? | % | Heating valve 0-100 |
+| CoolingValvePosition | Float? | % | Cooling valve 0-100 |
+| VentilationLevel | Float? | % | Ventilation level |
+| LightingLevel | Float? | % | Lighting 0-100 |
+| ShadingPosition | Float? | % | Shading 0-100 |
 
-**Betriebsmodus:**
+**Operating Mode:**
 
-| Attribute | Type | Beschreibung |
-|-----------|------|--------------|
-| OperatingMode | OperatingModeEnum | Aktueller Modus |
-| OccupancySchedule | ScheduleEntry[] | Belegungsplan |
+| Attribute | Type | Description |
+|-----------|------|-------------|
+| OperatingMode | OperatingModeEnum | Current mode |
+| OccupancySchedule | ScheduleEntry[] | Occupancy schedule |
 
-**Energiekennzahlen (aggregiert):**
+**Energy Metrics (Aggregated):**
 
-| Attribute | Type | Unit | Beschreibung |
-|-----------|------|------|--------------|
-| EnergyConsumptionHeating | Float? | kWh | Heizenergie (Periode) |
-| EnergyConsumptionCooling | Float? | kWh | Kühlenergie (Periode) |
-| EnergyConsumptionLighting | Float? | kWh | Beleuchtung (Periode) |
-| EnergyConsumptionTotal | Float? | kWh | Gesamt (Periode) |
+| Attribute | Type | Unit | Description |
+|-----------|------|------|-------------|
+| EnergyConsumptionHeating | Float? | kWh | Heating energy (period) |
+| EnergyConsumptionCooling | Float? | kWh | Cooling energy (period) |
+| EnergyConsumptionLighting | Float? | kWh | Lighting energy (period) |
+| EnergyConsumptionTotal | Float? | kWh | Total (period) |
 
-| Association | Target | Multiplicity | Beschreibung |
-|-------------|--------|--------------|--------------|
-| containedElements | BuildingElement | 1:N | Elemente im Raum |
-| servedBy | TechnicalSystem | N:M | Versorgende Anlagen |
+| Association | Target | Multiplicity | Description |
+|-------------|--------|--------------|-------------|
+| containedElements | BuildingElement | 1:N | Elements in the room |
+| servedBy | TechnicalSystem | N:M | Serving systems |
 
 ---
 
 ### BuildingElement (abstract)
 
-Basisklasse für Bauelemente.
+Base class for building elements.
 
-| Attribute | Type | Beschreibung |
-|-----------|------|--------------|
-| GlobalId | String | Eindeutige ID |
-| Name | String | Bezeichnung |
-| ObjectType | String? | Typ-Beschreibung |
+| Attribute | Type | Description |
+|-----------|------|-------------|
+| GlobalId | String | Unique ID |
+| Name | String | Designation |
+| ObjectType | String? | Type description |
 
-| Association | Target | Multiplicity | Beschreibung |
-|-------------|--------|--------------|--------------|
-| containedInSpace | Space | N:1 | Raum-Zugehörigkeit |
+| Association | Target | Multiplicity | Description |
+|-------------|--------|--------------|-------------|
+| containedInSpace | Space | N:1 | Room assignment |
 
 ---
 
 ### Door
 
-Tür mit Zustandsattributen.
+Door with state attributes.
 
-| Attribute | Type | Beschreibung |
-|-----------|------|--------------|
-| OverallHeight | Float | Höhe mm |
-| OverallWidth | Float | Breite mm |
-| IsExternal | Boolean | Außentür? |
-| IsOpen | Boolean? | Offen? (TimeSeries) |
-| IsLocked | Boolean? | Verriegelt? (TimeSeries) |
+| Attribute | Type | Description |
+|-----------|------|-------------|
+| OverallHeight | Float | Height mm |
+| OverallWidth | Float | Width mm |
+| IsExternal | Boolean | External door? |
+| IsOpen | Boolean? | Open? (TimeSeries) |
+| IsLocked | Boolean? | Locked? (TimeSeries) |
 
 ---
 
 ### Window
 
-Fenster mit Zustandsattributen.
+Window with state attributes.
 
-| Attribute | Type | Beschreibung |
-|-----------|------|--------------|
-| OverallHeight | Float | Höhe mm |
-| OverallWidth | Float | Breite mm |
-| IsOpen | Boolean? | Offen? (TimeSeries) |
-| OpeningPosition | Float? | Öffnungsgrad % |
+| Attribute | Type | Description |
+|-----------|------|-------------|
+| OverallHeight | Float | Height mm |
+| OverallWidth | Float | Width mm |
+| IsOpen | Boolean? | Open? (TimeSeries) |
+| OpeningPosition | Float? | Opening degree % |
 
 ---
 
 ### ShadingDevice
 
-Sonnenschutz (Jalousie, Rollo, Markise).
+Sun protection (venetian blind, roller shutter, awning).
 
-| Attribute | Type | Beschreibung |
-|-----------|------|--------------|
-| ShadingType | ShadingTypeEnum | Typ |
-| Position | Float? | Ist-Position % (TimeSeries) |
-| SlatAngle | Float? | Lamellenwinkel ° |
-| PositionSetpoint | Float? | Soll-Position % |
-| SlatAngleSetpoint | Float? | Soll-Winkel ° |
+| Attribute | Type | Description |
+|-----------|------|-------------|
+| ShadingType | ShadingTypeEnum | Type |
+| Position | Float? | Actual position % (TimeSeries) |
+| SlatAngle | Float? | Slat angle ° |
+| PositionSetpoint | Float? | Position setpoint % |
+| SlatAngleSetpoint | Float? | Angle setpoint ° |
 
 ---
 
 ### Luminaire
 
-Leuchte.
+Light fixture.
 
-| Attribute | Type | Beschreibung |
-|-----------|------|--------------|
-| LuminaireType | LuminaireTypeEnum | Leuchtentyp |
-| RatedPower | Float | Nennleistung W |
-| IsOn | Boolean? | Ein? (TimeSeries) |
-| DimmingLevel | Float? | Dimmwert % (TimeSeries) |
-| DimmingLevelSetpoint | Float? | Soll-Dimmwert % |
+| Attribute | Type | Description |
+|-----------|------|-------------|
+| LuminaireType | LuminaireTypeEnum | Luminaire type |
+| RatedPower | Float | Rated power W |
+| IsOn | Boolean? | On? (TimeSeries) |
+| DimmingLevel | Float? | Dimming level % (TimeSeries) |
+| DimmingLevelSetpoint | Float? | Dimming setpoint % |
 
 ---
 
 ### TechnicalSystem (abstract)
 
-Basisklasse für TGA-Anlagen.
+Base class for building services systems.
 
-| Attribute | Type | Beschreibung |
-|-----------|------|--------------|
-| Identifier | String | Anlagenkennzeichen |
-| Name | String | Bezeichnung |
-| SystemType | SystemTypeEnum | Anlagentyp |
-| IsRunning | Boolean? | In Betrieb? (TimeSeries) |
-| FaultState | Boolean? | Störung? (TimeSeries) |
+| Attribute | Type | Description |
+|-----------|------|-------------|
+| Identifier | String | System identifier |
+| Name | String | Designation |
+| SystemType | SystemTypeEnum | System type |
+| IsRunning | Boolean? | Running? (TimeSeries) |
+| FaultState | Boolean? | Fault? (TimeSeries) |
 
-| Association | Target | Multiplicity | Beschreibung |
-|-------------|--------|--------------|--------------|
-| servesSpaces | Space | N:M | Versorgte Räume |
-| containedInBuilding | Building | N:1 | Gebäude-Zuordnung |
+| Association | Target | Multiplicity | Description |
+|-------------|--------|--------------|-------------|
+| servesSpaces | Space | N:M | Served rooms |
+| containedInBuilding | Building | N:1 | Building assignment |
 
 ---
 
 ### AirHandlingUnit
 
-Lüftungsgerät (RLT-Anlage).
+Air handling unit (AHU).
 
-| Attribute | Type | Unit | Beschreibung |
-|-----------|------|------|--------------|
-| SupplyAirTemp | Float? | °C | Zuluft-Temperatur |
-| ReturnAirTemp | Float? | °C | Abluft-Temperatur |
-| OutdoorAirTemp | Float? | °C | Außenluft-Temperatur |
-| SupplyAirTempSetpoint | Float? | °C | Zuluft-Sollwert |
-| SupplyAirFlow | Float? | m³/h | Zuluft-Volumenstrom |
-| FanSpeedSupply | Float? | % | Zuluft-Ventilator |
-| FanSpeedReturn | Float? | % | Abluft-Ventilator |
-| FilterDifferentialPressure | Float? | Pa | Filterdruck |
-| HeatRecoveryEfficiency | Float? | % | WRG-Wirkungsgrad |
-| HeatingCoilPosition | Float? | % | Heizregister |
-| CoolingCoilPosition | Float? | % | Kühlregister |
+| Attribute | Type | Unit | Description |
+|-----------|------|------|-------------|
+| SupplyAirTemp | Float? | °C | Supply air temperature |
+| ReturnAirTemp | Float? | °C | Return air temperature |
+| OutdoorAirTemp | Float? | °C | Outdoor air temperature |
+| SupplyAirTempSetpoint | Float? | °C | Supply air setpoint |
+| SupplyAirFlow | Float? | m³/h | Supply air flow rate |
+| FanSpeedSupply | Float? | % | Supply fan speed |
+| FanSpeedReturn | Float? | % | Return fan speed |
+| FilterDifferentialPressure | Float? | Pa | Filter differential pressure |
+| HeatRecoveryEfficiency | Float? | % | Heat recovery efficiency |
+| HeatingCoilPosition | Float? | % | Heating coil position |
+| CoolingCoilPosition | Float? | % | Cooling coil position |
 
 ---
 
 ### Boiler
 
-Heizkessel.
+Boiler.
 
-| Attribute | Type | Unit | Beschreibung |
-|-----------|------|------|--------------|
-| SupplyTemp | Float? | °C | Vorlauf-Temperatur |
-| ReturnTemp | Float? | °C | Rücklauf-Temperatur |
-| SupplyTempSetpoint | Float? | °C | Vorlauf-Sollwert |
-| ModulationLevel | Float? | % | Modulationsgrad |
-| FuelConsumption | Float? | kWh | Verbrauch (TimeSeries) |
-| Efficiency | Float? | % | Wirkungsgrad |
+| Attribute | Type | Unit | Description |
+|-----------|------|------|-------------|
+| SupplyTemp | Float? | °C | Supply temperature |
+| ReturnTemp | Float? | °C | Return temperature |
+| SupplyTempSetpoint | Float? | °C | Supply temperature setpoint |
+| ModulationLevel | Float? | % | Modulation level |
+| FuelConsumption | Float? | kWh | Consumption (TimeSeries) |
+| Efficiency | Float? | % | Efficiency |
 
 ---
 
 ### Pump
 
-Pumpe.
+Pump.
 
-| Attribute | Type | Unit | Beschreibung |
-|-----------|------|------|--------------|
-| FlowRate | Float? | m³/h | Volumenstrom |
-| Pressure | Float? | bar | Druck |
-| SpeedSetpoint | Float? | % | Drehzahl-Sollwert |
-| PowerConsumption | Float? | kW | Leistungsaufnahme |
+| Attribute | Type | Unit | Description |
+|-----------|------|------|-------------|
+| FlowRate | Float? | m³/h | Flow rate |
+| Pressure | Float? | bar | Pressure |
+| SpeedSetpoint | Float? | % | Speed setpoint |
+| PowerConsumption | Float? | kW | Power consumption |
 
 ---
 
@@ -308,8 +308,8 @@ Pumpe.
 
 ### SpaceTypeEnum
 ```
-Office, MeetingRoom, Corridor, Toilet, Kitchen, 
-TechnicalRoom, Storage, Parking, Lobby, Staircase, 
+Office, MeetingRoom, Corridor, Toilet, Kitchen,
+TechnicalRoom, Storage, Parking, Lobby, Staircase,
 Elevator, ServerRoom, Laboratory, Workshop, Other
 ```
 
@@ -359,25 +359,25 @@ attributes:
 
 ## Associations
 
-### Räumliche Hierarchie
+### Spatial Hierarchy
 
 ```
 Site ──(1:N)──► Building ──(1:N)──► BuildingStorey ──(1:N)──► Space
 ```
 
-### Element-Containment
+### Element Containment
 
 ```
 Space ◄──(N:1)── BuildingElement
 ```
 
-### TGA-Versorgung
+### Building Services Supply
 
 ```
 Space ◄──(N:M)──► TechnicalSystem
 ```
 
-### Gebäude-Zuordnung
+### Building Assignment
 
 ```
 Building ◄──(N:1)── TechnicalSystem
@@ -385,9 +385,9 @@ Building ◄──(N:1)── TechnicalSystem
 
 ---
 
-## TimeSeries-Attribute
+## TimeSeries Attributes
 
-Folgende Attribute sollen als TimeSeries geführt werden (historische Werte):
+The following attributes should be maintained as TimeSeries (historical values):
 
 **Space:**
 - Temperature, Humidity, CO2Level, Illuminance, PresenceDetected
@@ -402,38 +402,38 @@ Folgende Attribute sollen als TimeSeries geführt werden (historische Werte):
 
 **TechnicalSystems:**
 - IsRunning, FaultState
-- Alle Temperatur- und Durchflusswerte
-- Energieverbräuche
+- All temperature and flow values
+- Energy consumption values
 
 ---
 
-## Haystack-Kompatibilität (optional)
+## Haystack Compatibility (Optional)
 
-Für Interoperabilität mit Haystack-basierten Tools (SkySpark, FIN Framework, etc.) können optionale Haystack-Attribute geführt werden.
+For interoperability with Haystack-based tools (SkySpark, FIN Framework, etc.), optional Haystack attributes can be maintained.
 
 ### HaystackTaggable (Mixin)
 
-Kann auf alle relevanten Types angewendet werden:
+Can be applied to all relevant types:
 
-| Attribute | Type | Beschreibung |
-|-----------|------|--------------|
-| haystackTags | String[] | Haystack Marker-Tags |
-| haystackRefs | HaystackRef[] (Record) | Referenzen zu anderen Entitäten |
-| haystackMeta | Map<String, Any>? | Zusätzliche Haystack-Metadaten |
+| Attribute | Type | Description |
+|-----------|------|-------------|
+| haystackTags | String[] | Haystack marker tags |
+| haystackRefs | HaystackRef[] (Record) | References to other entities |
+| haystackMeta | Map<String, Any>? | Additional Haystack metadata |
 
 ### HaystackRef (Record)
 ```yaml
 attributes:
-  - refName: String      # z.B. "equipRef", "spaceRef", "siteRef"
-  - targetId: String     # GlobalId des Zielobjekts
+  - refName: String      # e.g., "equipRef", "spaceRef", "siteRef"
+  - targetId: String     # GlobalId of the target object
 ```
 
-### Automatisches Tag-Mapping
+### Automatic Tag Mapping
 
 | EnergyIQ Type | Haystack Tags |
 |---------------|---------------|
 | Site | site |
-| Building | site (mit Gebäude-Tags) |
+| Building | site (with building tags) |
 | Space | space, hvacZone |
 | AirHandlingUnit | ahu, hvac, equip |
 | Boiler | boiler, hvac, equip, hot, water |
@@ -442,14 +442,14 @@ attributes:
 | TemperatureSetpoint | temp, sp, point |
 | HeatingValvePosition | valve, cmd, point, hot, water |
 
-### Beispiel mit Haystack-Tags
+### Example with Haystack Tags
 
 ```yaml
 - type: AirHandlingUnit
   globalId: "ahu-001"
-  name: "RLT Zentrale"
+  name: "Central AHU"
   supplyAirTemp: 18.5
-  # Haystack-Kompatibilität
+  # Haystack compatibility
   haystackTags: ["ahu", "hvac", "equip", "rooftop"]
   haystackRefs:
     - refName: "siteRef"
@@ -460,39 +460,39 @@ attributes:
 
 ---
 
-## Beispiel-Instanz
+## Example Instance
 
 ```yaml
 # Site
 - type: Site
   globalId: "site-001"
-  name: "Hauptstandort Wien"
+  name: "Main Site Vienna"
   refLatitude: 48.2082
   refLongitude: 16.3738
 
 # Building
 - type: Building
   globalId: "bldg-001"
-  name: "Bürogebäude A"
+  name: "Office Building A"
   yearOfConstruction: 2020
   grossFloorArea: 5000
   buildingAddress:
     street: "Technopark 1"
     postalCode: "1220"
-    city: "Wien"
+    city: "Vienna"
     country: "AT"
 
 # BuildingStorey
 - type: BuildingStorey
-  globalId: "storey-eg"
-  name: "EG"
+  globalId: "storey-gf"
+  name: "GF"
   elevation: 0.0
   aboveGround: true
 
 # Space
 - type: Space
   globalId: "space-001"
-  name: "Besprechung 1"
+  name: "Meeting Room 1"
   spaceType: MeetingRoom
   netFloorArea: 25.0
   ceilingHeight: 2.8
@@ -500,7 +500,7 @@ attributes:
   temperatureSetpointHeating: 21.0
   temperatureSetpointCooling: 24.0
   illuminanceSetpoint: 500
-  # Istwerte via TimeSeries
+  # Actual values via TimeSeries
   temperature: 22.3
   humidity: 45.0
   presenceDetected: true

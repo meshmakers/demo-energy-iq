@@ -1,48 +1,48 @@
-# Haystack Adapter Konzept
+# Haystack Adapter Concept
 
-## 1. Überblick
+## 1. Overview
 
-### Ziel
-Ein Adapter, der EnergyIQ/OctoMesh-Daten über die standardisierte **Project Haystack REST API** bereitstellt. Dadurch können Haystack-kompatible Tools wie SkySpark, FIN Framework, Widesky oder andere Clients direkt auf die Gebäudedaten zugreifen.
+### Goal
+An adapter that exposes EnergyIQ/OctoMesh data via the standardized **Project Haystack REST API**. This enables Haystack-compatible tools such as SkySpark, FIN Framework, Widesky, or other clients to directly access the building data.
 
-### Referenzen
+### References
 - [Project Haystack REST API Spec](https://project-haystack.org/doc/docHaystack/HttpApi)
 - [Haystack Filter Syntax](https://project-haystack.org/doc/docHaystack/Filters)
 - [Haystack JSON Encoding](https://project-haystack.org/doc/docHaystack/Json)
 
 ---
 
-## 2. Haystack API Operationen
+## 2. Haystack API Operations
 
-### 2.1 Basis-Operationen (Phase 1)
+### 2.1 Basic Operations (Phase 1)
 
-| Operation | HTTP | Beschreibung | Implementierung |
-|-----------|------|--------------|-----------------|
-| `about` | GET | Server-Info, Version, Vendor | Statisch + OctoMesh Tenant Info |
-| `ops` | GET | Liste verfügbarer Operationen | Statische Liste |
-| `formats` | GET | Unterstützte Formate | `["application/json", "text/zinc"]` |
-| `read` | POST | Entities lesen mit Filter | GraphQL Query → Haystack Grid |
-| `nav` | POST | Hierarchie-Navigation | ParentChild Traversal |
+| Operation | HTTP | Description | Implementation |
+|-----------|------|-------------|----------------|
+| `about` | GET | Server info, version, vendor | Static + OctoMesh tenant info |
+| `ops` | GET | List of available operations | Static list |
+| `formats` | GET | Supported formats | `["application/json", "text/zinc"]` |
+| `read` | POST | Read entities with filter | GraphQL query → Haystack Grid |
+| `nav` | POST | Hierarchy navigation | ParentChild traversal |
 
-### 2.2 TimeSeries-Operationen (Phase 2)
+### 2.2 TimeSeries Operations (Phase 2)
 
-| Operation | HTTP | Beschreibung | Implementierung |
-|-----------|------|--------------|-----------------|
-| `hisRead` | POST | Historische Daten lesen | OctoMesh TimeSeries API |
-| `hisWrite` | POST | Historische Daten schreiben | OctoMesh TimeSeries API |
+| Operation | HTTP | Description | Implementation |
+|-----------|------|-------------|----------------|
+| `hisRead` | POST | Read historical data | OctoMesh TimeSeries API |
+| `hisWrite` | POST | Write historical data | OctoMesh TimeSeries API |
 
-### 2.3 Echtzeit-Operationen (Phase 3)
+### 2.3 Real-Time Operations (Phase 3)
 
-| Operation | HTTP | Beschreibung | Implementierung |
-|-----------|------|--------------|-----------------|
-| `pointWrite` | POST | Schreibbare Punkte setzen | OctoMesh Mutation |
-| `watchSub` | POST | Watch subscription starten | WebSocket/SignalR |
-| `watchUnsub` | POST | Watch beenden | - |
-| `watchPoll` | POST | Watch Änderungen abfragen | - |
+| Operation | HTTP | Description | Implementation |
+|-----------|------|-------------|----------------|
+| `pointWrite` | POST | Set writable points | OctoMesh mutation |
+| `watchSub` | POST | Start watch subscription | WebSocket/SignalR |
+| `watchUnsub` | POST | End watch | - |
+| `watchPoll` | POST | Poll watch changes | - |
 
 ---
 
-## 3. Datenformat-Mapping
+## 3. Data Format Mapping
 
 ### 3.1 Haystack Grid Format (JSON)
 
@@ -59,8 +59,8 @@ Ein Adapter, der EnergyIQ/OctoMesh-Daten über die standardisierte **Project Hay
   ],
   "rows": [
     {
-      "id": {"_kind": "ref", "val": "6789a00000000000000011d1", "dis": "Wohnbereich"},
-      "dis": {"_kind": "str", "val": "Wohnbereich"},
+      "id": {"_kind": "ref", "val": "6789a00000000000000011d1", "dis": "Living Area"},
+      "dis": {"_kind": "str", "val": "Living Area"},
       "site": {"_kind": "marker"},
       "space": {"_kind": "marker"},
       "temp": {"_kind": "number", "val": 21.5, "unit": "°C"},
@@ -86,10 +86,10 @@ Ein Adapter, der EnergyIQ/OctoMesh-Daten über die standardisierte **Project Hay
 | Inverter | `inverter`, `equip` | `dc`, `ac`, `elec` |
 | BatteryStorage | `battery`, `storage`, `equip` | `elec` |
 
-### 3.3 Attribut → Haystack Point Mapping
+### 3.3 Attribute → Haystack Point Mapping
 
-| EnergyIQ Attribut | Haystack Point Tags |
-|-------------------|---------------------|
+| EnergyIQ Attribute | Haystack Point Tags |
+|--------------------|---------------------|
 | `temperature` | `temp`, `sensor`, `air`, `zone` |
 | `humidity` | `humidity`, `sensor`, `air`, `zone` |
 | `co2Level` | `co2`, `sensor`, `air`, `zone` |
@@ -102,9 +102,9 @@ Ein Adapter, der EnergyIQ/OctoMesh-Daten über die standardisierte **Project Hay
 
 ---
 
-## 4. Architektur
+## 4. Architecture
 
-### 4.1 Komponenten-Diagramm
+### 4.1 Component Diagram
 
 ```
 ┌─────────────────────────────────────────────────────────────────┐
@@ -150,7 +150,7 @@ Ein Adapter, der EnergyIQ/OctoMesh-Daten über die standardisierte **Project Hay
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### 4.2 Deployment-Optionen
+### 4.2 Deployment Options
 
 **Option A: Standalone Service**
 ```
@@ -161,27 +161,27 @@ docker-compose:
 ```
 
 **Option B: OctoMesh Plugin/Extension**
-- Direkt in OctoMesh integriert
-- Zusätzlicher `/haystack/*` Endpoint
+- Directly integrated into OctoMesh
+- Additional `/haystack/*` endpoint
 
 ---
 
-## 5. API Implementierung
+## 5. API Implementation
 
-### 5.1 Endpoint-Struktur
+### 5.1 Endpoint Structure
 
 ```
-/haystack/about      GET   → Server-Info
-/haystack/ops        GET   → Verfügbare Operationen
-/haystack/formats    GET   → Unterstützte Formate
-/haystack/read       POST  → Entities lesen
+/haystack/about      GET   → Server info
+/haystack/ops        GET   → Available operations
+/haystack/formats    GET   → Supported formats
+/haystack/read       POST  → Read entities
 /haystack/nav        POST  → Navigation
-/haystack/hisRead    POST  → TimeSeries lesen
-/haystack/hisWrite   POST  → TimeSeries schreiben
-/haystack/pointWrite POST  → Punkte schreiben
+/haystack/hisRead    POST  → Read TimeSeries
+/haystack/hisWrite   POST  → Write TimeSeries
+/haystack/pointWrite POST  → Write points
 ```
 
-### 5.2 Beispiel: `/haystack/about`
+### 5.2 Example: `/haystack/about`
 
 **Request:**
 ```http
@@ -207,7 +207,7 @@ Accept: application/json
 }
 ```
 
-### 5.3 Beispiel: `/haystack/read` mit Filter
+### 5.3 Example: `/haystack/read` with Filter
 
 **Request:**
 ```http
@@ -219,7 +219,7 @@ ver:"3.0"
 filter:"space and hvacZone"
 ```
 
-**GraphQL Query (intern generiert):**
+**GraphQL Query (internally generated):**
 ```graphql
 query {
   spaces(filter: { haystackTags: { contains: ["space", "hvacZone"] } }) {
@@ -255,21 +255,21 @@ query {
   ],
   "rows": [
     {
-      "id": {"_kind": "ref", "val": "6789a00000000000000011d1", "dis": "Wohnbereich"},
-      "dis": "Wohnbereich",
+      "id": {"_kind": "ref", "val": "6789a00000000000000011d1", "dis": "Living Area"},
+      "dis": "Living Area",
       "space": {"_kind": "marker"},
       "hvacZone": {"_kind": "marker"},
       "temp": {"_kind": "number", "val": 21.5, "unit": "°C"},
       "humidity": {"_kind": "number", "val": 48.0, "unit": "%"},
       "co2": {"_kind": "number", "val": 650, "unit": "ppm"},
       "siteRef": {"_kind": "ref", "val": "6789a00000000000000000a1", "dis": "Firmianstraße 31A"},
-      "equipRef": {"_kind": "ref", "val": "6789a00000000000000061f2", "dis": "KWL"}
+      "equipRef": {"_kind": "ref", "val": "6789a00000000000000061f2", "dis": "HRV"}
     }
   ]
 }
 ```
 
-### 5.4 Beispiel: `/haystack/hisRead`
+### 5.4 Example: `/haystack/hisRead`
 
 **Request:**
 ```http
@@ -309,7 +309,7 @@ Accept: application/json
 
 ---
 
-## 6. Filter-Syntax Mapping
+## 6. Filter Syntax Mapping
 
 ### 6.1 Haystack Filter → GraphQL
 
@@ -318,7 +318,7 @@ Accept: application/json
 | `site` | `{ ckTypeId: { eq: "EnergyIQ/Site" } }` |
 | `space and hvacZone` | `{ haystackTags: { containsAll: ["space", "hvacZone"] } }` |
 | `equip and solar` | `{ haystackTags: { containsAll: ["equip", "solar"] } }` |
-| `temp and sensor` | Attribute-basierte Filterung |
+| `temp and sensor` | Attribute-based filtering |
 | `siteRef == @abc` | `{ associations: { targetRtId: "abc" } }` |
 
 ### 6.2 Filter Parser
@@ -342,23 +342,23 @@ public class HaystackFilterParser
 
 ---
 
-## 7. Authentifizierung
+## 7. Authentication
 
 ### 7.1 Haystack SCRAM Authentication
 
-Haystack definiert SCRAM-basierte Authentifizierung:
+Haystack defines SCRAM-based authentication:
 
 ```
-1. Client → Server: GET /haystack/about (mit Authorization: HELLO)
+1. Client → Server: GET /haystack/about (with Authorization: HELLO)
 2. Server → Client: 401 + WWW-Authenticate: SCRAM hash=SHA-256, handshakeToken=xxx
-3. Client → Server: GET /haystack/about (mit Authorization: SCRAM data=base64...)
+3. Client → Server: GET /haystack/about (with Authorization: SCRAM data=base64...)
 4. Server → Client: Authentication-Info: hash=xxx, authToken=yyy
-5. Client → Server: Alle weiteren Requests mit Authorization: BEARER authToken
+5. Client → Server: All subsequent requests with Authorization: BEARER authToken
 ```
 
 ### 7.2 Alternative: OAuth2/OpenID Connect
 
-Für OctoMesh-Integration könnte auch OAuth2 verwendet werden:
+For OctoMesh integration, OAuth2 could also be used:
 
 ```
 Authorization: Bearer <octomesh-access-token>
@@ -366,36 +366,36 @@ Authorization: Bearer <octomesh-access-token>
 
 ---
 
-## 8. Implementierungsplan
+## 8. Implementation Plan
 
-### Phase 1: Basis (MVP)
-- [ ] ASP.NET Core Projekt Setup
-- [ ] `about`, `ops`, `formats` Endpoints
-- [ ] `read` Endpoint mit einfachen Filtern
+### Phase 1: Basics (MVP)
+- [ ] ASP.NET Core project setup
+- [ ] `about`, `ops`, `formats` endpoints
+- [ ] `read` endpoint with simple filters
 - [ ] JSON Grid Builder
-- [ ] EnergyIQ Type → Haystack Tag Mapping
+- [ ] EnergyIQ Type → Haystack tag mapping
 
 ### Phase 2: Navigation & History
-- [ ] `nav` Endpoint (ParentChild Traversal)
-- [ ] `hisRead` Endpoint (OctoMesh TimeSeries)
-- [ ] Haystack Filter Parser (vollständig)
-- [ ] Zinc Format Support
+- [ ] `nav` endpoint (ParentChild traversal)
+- [ ] `hisRead` endpoint (OctoMesh TimeSeries)
+- [ ] Haystack filter parser (complete)
+- [ ] Zinc format support
 
-### Phase 3: Schreiben & Echtzeit
-- [ ] `hisWrite` Endpoint
-- [ ] `pointWrite` Endpoint
+### Phase 3: Write & Real-Time
+- [ ] `hisWrite` endpoint
+- [ ] `pointWrite` endpoint
 - [ ] `watchSub/watchUnsub/watchPoll` (WebSocket)
-- [ ] SCRAM Authentication
+- [ ] SCRAM authentication
 
-### Phase 4: Produktion
-- [ ] Performance-Optimierung (Caching, Batching)
-- [ ] Monitoring & Logging
-- [ ] Docker Image
-- [ ] Dokumentation
+### Phase 4: Production
+- [ ] Performance optimization (caching, batching)
+- [ ] Monitoring & logging
+- [ ] Docker image
+- [ ] Documentation
 
 ---
 
-## 9. Projektstruktur
+## 9. Project Structure
 
 ```
 src/
@@ -435,7 +435,7 @@ src/
 
 ---
 
-## 10. Beispiel-Konfiguration
+## 10. Example Configuration
 
 ### appsettings.json
 
@@ -466,14 +466,14 @@ src/
 
 ---
 
-## 11. Zusammenfassung
+## 11. Summary
 
-Der Haystack Adapter ermöglicht:
+The Haystack Adapter enables:
 
-1. **Standardisierter Zugriff** auf EnergyIQ-Daten über das Haystack-Protokoll
-2. **Tool-Integration** mit SkySpark, FIN Framework, Widesky, etc.
-3. **Bidirektionaler Datenaustausch** (lesen + schreiben)
-4. **Real-time Updates** über Watch-Mechanismus
-5. **TimeSeries-Zugriff** für historische Analysen
+1. **Standardized access** to EnergyIQ data via the Haystack protocol
+2. **Tool integration** with SkySpark, FIN Framework, Widesky, etc.
+3. **Bidirectional data exchange** (read + write)
+4. **Real-time updates** via watch mechanism
+5. **TimeSeries access** for historical analysis
 
-Der Adapter fungiert als **Brücke** zwischen dem objektorientierten EnergyIQ-Modell und der Tag-basierten Haystack-Welt.
+The adapter acts as a **bridge** between the object-oriented EnergyIQ model and the tag-based Haystack world.
