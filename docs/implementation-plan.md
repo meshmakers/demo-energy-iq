@@ -319,14 +319,37 @@ from the mapping config — registerable as a starting point in SkySpark / FIN
 
 ---
 
-## Phase 20: Loxone Auto-Map Re-Enablement (planned)
+## Phase 20: Loxone Auto-Map Re-Enablement ✓ (partial — AI prompt deferred)
 
-Follow-up to Phase 15 — requires Pipeline-Node enhancements in `octo-communication-controller-services`:
+Follow-up to Phase 15. The pipeline-node enhancements actually live in
+`octo-mesh-adapter` (not `octo-communication-controller-services` as the
+original Phase 15 note guessed) — under `MeshAdapter.Sdk.Nodes.Transform`.
 
-- [ ] Extend `GenerateDataPointMappings@1` with a "navigate container → child entity by ckTypeId + association" step
-- [ ] Extend `ValidateDataPointCoverage@1` with a rule form "required associated entity of ckTypeId X via role Y"
-- [ ] Rewrite AI Auto-Map prompt + JSON contract for sensor-targeted mappings
-- [ ] Re-enable the three pipelines
+- [x] `GenerateDataPointMappings@1` extended with `ChildTargetCkTypeId` +
+      `ChildTargetAssociationRoleId` on the rule Map block. Rules can now
+      navigate from the matched container target (Space) to a child entity
+      (Sensor / Actuator / Terminal). Per-container resolution cache avoids
+      repeat lookups; missing children silently skip the rule. Two new tests;
+      all 338 existing tests still pass.
+- [x] `ValidateDataPointCoverage@1` extended with `RequiredAssociations` on
+      CoverageRule. Each entry is `(AssociationRoleId, TargetCkTypeId)`; the
+      node probes inbound associations from the entity and reports missing
+      ones as error-level coverage gaps. `EvaluateCoverage` signature stays
+      backward compatible. Three new tests cover attribute-only / association-only
+      / mixed cases.
+- [x] **Rules-based Auto-Map** pipeline re-enabled in `octo-adapter-loxone`
+      with v2-aware rules. IRoomController state rules navigate to the matching
+      Sensor subtype via SpaceSensors; InfoOnlyAnalog name-based rules do the
+      same. tempTarget targets `ThermalRequirementsRecord.SpaceTemperature` on
+      Space (design Pset target). Dimmer → Luminaire.DimmingLevel via
+      SpaceElements, Jalousie → ShadingDevice.Position via SpaceElements.
+- [x] **Validate DataPoint Coverage** pipeline re-enabled with
+      `requiredAssociations` rules: Space requires TemperatureSensor /
+      HumiditySensor / CO2Sensor via SpaceSensors; ExternalSpace has no
+      requirements.
+- [ ] AI Auto-Map pipeline — still disabled. Prompt + JSON output contract
+      assume Space-attribute targets; rewriting the AI side pairs best with
+      hands-on testing against real Loxone data, deferred until then.
 
 ---
 
