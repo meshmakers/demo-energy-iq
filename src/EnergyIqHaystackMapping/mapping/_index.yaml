@@ -50,4 +50,4 @@ unitConventions:
 identityStrategy:
   preferred: GlobalId
   fallback: rtId
-  refIdPrefix: "@energyiq:"   # PH ref-id prefix for all emitted entities
+  refIdPrefix: "energyiq:"    # PH ref-id namespace prefix (no leading @ — the sigil is added by Zinc/Trio writers; JSON omits it per PH4 spec)

@@ -46,23 +46,16 @@ public sealed class EntityRenderer
         // id — derived from identity strategy
         dict.Set("id", new PhRef(EntityId(entity)));
 
+        // per-type tags first (so dis appears right after id, matching PH convention)
+        foreach (var tag in mapping.Tags)
+        {
+            ApplyTagSpec(entity, tag, dict);
+        }
+
         // markers
         foreach (var marker in mapping.Markers)
         {
             dict.Set(marker, PhMarker.Instance);
-        }
-
-        // default tags (e.g. tz) — fall through to per-type overrides
-        foreach (var tag in _defaultTags)
-        {
-            if (dict.Has(tag.Name)) continue;
-            ApplyTagSpec(entity, tag, dict);
-        }
-
-        // per-type tags
-        foreach (var tag in mapping.Tags)
-        {
-            ApplyTagSpec(entity, tag, dict);
         }
 
         // refs (siteRef / spaceRef / equipRef ...)
@@ -73,6 +66,13 @@ public sealed class EntityRenderer
             {
                 dict.Set(refMap.PhRef, new PhRef(EntityId(target)));
             }
+        }
+
+        // default tags (e.g. tz) — only if not already overridden by a per-type tag
+        foreach (var tag in _defaultTags)
+        {
+            if (dict.Has(tag.Name)) continue;
+            ApplyTagSpec(entity, tag, dict);
         }
 
         // attributes — flat tags on this dict

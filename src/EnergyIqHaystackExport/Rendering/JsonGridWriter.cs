@@ -20,7 +20,7 @@ namespace Meshmakers.EnergyIq.HaystackExport.Rendering;
 /// Marker tags are encoded as <c>{ "_kind": "marker" }</c>.
 /// Number tags are encoded as <c>{ "_kind": "number", "val": 21.5, "unit": "°C" }</c>.
 /// </summary>
-public sealed class JsonGridWriter
+public sealed class JsonGridWriter : IGridWriter
 {
     private static readonly JsonWriterOptions WriterOptions = new()
     {

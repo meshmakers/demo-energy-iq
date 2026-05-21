@@ -280,9 +280,19 @@ the v2 mapping config + a runtime model YAML, emits a PH4 JSON grid.
       (1 site + 29 spaces + 63 equip + 266 points), valid PH4 JSON
 - [x] Mapping files corrected to reference underlying CK attribute IDs (not display names) —
       RT YAML stores attributes by global id, so the mapping must match
-- [ ] Zinc / Trio output formats (only JSON for now — JSON is the most common PH4 wire format)
+- [x] `Rendering/IGridWriter` — common writer interface
+- [x] `Rendering/ZincGridWriter` — PH4 Zinc wire format (compact grid: meta line + cols line
+      + data rows with `M`/`N`/`T`/`F`/`@ref`/number-with-unit/string encodings)
+- [x] `Rendering/TrioWriter` — PH4 Trio dict-per-block format with `---` separators
+- [x] CLI `--format json|zinc|trio` (or inferred from output extension)
+- [x] Ref identity fix: `refIdPrefix` is `energyiq:` (no leading `@`); the `@` sigil is added
+      by Zinc/Trio writers and omitted by JSON per PH4 spec
+- [x] Verified all three formats against rt-firmianstrasse.yaml:
+      JSON ~232K / 11559 lines, Zinc ~192K / 361 lines, Trio ~128K / 4495 lines
 - [ ] Hooks into the Haystack REST API service (`read`, `nav`, `hisRead`) — see
       `haystack-adapter-concept.md`. The renderer's core can be embedded directly.
+- [ ] Compound attributes (e.g. emit a single `geoCoord: Coord(lat, lng)` from two CK
+      attributes instead of separate `geoCoord.lat`/`geoCoord.lng` tags) — out of scope for now
 
 ---
 
