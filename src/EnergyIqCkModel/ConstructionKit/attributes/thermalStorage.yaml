@@ -1,0 +1,25 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+attributes:
+- id: StorageCapacity
+  valueType: Double
+  description: "Thermal storage capacity (litres of water-equivalent or kWh)"
+
+- id: StorageVolume
+  valueType: Double
+  description: "Storage tank volume (litres)"
+
+- id: StorageTempTop
+  valueType: Double
+  description: "Temperature at the top of the buffer tank (°C)"
+
+- id: StorageTempMiddle
+  valueType: Double
+  description: "Temperature in the middle of the buffer tank (°C)"
+
+- id: StorageTempBottom
+  valueType: Double
+  description: "Temperature at the bottom of the buffer tank (°C)"
+
+- id: StorageChargeLevel
+  valueType: Double
+  description: "Stratification charge level (0-100%, derived from temperatures)"

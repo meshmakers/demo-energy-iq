@@ -1,0 +1,25 @@
+ckTypeId: EnergyIQ/GenericSensor
+phSpec: ph::Str-Point
+# Fallback for proprietary / unclassified measurements. PH consumer should
+# interpret based on additional markers/tags set per instance (out of band).
+markers:
+  - point
+  - sensor
+tags:
+  - { name: dis, sourceAttribute: System/Name }
+  - { name: kind, value: "Str" }
+refs:
+  - phRef: spaceRef
+    sourceRole: EnergyIQ/SpaceSensors
+    direction: parent
+    targetCkTypeId: EnergyIQ/Space
+  - phRef: equipRef
+    sourceRole: EnergyIQ/EquipmentSensors
+    direction: parent
+attributes:
+  - ckAttribute: CurrentValue
+    phTag: curVal
+    kind: Str
+  - ckAttribute: LastUpdate
+    phTag: curStatus
+    kind: Str

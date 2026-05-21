@@ -1,0 +1,26 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+# IFC 4.3 Pset_SpaceThermalRequirements - design/operational targets for thermal comfort
+records:
+- recordId: PsetSpaceThermalRequirements
+  attributes:
+  - id: ${this}/SpaceTemperature
+    name: SpaceTemperature
+    isOptional: true
+  - id: ${this}/SpaceTemperatureMin
+    name: SpaceTemperatureMin
+    isOptional: true
+  - id: ${this}/SpaceTemperatureMax
+    name: SpaceTemperatureMax
+    isOptional: true
+  - id: ${this}/SpaceHumidity
+    name: SpaceHumidity
+    isOptional: true
+  - id: ${this}/SpaceHumidityMin
+    name: SpaceHumidityMin
+    isOptional: true
+  - id: ${this}/SpaceHumidityMax
+    name: SpaceHumidityMax
+    isOptional: true
+  - id: ${this}/CO2SetpointMax
+    name: CO2SetpointMax
+    isOptional: true

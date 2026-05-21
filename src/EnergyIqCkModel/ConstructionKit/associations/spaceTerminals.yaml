@@ -1,0 +1,8 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+associationRoles:
+- id: SpaceTerminals
+  inboundName: ContainedTerminals
+  outboundName: ContainedInSpace
+  inboundMultiplicity: N
+  outboundMultiplicity: ZeroOrOne
+  description: "Room terminals (Radiator, RadiantSurface, FanCoilUnit, AirTerminal, etc.) located in this space"

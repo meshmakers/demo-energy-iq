@@ -1,0 +1,81 @@
+ckTypeId: EnergyIQ/BatteryStorage
+phSpec: ph::Equip
+markers:
+  - equip
+  - ess
+  - battery
+  - storage
+  - elec
+tags:
+  - { name: dis, sourceAttribute: System/Name }
+refs:
+  - phRef: equipRef
+    sourceRole: System/ParentChild
+    direction: parent
+    targetCkTypeId: EnergyIQ/PhotovoltaicSystem
+attributes:
+  - ckAttribute: Identifier
+    phTag: navName
+    kind: Str
+  - ckAttribute: RatedCapacityKWh
+    phTag: capacity
+    kind: Number
+    unit: "kWh"
+  - ckAttribute: MaxChargePower
+    phTag: maxChargePower
+    kind: Number
+    unit: "kW"
+  - ckAttribute: MaxDischargePower
+    phTag: maxDischargePower
+    kind: Number
+    unit: "kW"
+points:
+  - ckAttribute: StateOfCharge
+    markers: [point, sensor, battery, soc]
+    kind: Number
+    unit: "%"
+    refTo: { phRef: equipRef, target: self }
+    navName: soc
+  - ckAttribute: ChargingPower
+    markers: [point, sensor, battery, charging, power]
+    kind: Number
+    unit: "kW"
+    refTo: { phRef: equipRef, target: self }
+    navName: chargingPower
+  - ckAttribute: DischargingPower
+    markers: [point, sensor, battery, discharging, power]
+    kind: Number
+    unit: "kW"
+    refTo: { phRef: equipRef, target: self }
+    navName: dischargingPower
+  - ckAttribute: BatteryTemperature
+    markers: [point, sensor, battery, temp]
+    kind: Number
+    unit: "°C"
+    refTo: { phRef: equipRef, target: self }
+    navName: temp
+  - ckAttribute: CycleCount
+    markers: [point, sensor, battery, cycles]
+    kind: Number
+    refTo: { phRef: equipRef, target: self }
+    navName: cycles
+  - ckAttribute: IsCharging
+    markers: [point, sensor, battery, charging]
+    kind: Bool
+    refTo: { phRef: equipRef, target: self }
+    navName: isCharging
+  - ckAttribute: IsDischarging
+    markers: [point, sensor, battery, discharging]
+    kind: Bool
+    refTo: { phRef: equipRef, target: self }
+    navName: isDischarging
+  - ckAttribute: IsRunning
+    markers: [point, sensor, run]
+    kind: Bool
+    refTo: { phRef: equipRef, target: self }
+    navName: run
+  - ckAttribute: FaultState
+    markers: [point, sensor, fault]
+    kind: Bool
+    refTo: { phRef: equipRef, target: self }
+    navName: fault

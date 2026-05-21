@@ -1,0 +1,107 @@
+ckTypeId: EnergyIQ/Space
+phSpec: ph::Space
+markers:
+  - space
+  - room
+  - hvacZone
+tags:
+  - { name: dis, sourceAttribute: System/Name }
+refs:
+  - phRef: spaceRef
+    sourceRole: System/ParentChild
+    direction: parent
+    targetCkTypeId: EnergyIQ/BuildingStorey
+  - phRef: siteRef
+    sourceRole: System/ParentChild
+    direction: ancestor
+    targetCkTypeId: EnergyIQ/Site
+attributes:
+  - ckAttribute: LongName
+    phTag: navName
+    kind: Str
+  - ckAttribute: RoomNumber
+    phTag: roomNum
+    kind: Str
+  - ckAttribute: RoomIdentifier
+    phTag: roomId
+    kind: Str
+  - ckAttribute: NetFloorArea
+    phTag: area
+    kind: Number
+    unit: "m²"
+  - ckAttribute: GrossFloorArea
+    phTag: grossArea
+    kind: Number
+    unit: "m²"
+  - ckAttribute: CeilingHeight
+    phTag: height
+    kind: Number
+    unit: "m"
+  - ckAttribute: OperatingModeValue
+    phTag: hvacMode
+    kind: Str
+    enumMapping:
+      0: comfort
+      1: economy
+      2: standby
+      3: protection
+      4: off
+      5: auto
+  - ckAttribute: SpaceTypeValue
+    phTag: spaceType
+    kind: Str
+    enumMapping:
+      0: office
+      1: meetingRoom
+      2: corridor
+      3: toilet
+      4: kitchen
+      5: technicalRoom
+      6: storage
+      7: parking
+      8: lobby
+      9: staircase
+      10: elevator
+      11: serverRoom
+      12: laboratory
+      13: workshop
+      14: other
+      15: livingRoom
+      16: bedroom
+      17: bathroom
+      18: diningRoom
+      19: lounge
+      20: childrensRoom
+      21: guestRoom
+      22: laundry
+      23: garage
+      24: walkInCloset
+      25: anteroom
+  # Pset_SpaceThermalRequirements record fields flatten to PH design target tags
+  - ckAttribute: ThermalRequirementsRecord.SpaceTemperature
+    phTag: designTemp
+    kind: Number
+    unit: "°C"
+  - ckAttribute: ThermalRequirementsRecord.SpaceTemperatureMin
+    phTag: designTempMin
+    kind: Number
+    unit: "°C"
+  - ckAttribute: ThermalRequirementsRecord.SpaceTemperatureMax
+    phTag: designTempMax
+    kind: Number
+    unit: "°C"
+  - ckAttribute: ThermalRequirementsRecord.CO2SetpointMax
+    phTag: designCo2Max
+    kind: Number
+    unit: "ppm"
+  - ckAttribute: LightingRequirementsRecord.IlluminanceTarget
+    phTag: designLux
+    kind: Number
+    unit: "lx"
+  - ckAttribute: OccupancyRequirementsRecord.OccupancyNumberPeak
+    phTag: designOccupancy
+    kind: Number
+  - ckAttribute: OccupancyRequirementsRecord.AreaPerOccupant
+    phTag: designAreaPerOccupant
+    kind: Number
+    unit: "m²"

@@ -1,0 +1,33 @@
+ckTypeId: EnergyIQ/ExternalSpace
+phSpec: ph::Space
+markers:
+  - space
+  - outdoor
+tags:
+  - { name: dis, sourceAttribute: System/Name }
+refs:
+  - phRef: spaceRef
+    sourceRole: System/ParentChild
+    direction: parent
+  - phRef: siteRef
+    sourceRole: System/ParentChild
+    direction: ancestor
+    targetCkTypeId: EnergyIQ/Site
+attributes:
+  - ckAttribute: LongName
+    phTag: navName
+    kind: Str
+  - ckAttribute: RoomNumber
+    phTag: roomNum
+    kind: Str
+  - ckAttribute: RoomIdentifier
+    phTag: roomId
+    kind: Str
+  - ckAttribute: NetFloorArea
+    phTag: area
+    kind: Number
+    unit: "m²"
+  - ckAttribute: PredefinedType
+    phTag: spaceType
+    kind: Str
+    # No enum mapping — free-text (TERRACE, GARDEN, BALCONY, ROOFTERRACE, DRIVEWAY, ...)

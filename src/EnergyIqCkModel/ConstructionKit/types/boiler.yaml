@@ -25,3 +25,11 @@ types:
   associations:
   - id: ${this}/SystemSpaces
     targetCkTypeId: ${this}/Space
+  - id: ${this}/EquipmentSensors
+    targetCkTypeId: ${this}/Sensor
+  - id: ${this}/EquipmentActuators
+    targetCkTypeId: ${this}/Actuator
+  - id: ${this}/TerminalServedBy
+    targetCkTypeId: ${this}/RoomTerminal
+  - id: ${this}/SystemMembers
+    targetCkTypeId: ${this}/DistributionSystem

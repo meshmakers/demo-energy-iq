@@ -1,0 +1,72 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: HeatPump
+  derivedFromCkTypeId: ${this}/TechnicalSystem
+  description: "Heat pump (IFC: IfcUnitaryEquipment/HEATPUMP, VDI 3814). Reversible aggregate capable of heating, active cooling and/or passive cooling depending on capabilities."
+  attributes:
+  # Master / nameplate
+  - id: ${this}/HeatSourceValue
+    name: HeatSource
+    isOptional: true
+  - id: ${this}/IsReversibleAggregate
+    name: IsReversible
+    isOptional: true
+  - id: ${this}/HeatingCapacity
+    name: HeatingCapacity
+    isOptional: true
+  - id: ${this}/CoolingCapacity
+    name: CoolingCapacity
+    isOptional: true
+  # Operating state
+  - id: ${this}/HeatPumpOperatingModeValue
+    name: OperatingMode
+    isOptional: true
+  # Hydraulic side (sink)
+  - id: ${this}/SupplyTemp
+    name: SupplyTemp
+    isOptional: true
+  - id: ${this}/ReturnTemp
+    name: ReturnTemp
+    isOptional: true
+  - id: ${this}/SupplyTempSetpoint
+    name: SupplyTempSetpoint
+    isOptional: true
+  - id: ${this}/ModulationLevel
+    name: ModulationLevel
+    isOptional: true
+  - id: ${this}/PowerConsumption
+    name: PowerConsumption
+    isOptional: true
+  # Source side
+  - id: ${this}/SourceInletTemp
+    name: SourceInletTemp
+    isOptional: true
+  - id: ${this}/SourceOutletTemp
+    name: SourceOutletTemp
+    isOptional: true
+  # Performance
+  - id: ${this}/COP
+    name: COP
+    isOptional: true
+  - id: ${this}/SCOP
+    name: SCOP
+    isOptional: true
+  - id: ${this}/EER
+    name: EER
+    isOptional: true
+  - id: ${this}/SEER
+    name: SEER
+    isOptional: true
+  associations:
+  # Parent (Building) via inherited System/ParentChild
+  # Equipment-level sensors/actuators (e.g. changeover valve)
+  - id: ${this}/EquipmentSensors
+    targetCkTypeId: ${this}/Sensor
+  - id: ${this}/EquipmentActuators
+    targetCkTypeId: ${this}/Actuator
+  # Serves terminals
+  - id: ${this}/TerminalServedBy
+    targetCkTypeId: ${this}/RoomTerminal
+  # Membership in a DistributionSystem
+  - id: ${this}/SystemMembers
+    targetCkTypeId: ${this}/DistributionSystem

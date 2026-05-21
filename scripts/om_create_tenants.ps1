@@ -1,5 +1,5 @@
 param (
-    [string]$tenantId = "energyiqdemo"
+    [string]$tenantId = "energyiq"
 )
 octo-cli -c Create -tid $tenantId -db $tenantId
 

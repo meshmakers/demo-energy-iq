@@ -1,0 +1,8 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+associationRoles:
+- id: SpaceSensors
+  inboundName: ContainedSensors
+  outboundName: SensorInSpace
+  inboundMultiplicity: N
+  outboundMultiplicity: ZeroOrOne
+  description: "Sensors physically located in this space (room thermostats, CO2 sensors, presence sensors, etc.)"

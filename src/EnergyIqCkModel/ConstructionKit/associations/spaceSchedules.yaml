@@ -1,0 +1,8 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+associationRoles:
+- id: SpaceSchedules
+  inboundName: SchedulesAppliedTo
+  outboundName: UsedSchedules
+  inboundMultiplicity: N
+  outboundMultiplicity: N
+  description: "Schedules applied to spaces (M:N - one schedule can cover many rooms, one room can have multiple schedules)"

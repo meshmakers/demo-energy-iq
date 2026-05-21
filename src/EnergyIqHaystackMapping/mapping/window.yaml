@@ -1,0 +1,33 @@
+ckTypeId: EnergyIQ/Window
+phSpec: ph::Equip
+markers:
+  - equip
+  - window
+tags:
+  - { name: dis, sourceAttribute: System/Name }
+refs:
+  - phRef: spaceRef
+    sourceRole: EnergyIQ/SpaceElements
+    direction: parent
+    targetCkTypeId: EnergyIQ/Space
+attributes:
+  - ckAttribute: OverallHeight
+    phTag: height
+    kind: Number
+    unit: "mm"
+  - ckAttribute: OverallWidth
+    phTag: width
+    kind: Number
+    unit: "mm"
+points:
+  - ckAttribute: IsOpen
+    markers: [point, sensor, window, open]
+    kind: Bool
+    refTo: { phRef: equipRef, target: self }
+    navName: open
+  - ckAttribute: OpeningPosition
+    markers: [point, sensor, window, position]
+    kind: Number
+    unit: "%"
+    refTo: { phRef: equipRef, target: self }
+    navName: openingPos

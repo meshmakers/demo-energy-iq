@@ -1,0 +1,73 @@
+ckTypeId: EnergyIQ/FanCoilUnit
+phSpec: ph::Equip
+markers:
+  - equip
+  - fcu
+  - hvac
+tags:
+  - { name: dis, sourceAttribute: System/Name }
+refs:
+  - phRef: spaceRef
+    sourceRole: EnergyIQ/SpaceTerminals
+    direction: parent
+    targetCkTypeId: EnergyIQ/Space
+  - phRef: equipRef
+    sourceRole: EnergyIQ/TerminalServedBy
+    direction: parent
+attributes:
+  - ckAttribute: NominalPower
+    phTag: nomPower
+    kind: Number
+    unit: "kW"
+  - ckAttribute: TerminalOperatingModeValue
+    phTag: hvacMode
+    kind: Str
+    enumMapping:
+      0: off
+      1: heating
+      2: cooling
+      3: ventilating
+      4: standby
+points:
+  - ckAttribute: HeatingValvePosition
+    markers: [point, sensor, valve, position, hot, water]
+    kind: Number
+    unit: "%"
+    refTo: { phRef: equipRef, target: self }
+    navName: heatValvePos
+  - ckAttribute: CoolingValvePosition
+    markers: [point, sensor, valve, position, chilled, water]
+    kind: Number
+    unit: "%"
+    refTo: { phRef: equipRef, target: self }
+    navName: coolValvePos
+  - ckAttribute: FanSpeed
+    markers: [point, sensor, fan, speed]
+    kind: Number
+    unit: "%"
+    refTo: { phRef: equipRef, target: self }
+    navName: fanSpeed
+  - ckAttribute: FanSpeedSetpoint
+    markers: [point, sp, cmd, fan, speed]
+    kind: Number
+    unit: "%"
+    refTo: { phRef: equipRef, target: self }
+    navName: fanSpeedSp
+    writable: true
+  - ckAttribute: FanStage
+    markers: [point, sensor, fan, stage]
+    kind: Number
+    refTo: { phRef: equipRef, target: self }
+    navName: fanStage
+  - ckAttribute: SupplyTemp
+    markers: [point, sensor, water, leaving, temp]
+    kind: Number
+    unit: "°C"
+    refTo: { phRef: equipRef, target: self }
+    navName: supplyTemp
+  - ckAttribute: ReturnTemp
+    markers: [point, sensor, water, entering, temp]
+    kind: Number
+    unit: "°C"
+    refTo: { phRef: equipRef, target: self }
+    navName: returnTemp

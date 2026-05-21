@@ -1,0 +1,17 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+# IFC 4.3 Pset_SpaceLightingRequirements - design/operational targets for visual comfort
+records:
+- recordId: PsetSpaceLightingRequirements
+  attributes:
+  - id: ${this}/IlluminanceTarget
+    name: IlluminanceTarget
+    isOptional: true
+  - id: ${this}/IlluminanceMin
+    name: IlluminanceMin
+    isOptional: true
+  - id: ${this}/ArtificialLighting
+    name: ArtificialLighting
+    isOptional: true
+  - id: ${this}/NaturalLighting
+    name: NaturalLighting
+    isOptional: true

@@ -1,0 +1,24 @@
+ckTypeId: EnergyIQ/IlluminanceSensor
+phSpec: ph::Number-Point
+markers:
+  - point
+  - sensor
+  - lighting
+  - level
+tags:
+  - { name: dis, sourceAttribute: System/Name }
+  - { name: kind, value: "Number" }
+  - { name: unit, value: "lx" }
+refs:
+  - phRef: spaceRef
+    sourceRole: EnergyIQ/SpaceSensors
+    direction: parent
+    targetCkTypeId: EnergyIQ/Space
+attributes:
+  - ckAttribute: CurrentValue
+    phTag: curVal
+    kind: Number
+    unit: "lx"
+  - ckAttribute: LastUpdate
+    phTag: curStatus
+    kind: Str

@@ -1,14 +1,23 @@
 # EnergyIQ Construction Kit Implementation Plan
 
-## Phase 1: Base Types ✓
+This document tracks the historical phases of EnergyIQ development. The current state is **EnergyIQ-2.0.0**.
+
+For ongoing / future work see:
+- `space-restructuring-concept.md` — IFC/VDI restructure (delivered in 2.0.0)
+- `haystack-integration-concept.md` — Haystack projection layer (mapping config + renderer pending)
+- `haystack-adapter-concept.md` — Haystack REST API server (depends on the integration concept)
+
+---
+
+## Phase 1: Base Types (v1) ✓
 
 ### 1.1 Create Enums
-- [x] `enums/spaceType.yaml` – SpaceTypeEnum
-- [x] `enums/operatingMode.yaml` – OperatingModeEnum
-- [x] `enums/shadingType.yaml` – ShadingTypeEnum
-- [x] `enums/luminaireType.yaml` – LuminaireTypeEnum
-- [x] `enums/systemType.yaml` – SystemTypeEnum
-- [x] `enums/dayOfWeek.yaml` – DayOfWeekEnum
+- [x] `enums/spaceType.yaml` – SpaceType
+- [x] `enums/operatingMode.yaml` – OperatingMode (VDI 3814)
+- [x] `enums/shadingType.yaml` – ShadingType
+- [x] `enums/luminaireType.yaml` – LuminaireType
+- [x] `enums/systemType.yaml` – SystemType
+- [x] `enums/dayOfWeek.yaml` – DayOfWeek
 
 ### 1.2 Create Records
 - [x] `records/address.yaml` – Address
@@ -16,8 +25,6 @@
 
 ### 1.3 Create Base Attributes
 - [x] `attributes/globalId.yaml` – String
-- [x] `attributes/name.yaml` – String
-- [x] `attributes/description.yaml` – String (optional)
 - [x] `attributes/temperature.yaml` – Double
 - [x] `attributes/percentage.yaml` – Double (0-100)
 - [x] `attributes/area.yaml` – Double (m²)
@@ -26,329 +33,333 @@
 
 ---
 
-## Phase 2: Spatial Structure ✓
+## Phase 2: Spatial Structure (v1) ✓
 
-### 2.1 Abstract Base Types
-- [x] `types/spatialElement.yaml` – SpatialElement (abstract)
-
-### 2.2 Concrete Spatial Types
-- [x] `types/site.yaml` – Site
-- [x] `types/building.yaml` – Building
-- [x] `types/buildingStorey.yaml` – BuildingStorey
-- [x] `types/space.yaml` – Space (with all attributes)
-
-### 2.3 Associations
-- [x] `associations/siteBuildings.yaml` – Site → Building (1:N)
-- [x] `associations/buildingStoreys.yaml` – Building → Storey (1:N)
-- [x] `associations/storeySpaces.yaml` – Storey → Space (1:N)
+- [x] `types/site.yaml`, `types/building.yaml`, `types/buildingStorey.yaml`, `types/space.yaml`
+- [x] Hierarchy via `Basic/Tree` + `Basic/TreeNode` (`System/ParentChild` inherited)
 
 ---
 
-## Phase 3: Building Elements ✓
+## Phase 3: Building Elements (v1) ✓
 
-### 3.1 Abstract Base
-- [x] `types/buildingElement.yaml` – BuildingElement (abstract)
-
-### 3.2 Concrete Elements
-- [x] `types/wall.yaml` – Wall
-- [x] `types/door.yaml` – Door
-- [x] `types/window.yaml` – Window
-- [x] `types/shadingDevice.yaml` – ShadingDevice
-- [x] `types/luminaire.yaml` – Luminaire
-
-### 3.3 Associations
-- [x] `associations/spaceElements.yaml` – Space → BuildingElement (1:N)
+- [x] `types/buildingElement.yaml` (abstract)
+- [x] `types/wall.yaml`, `door.yaml`, `window.yaml`, `shadingDevice.yaml`, `luminaire.yaml`
+- [x] `associations/spaceElements.yaml` (Space → BuildingElement)
 
 ---
 
-## Phase 4: Technical Systems ✓
+## Phase 4: Technical Systems (v1) ✓
 
-### 4.1 Abstract Base
-- [x] `types/technicalSystem.yaml` – TechnicalSystem (abstract)
-
-### 4.2 Concrete Systems
-- [x] `types/airHandlingUnit.yaml` – AirHandlingUnit
-- [x] `types/boiler.yaml` – Boiler
-- [x] `types/chiller.yaml` – Chiller
-- [x] `types/pump.yaml` – Pump
-
-### 4.3 Associations
-- [x] `associations/systemSpaces.yaml` – TechnicalSystem ↔ Space (N:M)
-- [x] `associations/buildingSystems.yaml` – Building → TechnicalSystem (1:N)
+- [x] `types/technicalSystem.yaml` (abstract)
+- [x] `types/airHandlingUnit.yaml`, `boiler.yaml`, `chiller.yaml`, `pump.yaml`
+- [x] `associations/systemSpaces.yaml`
 
 ---
 
-## Phase 5: Haystack Compatibility ✓
+## Phase 5: Haystack Compatibility (v1) ✓ — later removed in v2
 
-- [x] `records/haystackRef.yaml` – HaystackRef Record
-- [x] `attributes/haystack.yaml` – HaystackTags, HaystackMeta
-- [x] `attributes/haystackRefs.yaml` – HaystackRefs (RecordArray)
-- [x] Haystack attributes added to abstract base types (SpatialElement, BuildingElement, TechnicalSystem)
+In v1, Haystack tags were carried as mixin attributes on every type.
 
----
+- [x] `records/haystackRef.yaml`
+- [x] `attributes/haystack.yaml` (HaystackTags, HaystackMeta)
+- [x] `attributes/haystackRefs.yaml`
+- [x] Mixin attributes on all base + concrete types
 
-## Phase 6: Validation & Testing
-
-- [x] `ckModel.yaml` updated (modelId: EnergyIQ-1.0.0)
-- [x] Build executed – successful
-- [x] Sample data created – `data/bim/rt-firmianstrasse.yaml` (Firmianstraße 31A, Salzburg)
-- [ ] Test GraphQL queries
+**v2 decision:** All Haystack mixin attributes removed. Haystack compatibility is now provided via a projection layer (see `haystack-integration-concept.md`). The structural impedance that motivated mixins (Haystack Point as first-class entity vs. inline Space attribute) was resolved by the v2 Sensor-as-entity restructuring.
 
 ---
 
-## Phase 7: TreeNode Migration ✓
-
-Migration to OctoMesh Basic Package for standardized tree structures (corresponds to IFC IfcRelAggregates):
-
-### 7.1 Dependencies Updated
-- [x] `ckModel.yaml` – Added dependency on `Basic-[2.0,3.0)`
-- [x] `EnergyIqCkModel.csproj` – PackageReference to `Meshmakers.Octo.Sdk.Packages.Basic`
-- [x] `GlobalUsings.cs` – `using Meshmakers.Octo.Sdk.Packages.Basic.Generated.Basic.v2`
-
-### 7.2 Spatial Types Migrated to TreeNode
-- [x] `types/spatialElement.yaml` – REMOVED (replaced by TreeNode inheritance)
-- [x] `types/site.yaml` – Now derives from `Basic/Tree`
-- [x] `types/building.yaml` – Now derives from `Basic/TreeNode` (ParentChild inherited)
-- [x] `types/buildingStorey.yaml` – Now derives from `Basic/TreeNode`
-- [x] `types/space.yaml` – Now derives from `Basic/TreeNode`
-
-### 7.3 Other Types Migrated to NamedEntity
-- [x] `types/buildingElement.yaml` – Now derives from `Basic/NamedEntity`
-- [x] `types/technicalSystem.yaml` – Now derives from `Basic/NamedEntity`
-
-### 7.4 Attributes Cleaned Up
-- [x] `attributes/name.yaml` – REMOVED (inherited from NamedEntity)
-- [x] `attributes/description.yaml` – REMOVED (inherited from NamedEntity)
-
-### 7.5 RT Sample Updated
-- [x] `EnergyIQ/Name` → `System/Name`
-- [x] `EnergyIQ/Description` → `System/Description`
-- [x] rtIds corrected: Schema requires exactly 24 hexadecimal characters (`^[0-9a-fA-F]{24}$`)
-  - Old IDs like `6789a000000000000000site` contained invalid characters (s, i, t, e)
-  - New IDs are purely hexadecimal: `6789a00000000000000000a1`
-
-### 7.6 Redundant Associations Removed
-- [x] `associations/siteBuildings.yaml` – REMOVED (System/ParentChild suffices)
-- [x] `associations/buildingStoreys.yaml` – REMOVED (System/ParentChild suffices)
-- [x] `associations/storeySpaces.yaml` – REMOVED (System/ParentChild suffices)
-- [x] `associations/buildingSystems.yaml` – REMOVED (System/ParentChild suffices)
-- [x] `types/technicalSystem.yaml` – Now derives from `Basic/TreeNode` (instead of NamedEntity)
-- [x] RT Sample: all hierarchy associations → `System/ParentChild`
+## Phase 6: Validation & Sample Data (v1) ✓
+- [x] `ckModel.yaml` (`EnergyIQ-1.0.0`)
+- [x] Initial demo: `data/bim/rt-firmianstrasse.yaml`
 
 ---
 
-## Phase 8: Renewable Energy Systems ✓
+## Phase 7: TreeNode Migration (v1) ✓
 
-### 8.1 New Attributes
-- [x] `attributes/photovoltaic.yaml` – PV, Inverter, Battery attributes
+Migration to OctoMesh Basic package for tree structures (mirrors `IfcRelAggregates`).
 
-### 8.2 New Types (all TreeNode)
-- [x] `types/photovoltaicSystem.yaml` – PV system container
-- [x] `types/pvString.yaml` – PV string (module group)
-- [x] `types/inverter.yaml` – Inverter
-- [x] `types/batteryStorage.yaml` – Battery storage
-
-### 8.3 RT Sample Extended
-- [x] PV system with 18.4 kWp total capacity
-- [x] 4 strings: Main roof east (4.8 kWp), Main roof south (6.0 kWp), Annex (4.0 kWp), PV fence (3.6 kWp)
-- [x] 2 inverters (10 kVA + 8 kVA)
-- [x] Battery storage 15 kWh (LiFePO4)
+- [x] Site → `Basic/Tree`; Building / BuildingStorey / Space / TechnicalSystem → `Basic/TreeNode`
+- [x] BuildingElement → `Basic/NamedEntity`
+- [x] `attributes/name.yaml`, `description.yaml` removed (inherited from NamedEntity)
+- [x] Redundant explicit hierarchy associations removed; `System/ParentChild` used throughout
 
 ---
 
-## Phase 9: Haystack Adapter (Planned)
+## Phase 8: Renewable Energy Systems (v1) ✓
 
-See concept: [`docs/haystack-adapter-concept.md`](haystack-adapter-concept.md)
-
-### 9.1 Basics (MVP)
-- [ ] ASP.NET Core project setup
-- [ ] `about`, `ops`, `formats` endpoints
-- [ ] `read` endpoint with filter support
-- [ ] JSON Grid Builder
-- [ ] EnergyIQ → Haystack tag mapping
-
-### 9.2 Navigation & History
-- [ ] `nav` endpoint (ParentChild traversal)
-- [ ] `hisRead` endpoint (OctoMesh TimeSeries)
-- [ ] Haystack filter parser
-- [ ] Zinc format support
-
-### 9.3 Write & Real-Time
-- [ ] `hisWrite`, `pointWrite` endpoints
-- [ ] Watch mechanism (WebSocket)
-- [ ] SCRAM authentication
+- [x] `attributes/photovoltaic.yaml`
+- [x] `types/photovoltaicSystem.yaml`, `pvString.yaml`, `inverter.yaml`, `batteryStorage.yaml`
+- [x] RT sample: 18.4 kWp PV, 4 strings, 2 inverters, 15 kWh battery
 
 ---
 
-## Phase 10: ISO 4157 Room Designation ✓
+## Phase 10: ISO 4157 Room Designation (v1) ✓
 
-Implementation of the ISO 4157 standard for standardized room and storey designation.
-
-### 10.1 BuildingStorey Attributes
-- [x] `storeyNumber` (Int) – ISO 4157-1 storey number from bottom
-- [x] `floorDesignation` (String) – National floor code (GF, 1F, TF)
-
-### 10.2 Space Attributes
-- [x] `roomNumber` (String) – ISO 4157-2 room number (GF01, 1F02, TF03)
-- [x] `roomIdentifier` (String) – ISO 4157-3 room identifier (I#1001, I#2015)
-
-### 10.3 RT Sample Updated
-- [x] All storeys with storeyNumber and floorDesignation
-- [x] All rooms with roomNumber and roomIdentifier
-- [x] German convention: EG, 1.OG, DG
-
-### 10.4 Documentation
-- [x] Developer guide updated with ISO 4157 section
+- [x] `BuildingStorey.StoreyNumber` + `FloorDesignation` (4157-1)
+- [x] `Space.RoomNumber` (4157-2), `Space.RoomIdentifier` (4157-3, immutable)
 
 ---
 
-## Phase 11: Simulation Pipelines ✓
+## Phase 11: Simulation Pipelines (v1) ✓ — updated in v2
 
-Implementation of simulation pipelines for the EnergyIQ model based on the OctoMesh Simulator framework.
-
-### 11.1 Infrastructure
-- [x] `data/_pipelines/` directory for pipelines
-- [x] `rt-simulation-adapters.yaml` created
-
-### 11.2 Pipeline Components
-- [x] Pool Entity (Simulation Pool)
-- [x] EdgeAdapter Entity (meshmakers/octo-communication-adapter-simulation)
-- [x] DataPipeline Entity (Container)
-- [x] EdgePipeline with Simulation@1 (10s polling interval)
-- [x] MeshPipeline with CreateUpdateInfo@1 and ApplyChanges@1
-
-### 11.3 Simulated Entities
-
-**Rooms (6 main rooms):**
-- [x] Living area GF (6789a00000000000000011d1)
-- [x] Office GF (6789a00000000000000012d2)
-- [x] Bedroom 1F (6789a00000000000000021d8)
-- [x] Children's room 1F (6789a00000000000000023da)
-- [x] Lounge TF (6789a00000000000000031de)
-- [x] Office TF 1 (6789a00000000000000032df)
-
-**PV System:**
-- [x] PhotovoltaicSystem (totalCurrentPowerKW, gridFeedIn, selfConsumption)
-- [x] PVString 1-4 (currentPowerKW)
-- [x] Inverter 1-2 (dcPower, acPower)
-- [x] BatteryStorage (stateOfCharge, chargingPower)
-
-**HVAC:**
-- [x] Boiler/Heat pump (supplyTemp, returnTemp, modulationLevel)
-- [x] AirHandlingUnit (supplyAirTemp, fanSpeedSupply)
-
-### 11.4 Simulation Profiles
-
-| Attribute | Simulator | Range | Description |
-|-----------|-----------|-------|-------------|
-| temperature | Math.Sinus | 18-24°C | Diurnal cycle around setpoint |
-| humidity | Math.Sinus | 35-65% | Phase-shifted |
-| co2Level | Math.Triangle | 500-900 ppm | Rise during occupancy |
-| illuminance | Math.Sinus | 100-700 lux | Daylight progression |
-| heatingValvePosition | Math.Sinus | 20-70% | Follows temperature |
-| ventilationLevel | Math.Sinus | 30-70% | Follows CO2 |
-| pvStringPower | Math.Sinus | 0-6 kW | Solar progression |
-| stateOfCharge | Math.Triangle | 30-90% | Charge/discharge cycle |
-
-### 11.5 Documentation
-- [x] Developer guide updated with simulation section
+- [x] `data/_pipelines/rt-simulation-adapters.yaml`
+- [x] EdgePipeline: Math.Sinus / Math.Triangle simulators, 10s polling
+- [x] MeshPipeline: CreateUpdateInfo@1 + ApplyChanges@1
+- [x] **v2 update:** MeshPipeline now targets Sensor / Actuator / Terminal entities (not Space attributes)
 
 ---
 
-## CK YAML Example Structure
+## Phase 12: IFC/VDI Restructuring (v2.0.0) ✓
 
-### Enum Example
+Full restructure following IFC 4.3 and VDI 3814 (Anlagen- vs. Raumautomation split). Concept: `space-restructuring-concept.md`.
+
+### 12.1 New Enums
+- [x] `enums/heatPumpOperatingMode.yaml` (Off, Standby, Heating, ActiveCooling, PassiveCooling, DomesticHotWater, Defrost, Fault)
+- [x] `enums/heatSource.yaml` (Air, Ground, Water, Exhaust, Hybrid)
+- [x] `enums/valveType.yaml` (Heating, Cooling, Reversible, ChangeoverHeatingCooling, Mixing, Bypass, Isolation)
+- [x] `enums/terminalOperatingMode.yaml`
+- [x] `enums/scheduleType.yaml`
+- [x] `enums/distributionSystemType.yaml`
+- [x] `enums/spaceType.yaml` extended with 11 residential types (LivingRoom, Bedroom, Bathroom, …)
+
+### 12.2 New Records
+- [x] `records/psetSpaceThermalRequirements.yaml`
+- [x] `records/psetSpaceLightingRequirements.yaml`
+- [x] `records/psetSpaceOccupancyRequirements.yaml`
+
+### 12.3 New Associations
+- [x] `associations/spaceSensors.yaml`, `spaceActuators.yaml`, `spaceTerminals.yaml`
+- [x] `associations/equipmentSensors.yaml`, `equipmentActuators.yaml`
+- [x] `associations/terminalActuators.yaml`, `terminalServedBy.yaml`
+- [x] `associations/systemMembers.yaml`
+- [x] `associations/spaceSchedules.yaml`
+
+### 12.4 New Plant Types
+- [x] `types/heatPump.yaml` (reversible aggregate)
+- [x] `types/thermalEnergyStorage.yaml`
+
+### 12.5 Terminal-Unit Hierarchy
+- [x] `types/roomTerminal.yaml` (abstract), `hydronicTerminal.yaml` (abstract)
+- [x] `types/radiator.yaml`, `radiantSurface.yaml`, `chilledBeam.yaml`, `fanCoilUnit.yaml`
+- [x] `types/airTerminal.yaml`, `electricHeater.yaml`
+
+### 12.6 Sensor Hierarchy
+- [x] `types/sensor.yaml` (abstract)
+- [x] `types/temperatureSensor.yaml`, `humiditySensor.yaml`, `co2Sensor.yaml`, `illuminanceSensor.yaml`
+- [x] `types/presenceSensor.yaml`, `windowContactSensor.yaml`, `genericSensor.yaml`
+
+### 12.7 Actuator Hierarchy
+- [x] `types/actuator.yaml` (abstract)
+- [x] `types/valve.yaml`, `damper.yaml`, `dimmer.yaml`, `motor.yaml`
+
+### 12.8 Supporting Types
+- [x] `types/externalSpace.yaml` (IfcExternalSpatialElement)
+- [x] `types/schedule.yaml` (M:N to Space)
+- [x] `types/distributionSystem.yaml`
+
+### 12.9 Space Entrümpelt
+- [x] Removed: Temperature, Humidity, CO2Level, Illuminance, PresenceDetected, WindowOpen, HeatingValvePosition, CoolingValvePosition, VentilationLevel, LightingLevel, ShadingPosition, TemperatureSetpointHeating/Cooling, CO2Setpoint, IlluminanceSetpoint, ScheduleEntries, EnergyConsumption*
+- [x] Added: Pset records (Thermal/Lighting/Occupancy), PredefinedType, new associations to Sensor/Actuator/Terminal/Schedule
+
+### 12.10 Haystack Cleanup
+- [x] Removed `attributes/haystack.yaml`, `attributes/haystackRefs.yaml`, `records/haystackRef.yaml`
+- [x] Removed HaystackTags / HaystackRefs / HaystackMeta from all 9 affected types
+
+### 12.11 Plant-Equipment Updates
+- [x] Boiler / Chiller / AHU / Pump: added EquipmentSensors, EquipmentActuators, TerminalServedBy, SystemMembers associations
+- [x] Window / Door: added EquipmentSensors
+- [x] ShadingDevice / Luminaire: added EquipmentActuators
+
+### 12.12 Version Bump
+- [x] `ckModel.yaml`: `EnergyIQ-2.0.0`
+- [x] CK build clean: 0 warnings, 0 errors
+
+---
+
+## Phase 13: RT Data Migration Firmianstrasse (v2.0.0) ✓
+
+`data/bim/rt-firmianstrasse.yaml` rewritten — ~140 entities (up from ~35 in v1):
+
+- [x] 4 spatial top-level entities (Site, 2 Buildings, 4 storeys)
+- [x] 18 interior Spaces with Pset records
+- [x] 5 ExternalSpaces (Terrasse EG/Dachterrasse OG/Balkon DG/Zufahrt/Garten)
+- [x] ~50 Sensors (Temperature/Humidity/CO2/Illuminance/Presence/WindowContact distributed across rooms)
+- [x] ~20 RoomTerminals (RadiantSurface for HG with IsReversible, Radiator for NG, AirTerminal for KWL outlets)
+- [x] ~25 Actuators (Valves, Dampers, Motor for shading)
+- [x] HeatPump replacing v1 Boiler (`IsReversibleAggregate: true`, OperatingMode `Heating`, COP 3.8 / SCOP 4.2)
+- [x] ChangeoverHeatingCooling Valve at HeatPump (passive cooling mode switch)
+- [x] ThermalEnergyStorage (500l buffer)
+- [x] AirHandlingUnit (KWL), Pump, full PV chain (unchanged)
+- [x] 4 Schedules (Wohnen-Werktag, Wohnen-Wochenende, Schlafzimmer-Nacht, Buero-Werktag)
+- [x] 3 DistributionSystems (Heizkreis, Lüftung, Elektrisch/PV)
+- [x] All v1 Haystack tag arrays removed
+
+---
+
+## Phase 14: Archives (v2.0.0) ✓
+
+Moved from `octo-adapter-loxone` to `demo-energy-iq` (archives reference EnergyIQ types).
+
+- [x] `data/_general/rt-archives-energyiq.yaml`
+- [x] TemperatureSensorArchive (rtId `6a0e000000000000000a0001`)
+- [x] HumiditySensorArchive (`6a0e000000000000000a0002`)
+- [x] CO2SensorArchive (`6a0e000000000000000a0003`)
+- [x] `Path` references the display name `CurrentValue` (unified across sensor subtypes)
+- [x] `om_importrt.ps1` imports + activates archives (Upsert mode)
+
+---
+
+## Phase 15: Loxone Pipeline Adaptation (v2.0.0) ✓
+
+`octo-adapter-loxone/scripts/_general/rt-pipelines-loxone.yaml`:
+
+- [x] **Store Control States** pipeline: `BackfillFromRtEntity@1` + `SaveStreamDataInArchive@1` fan-out to 3 sensor archives
+- [x] Old SpaceArchive rtId references removed
+- [x] **AI Auto-Map** disabled — prompt + JSON contract assume Space attribute targets, not Sensor entities
+- [x] **Rules-based Auto-Map** disabled — `GenerateDataPointMappings@1` needs a Space→Sensor navigation step
+- [x] **Validate Coverage** disabled — `ValidateDataPointCoverage@1` rules check Space attributes that moved to Sensors
+- [x] All disabled pipelines carry migration TODO comments
+
+---
+
+## Phase 16: Documentation (v2.0.0) ✓
+
+- [x] `CLAUDE.md` — full v2 hierarchy, IFC/VDI principles, associations table
+- [x] `docs/developer-guide.md` — rewritten for v2
+- [x] `docs/construction-kit.md` — type-by-type catalog for v2
+- [x] `docs/standards-reference.md` — IFC 4.3 / VDI 3814 / Haystack 4 mappings
+- [x] `docs/implementation-plan.md` — this file
+- [x] `docs/space-restructuring-concept.md` — Status: umgesetzt
+- [x] `docs/haystack-integration-concept.md` — Status: EnergyIQ-Cleanup done, mapping config pending
+
+---
+
+## Phase 17: Haystack Mapping Config ✓
+
+Phase 1 of `haystack-integration-concept.md`. 35 type mappings + index + README.
+
+- [x] `src/EnergyIqHaystackMapping/mapping/_index.yaml` — PH4 lib metadata, default tags, unit conventions, identity strategy
+- [x] `src/EnergyIqHaystackMapping/mapping/README.md` — mapping schema documentation
+- [x] Spatial (5): Site, Building, BuildingStorey, Space, ExternalSpace
+- [x] Sensors (7): TemperatureSensor, HumiditySensor, CO2Sensor, IlluminanceSensor, PresenceSensor, WindowContactSensor, GenericSensor (each → ph::Point 1:1)
+- [x] Actuators (4): Valve, Damper, Dimmer, Motor (Equip + synthetic Position/Setpoint points)
+- [x] Terminals (6): Radiator, RadiantSurface, ChilledBeam, FanCoilUnit, AirTerminal, ElectricHeater
+- [x] Plant (6): HeatPump, Boiler, Chiller, AirHandlingUnit, Pump, ThermalEnergyStorage
+- [x] BuildingElements (4): Door, Window, ShadingDevice, Luminaire (Wall intentionally skipped)
+- [x] PV (4): PhotovoltaicSystem, PVString, Inverter, BatteryStorage
+- [x] Identity: prefer `GlobalId`, fallback `rtId`, prefix `@energyiq:`
+- [x] PH4-conformant unit strings throughout
+- [x] Schedule / DistributionSystem intentionally not mapped (logical aggregates — defer until concrete consumer)
+
+---
+
+## Phase 18: Haystack Export Renderer (planned)
+
+Phase 3 of `haystack-integration-concept.md`.
+
+- [ ] Renderer service that reads RT entities + mapping config
+- [ ] Emits PH4 grids (Zinc + JSON)
+- [ ] Hooks into Haystack REST API (`read`, `nav`, `hisRead`) — see `haystack-adapter-concept.md`
+
+---
+
+## Phase 19: PH4 lib Generator (planned)
+
+Phase 4 of `haystack-integration-concept.md`.
+
+- [ ] From mapping config, emit a Trio-format `energyIq.lib` registerable in SkySpark / FIN.
+
+---
+
+## Phase 20: Loxone Auto-Map Re-Enablement (planned)
+
+Follow-up to Phase 15 — requires Pipeline-Node enhancements in `octo-communication-controller-services`:
+
+- [ ] Extend `GenerateDataPointMappings@1` with a "navigate container → child entity by ckTypeId + association" step
+- [ ] Extend `ValidateDataPointCoverage@1` with a rule form "required associated entity of ckTypeId X via role Y"
+- [ ] Rewrite AI Auto-Map prompt + JSON contract for sensor-targeted mappings
+- [ ] Re-enable the three pipelines
+
+---
+
+## Out of Scope (kept compatible for later)
+
+See `space-restructuring-concept.md` §12 for the full list. Notable items:
+- Decentralised HRV units per room
+- Solarthermie (`SolarThermalCollector`)
+- BHKW (`CombinedHeatAndPower`)
+- Pelletkessel — `Boiler` PredefinedType variant or dedicated subtype
+- Submetering / Smart Meter — `EnergyMeter` sensor subtype + DistributionSystem binding
+- Wallbox / EV charger (`ElectricVehicleCharger` TechnicalSystem subtype)
+- Weather-compensated heating curve
+- Native IFC export
+
+---
+
+## CK YAML Reference
+
+### Schema Reference
+Every CK YAML file must start with:
 ```yaml
-# enums/spaceType.yaml
 $schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
-enums:
-- enumId: SpaceType
-  values:
-  - key: 0
-    name: Office
-  - key: 1
-    name: MeetingRoom
-  - key: 2
-    name: Corridor
-  # ...
 ```
 
-### Attribute Example
+Model metadata (`ckModel.yaml`):
 ```yaml
-# attributes/temperature.yaml
-$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
-attributes:
-- id: Temperature
-  valueType: Double
+$schema: https://schemas.meshmakers.cloud/construction-kit-meta.schema.json
+modelId: EnergyIQ-2.0.0
+dependencies:
+- Basic-[2.0,3.0)
 ```
 
-### Type Example (TreeNode)
+### Reference Syntax
+- `${this}` = current model (EnergyIQ)
+- `${Basic}` = Basic package (NamedEntity, Tree, TreeNode)
+- `${System}` = System model (base types)
+
+### Value Types
+`String`, `Boolean`, `DateTime`, `Int`, `Double`, `StringArray`, `IntArray`, `Record`, `RecordArray`, `TimeSpan`, `Enum`, `Int64`, `DateTimeOffset`, `Binary`, `BinaryLinked`, `GeospatialPoint`.
+
+### Implementation Order
+Enums → Records → Attributes → Associations → Types (abstract first, then concrete).
+
+### Naming Convention
+- Attribute `id` and `name`: PascalCase
+- Type `typeId`, Enum `enumId`, Record `recordId`: PascalCase
+- Association `id`, `inboundName`, `outboundName`: PascalCase
+
+### Enum Attribute
 ```yaml
-# types/space.yaml
-$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+- id: SpaceTypeValue
+  valueType: Enum
+  valueCkEnumId: ${this}/SpaceType
+```
+
+### Record Attribute
+```yaml
+- id: ThermalRequirementsRecord
+  valueType: Record
+  valueCkRecordId: ${this}/PsetSpaceThermalRequirements
+```
+
+### RecordArray Attribute
+```yaml
+- id: ScheduleEntries
+  valueType: RecordArray
+  valueCkRecordId: ${this}/ScheduleEntry
+```
+
+### Abstract Type
+```yaml
 types:
-- typeId: Space
-  derivedFromCkTypeId: ${Basic}/TreeNode  # Inherits ParentChild, Name, Description
-  associations:
-  # ParentChild inherited from TreeNode - enables: Space → BuildingStorey
-  - id: ${this}/SpaceElements
-    targetCkTypeId: ${this}/BuildingElement
-  attributes:
-  - id: ${this}/SpaceTypeValue
-    name: spaceType
-  - id: ${this}/Temperature
-    name: temperature
-  # ...
+- typeId: Sensor
+  derivedFromCkTypeId: ${this}/BuildingElement
+  isAbstract: true
 ```
 
-### Association Example
-```yaml
-# associations/spaceElements.yaml
-$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
-associationRoles:
-- id: SpaceElements
-  inboundName: containedElements
-  outboundName: containedInSpace
-  inboundMultiplicity: N
-  outboundMultiplicity: ZeroOrOne
-```
-
----
-
-## Notes for Claude Code
-
-1. **Always specify schema:** `$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json`
-
-2. **References:**
-   - `${this}` = current model (EnergyIQ)
-   - `${Basic}` = Basic package (NamedEntity, Tree, TreeNode)
-   - `${System}` = System model (base types)
-
-3. **Value Types:** String, Boolean, DateTime, Int, Double, StringArray, IntArray, Record, RecordArray, TimeSpan, Enum, Int64, DateTimeOffset, Binary, BinaryLinked, GeospatialPoint
-
-4. **Inheritance from Basic:**
-   - Spatial types (hierarchical): derive from `${Basic}/Tree` or `${Basic}/TreeNode`
-   - Other types: derive from `${Basic}/NamedEntity` (provides Name + Description)
-   - TreeNode automatically inherits ParentChild association for tree structure
-
-5. **Enum Attributes:**
-   ```yaml
-   - id: SpaceTypeValue
-     valueType: Enum
-     valueCkEnumId: ${this}/SpaceType
-   ```
-
-6. **Record Attributes:**
-   ```yaml
-   - id: AddressValue
-     valueType: Record
-     valueCkRecordId: ${this}/Address
-   ```
-
-7. **Abstract Types:** Mark with `isAbstract: true`
-
-8. **TimeSeries:** Automatically supported by OctoMesh, no special marking in CK required
-
-9. **Order:** First Enums/Records/Attributes, then Types, then Associations
-
-10. **Documentation:** Update `docs/developer-guide.md` after every structural change!
+### Notes
+1. **Always include `$schema`** — every CK YAML.
+2. **TimeSeries** is automatic — no marking required in CK.
+3. **Documentation must be updated** after every CK structural change (CLAUDE.md mandates this).
+4. **Arrays inside RecordArray** require bracket-string encoding in RT YAML: `value: '[0, 1, 2]'` not block-style or inline flow.

@@ -1,0 +1,22 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+attributes:
+- id: DistributionSystemTypeValue
+  valueType: Enum
+  valueCkEnumId: ${this}/DistributionSystemType
+  description: "Type of distribution system (Heating/Cooling/Ventilation/Electrical/Sanitary/DomesticHotWater/etc.)"
+
+- id: TotalEnergyConsumed
+  valueType: Double
+  description: "Total energy consumed by this distribution system (kWh)"
+
+- id: TotalEnergyDelivered
+  valueType: Double
+  description: "Total energy delivered by this distribution system (kWh)"
+
+- id: SystemEfficiency
+  valueType: Double
+  description: "Average system efficiency (dimensionless or %)"
+
+- id: LastEnergyUpdate
+  valueType: DateTime
+  description: "Timestamp of the most recent energy aggregation"

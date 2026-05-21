@@ -19,3 +19,5 @@ types:
   associations:
   - id: ${this}/SpaceElements
     targetCkTypeId: ${this}/Space
+  - id: ${this}/EquipmentSensors
+    targetCkTypeId: ${this}/Sensor

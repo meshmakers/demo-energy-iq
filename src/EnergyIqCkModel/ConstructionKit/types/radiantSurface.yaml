@@ -1,0 +1,15 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: RadiantSurface
+  derivedFromCkTypeId: ${this}/HydronicTerminal
+  description: "Radiant surface terminal - underfloor, ceiling or wall (IFC: IfcSpaceHeater/RADIATOR USERDEFINED). Can be reversible (heating + passive cooling) when IsReversible=true."
+  attributes:
+  - id: ${this}/RadiantSurfaceArea
+    name: ActiveArea
+    isOptional: true
+  - id: ${this}/RadiantSurfaceMaxSupplyTemp
+    name: MaxSupplyTemp
+    isOptional: true
+  # Valve(s) modeled as separate Valve actuator(s) via TerminalActuators.
+  # For reversible loops: a single Valve with ValveType=Reversible, or a separate
+  # ChangeoverHeatingCooling valve elsewhere in the loop.

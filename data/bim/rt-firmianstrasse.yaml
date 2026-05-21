@@ -1,6 +1,6 @@
 $schema: https://schemas.meshmakers.cloud/runtime-model.schema.json
 dependencies:
-  - EnergyIQ-1.0.0
+  - EnergyIQ-2.0.0
 entities:
   # ============================================================
   # SITE - Grundstück Firmianstraße 31A
@@ -20,8 +20,6 @@ entities:
         value: 13.0333
       - id: EnergyIQ/RefElevation
         value: 424.0
-      - id: EnergyIQ/HaystackTags
-        value: ["site", "residential"]
 
   # ============================================================
   # BUILDING 1 - Hauptgebäude
@@ -49,15 +47,32 @@ entities:
               value: AT
       - id: EnergyIQ/GrossFloorArea
         value: 280.0
-      - id: EnergyIQ/HaystackTags
-        value: ["site", "building", "residential"]
     associations:
       - roleId: System/ParentChild
         targetRtId: 6789a00000000000000000a1
         targetCkTypeId: EnergyIQ/Site
 
   # ============================================================
-  # HAUPTGEBÄUDE - EG (Erdgeschoss)
+  # BUILDING 2 - Nebengebäude
+  # ============================================================
+  - rtId: 6789a00000000000000002b2
+    ckTypeId: EnergyIQ/Building
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: bldg-nebengebaeude
+      - id: System/Name
+        value: Nebengebäude
+      - id: System/Description
+        value: Einstöckiges Nebengebäude mit Garage und Werkstatt
+      - id: EnergyIQ/GrossFloorArea
+        value: 60.0
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6789a00000000000000000a1
+        targetCkTypeId: EnergyIQ/Site
+
+  # ============================================================
+  # STOREYS Hauptgebäude
   # ============================================================
   - rtId: 6789a00000000000000010c1
     ckTypeId: EnergyIQ/BuildingStorey
@@ -74,7 +89,6 @@ entities:
         value: true
       - id: EnergyIQ/GrossFloorArea
         value: 95.0
-      # ISO 4157-1
       - id: EnergyIQ/StoreyNumber
         value: 1
       - id: EnergyIQ/FloorDesignation
@@ -84,277 +98,6 @@ entities:
         targetRtId: 6789a00000000000000001b1
         targetCkTypeId: EnergyIQ/Building
 
-  # EG - Wohn-/Ess-/Küchenbereich (offener Grundriss)
-  - rtId: 6789a00000000000000011d1
-    ckTypeId: EnergyIQ/Space
-    attributes:
-      - id: EnergyIQ/GlobalId
-        value: space-hg-eg-wohnbereich
-      - id: System/Name
-        value: Wohnbereich
-      - id: System/Description
-        value: Offener Wohn-, Ess- und Küchenbereich
-      # ISO 4157-2/3
-      - id: EnergyIQ/RoomNumber
-        value: EG01
-      - id: EnergyIQ/RoomIdentifier
-        value: I#1001
-      - id: EnergyIQ/SpaceTypeValue
-        value: 14  # Other (offener Wohnbereich)
-      - id: EnergyIQ/NetFloorArea
-        value: 45.0
-      - id: EnergyIQ/CeilingHeight
-        value: 2.6
-      - id: EnergyIQ/DesignOccupancy
-        value: 6
-      # Istwerte
-      - id: EnergyIQ/Temperature
-        value: 21.5
-      - id: EnergyIQ/Humidity
-        value: 48.0
-      - id: EnergyIQ/CO2Level
-        value: 650
-      - id: EnergyIQ/Illuminance
-        value: 350
-      - id: EnergyIQ/PresenceDetected
-        value: true
-      # Sollwerte
-      - id: EnergyIQ/TemperatureSetpointHeating
-        value: 21.0
-      - id: EnergyIQ/TemperatureSetpointCooling
-        value: 25.0
-      - id: EnergyIQ/CO2Setpoint
-        value: 1000
-      - id: EnergyIQ/IlluminanceSetpoint
-        value: 300
-      # Stellgrößen
-      - id: EnergyIQ/HeatingValvePosition
-        value: 35.0
-      - id: EnergyIQ/VentilationLevel
-        value: 45.0
-      - id: EnergyIQ/LightingLevel
-        value: 60.0
-      # Betriebsmodus
-      - id: EnergyIQ/OperatingModeValue
-        value: 0  # Comfort
-      - id: EnergyIQ/HaystackTags
-        value: ["space", "room", "hvacZone", "livingRoom"]
-    associations:
-      - roleId: System/ParentChild
-        targetRtId: 6789a00000000000000010c1
-        targetCkTypeId: EnergyIQ/BuildingStorey
-
-  # EG - Büro
-  - rtId: 6789a00000000000000012d2
-    ckTypeId: EnergyIQ/Space
-    attributes:
-      - id: EnergyIQ/GlobalId
-        value: space-hg-eg-buero
-      - id: System/Name
-        value: Büro EG
-      # ISO 4157-2/3
-      - id: EnergyIQ/RoomNumber
-        value: EG02
-      - id: EnergyIQ/RoomIdentifier
-        value: I#1002
-      - id: EnergyIQ/SpaceTypeValue
-        value: 0  # Office
-      - id: EnergyIQ/NetFloorArea
-        value: 12.0
-      - id: EnergyIQ/CeilingHeight
-        value: 2.6
-      - id: EnergyIQ/DesignOccupancy
-        value: 1
-      - id: EnergyIQ/Temperature
-        value: 22.0
-      - id: EnergyIQ/Humidity
-        value: 45.0
-      - id: EnergyIQ/CO2Level
-        value: 580
-      - id: EnergyIQ/TemperatureSetpointHeating
-        value: 21.0
-      - id: EnergyIQ/TemperatureSetpointCooling
-        value: 24.0
-      - id: EnergyIQ/HeatingValvePosition
-        value: 40.0
-      - id: EnergyIQ/VentilationLevel
-        value: 50.0
-      - id: EnergyIQ/OperatingModeValue
-        value: 0
-      - id: EnergyIQ/HaystackTags
-        value: ["space", "room", "hvacZone", "office"]
-    associations:
-      - roleId: System/ParentChild
-        targetRtId: 6789a00000000000000010c1
-        targetCkTypeId: EnergyIQ/BuildingStorey
-
-  # EG - WC
-  - rtId: 6789a00000000000000013d3
-    ckTypeId: EnergyIQ/Space
-    attributes:
-      - id: EnergyIQ/GlobalId
-        value: space-hg-eg-wc
-      - id: System/Name
-        value: WC EG
-      # ISO 4157-2/3
-      - id: EnergyIQ/RoomNumber
-        value: EG03
-      - id: EnergyIQ/RoomIdentifier
-        value: I#1003
-      - id: EnergyIQ/SpaceTypeValue
-        value: 3  # Toilet
-      - id: EnergyIQ/NetFloorArea
-        value: 3.0
-      - id: EnergyIQ/CeilingHeight
-        value: 2.6
-      - id: EnergyIQ/Temperature
-        value: 20.0
-      - id: EnergyIQ/Humidity
-        value: 55.0
-      - id: EnergyIQ/TemperatureSetpointHeating
-        value: 20.0
-      - id: EnergyIQ/VentilationLevel
-        value: 100.0
-      - id: EnergyIQ/OperatingModeValue
-        value: 5  # Auto
-      - id: EnergyIQ/HaystackTags
-        value: ["space", "room", "toilet"]
-    associations:
-      - roleId: System/ParentChild
-        targetRtId: 6789a00000000000000010c1
-        targetCkTypeId: EnergyIQ/BuildingStorey
-
-  # EG - Bad
-  - rtId: 6789a00000000000000014d4
-    ckTypeId: EnergyIQ/Space
-    attributes:
-      - id: EnergyIQ/GlobalId
-        value: space-hg-eg-bad
-      - id: System/Name
-        value: Bad EG
-      # ISO 4157-2/3
-      - id: EnergyIQ/RoomNumber
-        value: EG04
-      - id: EnergyIQ/RoomIdentifier
-        value: I#1004
-      - id: EnergyIQ/SpaceTypeValue
-        value: 14  # Other (Bathroom)
-      - id: EnergyIQ/NetFloorArea
-        value: 8.0
-      - id: EnergyIQ/CeilingHeight
-        value: 2.6
-      - id: EnergyIQ/Temperature
-        value: 23.0
-      - id: EnergyIQ/Humidity
-        value: 65.0
-      - id: EnergyIQ/TemperatureSetpointHeating
-        value: 23.0
-      - id: EnergyIQ/HeatingValvePosition
-        value: 55.0
-      - id: EnergyIQ/VentilationLevel
-        value: 80.0
-      - id: EnergyIQ/OperatingModeValue
-        value: 5
-      - id: EnergyIQ/HaystackTags
-        value: ["space", "room", "bathroom"]
-    associations:
-      - roleId: System/ParentChild
-        targetRtId: 6789a00000000000000010c1
-        targetCkTypeId: EnergyIQ/BuildingStorey
-
-  # EG - Technikraum
-  - rtId: 6789a00000000000000015d5
-    ckTypeId: EnergyIQ/Space
-    attributes:
-      - id: EnergyIQ/GlobalId
-        value: space-hg-eg-technik
-      - id: System/Name
-        value: Technikraum
-      # ISO 4157-2/3
-      - id: EnergyIQ/RoomNumber
-        value: EG05
-      - id: EnergyIQ/RoomIdentifier
-        value: I#1005
-      - id: EnergyIQ/SpaceTypeValue
-        value: 5  # TechnicalRoom
-      - id: EnergyIQ/NetFloorArea
-        value: 10.0
-      - id: EnergyIQ/CeilingHeight
-        value: 2.6
-      - id: EnergyIQ/Temperature
-        value: 18.0
-      - id: EnergyIQ/Humidity
-        value: 40.0
-      - id: EnergyIQ/TemperatureSetpointHeating
-        value: 16.0
-      - id: EnergyIQ/OperatingModeValue
-        value: 3  # Protection
-      - id: EnergyIQ/HaystackTags
-        value: ["space", "room", "technicalRoom", "mechanical"]
-    associations:
-      - roleId: System/ParentChild
-        targetRtId: 6789a00000000000000010c1
-        targetCkTypeId: EnergyIQ/BuildingStorey
-
-  # EG - Vorraum
-  - rtId: 6789a00000000000000016d6
-    ckTypeId: EnergyIQ/Space
-    attributes:
-      - id: EnergyIQ/GlobalId
-        value: space-hg-eg-vorraum
-      - id: System/Name
-        value: Vorraum
-      # ISO 4157-2/3
-      - id: EnergyIQ/RoomNumber
-        value: EG06
-      - id: EnergyIQ/RoomIdentifier
-        value: I#1006
-      - id: EnergyIQ/SpaceTypeValue
-        value: 2  # Corridor
-      - id: EnergyIQ/NetFloorArea
-        value: 8.0
-      - id: EnergyIQ/CeilingHeight
-        value: 2.6
-      - id: EnergyIQ/Temperature
-        value: 20.0
-      - id: EnergyIQ/TemperatureSetpointHeating
-        value: 19.0
-      - id: EnergyIQ/OperatingModeValue
-        value: 1  # Economy
-      - id: EnergyIQ/HaystackTags
-        value: ["space", "room", "corridor", "entry"]
-    associations:
-      - roleId: System/ParentChild
-        targetRtId: 6789a00000000000000010c1
-        targetCkTypeId: EnergyIQ/BuildingStorey
-
-  # EG - Terrasse
-  - rtId: 6789a00000000000000017d7
-    ckTypeId: EnergyIQ/Space
-    attributes:
-      - id: EnergyIQ/GlobalId
-        value: space-hg-eg-terrasse
-      - id: System/Name
-        value: Terrasse
-      # ISO 4157-2/3
-      - id: EnergyIQ/RoomNumber
-        value: EG07
-      - id: EnergyIQ/RoomIdentifier
-        value: I#1007
-      - id: EnergyIQ/SpaceTypeValue
-        value: 14  # Other
-      - id: EnergyIQ/NetFloorArea
-        value: 25.0
-      - id: EnergyIQ/HaystackTags
-        value: ["space", "outdoor", "terrace"]
-    associations:
-      - roleId: System/ParentChild
-        targetRtId: 6789a00000000000000010c1
-        targetCkTypeId: EnergyIQ/BuildingStorey
-
-  # ============================================================
-  # HAUPTGEBÄUDE - OG (Obergeschoss)
-  # ============================================================
   - rtId: 6789a00000000000000020c2
     ckTypeId: EnergyIQ/BuildingStorey
     attributes:
@@ -370,7 +113,6 @@ entities:
         value: true
       - id: EnergyIQ/GrossFloorArea
         value: 95.0
-      # ISO 4157-1
       - id: EnergyIQ/StoreyNumber
         value: 2
       - id: EnergyIQ/FloorDesignation
@@ -380,225 +122,6 @@ entities:
         targetRtId: 6789a00000000000000001b1
         targetCkTypeId: EnergyIQ/Building
 
-  # OG - Schlafzimmer
-  - rtId: 6789a00000000000000021d8
-    ckTypeId: EnergyIQ/Space
-    attributes:
-      - id: EnergyIQ/GlobalId
-        value: space-hg-og-schlafzimmer
-      - id: System/Name
-        value: Schlafzimmer
-      # ISO 4157-2/3
-      - id: EnergyIQ/RoomNumber
-        value: 1OG01
-      - id: EnergyIQ/RoomIdentifier
-        value: I#2001
-      - id: EnergyIQ/SpaceTypeValue
-        value: 14  # Other (Bedroom)
-      - id: EnergyIQ/NetFloorArea
-        value: 20.0
-      - id: EnergyIQ/CeilingHeight
-        value: 2.6
-      - id: EnergyIQ/DesignOccupancy
-        value: 2
-      - id: EnergyIQ/Temperature
-        value: 19.0
-      - id: EnergyIQ/Humidity
-        value: 50.0
-      - id: EnergyIQ/CO2Level
-        value: 720
-      - id: EnergyIQ/TemperatureSetpointHeating
-        value: 18.0
-      - id: EnergyIQ/TemperatureSetpointCooling
-        value: 24.0
-      - id: EnergyIQ/HeatingValvePosition
-        value: 25.0
-      - id: EnergyIQ/VentilationLevel
-        value: 40.0
-      - id: EnergyIQ/OperatingModeValue
-        value: 0
-      - id: EnergyIQ/HaystackTags
-        value: ["space", "room", "hvacZone", "bedroom"]
-    associations:
-      - roleId: System/ParentChild
-        targetRtId: 6789a00000000000000020c2
-        targetCkTypeId: EnergyIQ/BuildingStorey
-
-  # OG - Gästezimmer
-  - rtId: 6789a00000000000000022d9
-    ckTypeId: EnergyIQ/Space
-    attributes:
-      - id: EnergyIQ/GlobalId
-        value: space-hg-og-gaestezimmer
-      - id: System/Name
-        value: Gästezimmer
-      # ISO 4157-2/3
-      - id: EnergyIQ/RoomNumber
-        value: 1OG02
-      - id: EnergyIQ/RoomIdentifier
-        value: I#2002
-      - id: EnergyIQ/SpaceTypeValue
-        value: 14
-      - id: EnergyIQ/NetFloorArea
-        value: 14.0
-      - id: EnergyIQ/CeilingHeight
-        value: 2.6
-      - id: EnergyIQ/DesignOccupancy
-        value: 2
-      - id: EnergyIQ/Temperature
-        value: 18.0
-      - id: EnergyIQ/TemperatureSetpointHeating
-        value: 16.0
-      - id: EnergyIQ/HeatingValvePosition
-        value: 0.0
-      - id: EnergyIQ/OperatingModeValue
-        value: 2  # Standby
-      - id: EnergyIQ/HaystackTags
-        value: ["space", "room", "hvacZone", "guestRoom"]
-    associations:
-      - roleId: System/ParentChild
-        targetRtId: 6789a00000000000000020c2
-        targetCkTypeId: EnergyIQ/BuildingStorey
-
-  # OG - Kinderzimmer
-  - rtId: 6789a00000000000000023da
-    ckTypeId: EnergyIQ/Space
-    attributes:
-      - id: EnergyIQ/GlobalId
-        value: space-hg-og-kinderzimmer
-      - id: System/Name
-        value: Kinderzimmer
-      # ISO 4157-2/3
-      - id: EnergyIQ/RoomNumber
-        value: 1OG03
-      - id: EnergyIQ/RoomIdentifier
-        value: I#2003
-      - id: EnergyIQ/SpaceTypeValue
-        value: 14
-      - id: EnergyIQ/NetFloorArea
-        value: 16.0
-      - id: EnergyIQ/CeilingHeight
-        value: 2.6
-      - id: EnergyIQ/DesignOccupancy
-        value: 1
-      - id: EnergyIQ/Temperature
-        value: 21.0
-      - id: EnergyIQ/Humidity
-        value: 48.0
-      - id: EnergyIQ/CO2Level
-        value: 600
-      - id: EnergyIQ/TemperatureSetpointHeating
-        value: 21.0
-      - id: EnergyIQ/HeatingValvePosition
-        value: 45.0
-      - id: EnergyIQ/VentilationLevel
-        value: 50.0
-      - id: EnergyIQ/OperatingModeValue
-        value: 0
-      - id: EnergyIQ/HaystackTags
-        value: ["space", "room", "hvacZone", "bedroom"]
-    associations:
-      - roleId: System/ParentChild
-        targetRtId: 6789a00000000000000020c2
-        targetCkTypeId: EnergyIQ/BuildingStorey
-
-  # OG - Bad
-  - rtId: 6789a00000000000000024db
-    ckTypeId: EnergyIQ/Space
-    attributes:
-      - id: EnergyIQ/GlobalId
-        value: space-hg-og-bad
-      - id: System/Name
-        value: Bad OG
-      # ISO 4157-2/3
-      - id: EnergyIQ/RoomNumber
-        value: 1OG04
-      - id: EnergyIQ/RoomIdentifier
-        value: I#2004
-      - id: EnergyIQ/SpaceTypeValue
-        value: 14
-      - id: EnergyIQ/NetFloorArea
-        value: 10.0
-      - id: EnergyIQ/CeilingHeight
-        value: 2.6
-      - id: EnergyIQ/Temperature
-        value: 23.0
-      - id: EnergyIQ/Humidity
-        value: 70.0
-      - id: EnergyIQ/TemperatureSetpointHeating
-        value: 23.0
-      - id: EnergyIQ/HeatingValvePosition
-        value: 60.0
-      - id: EnergyIQ/VentilationLevel
-        value: 100.0
-      - id: EnergyIQ/OperatingModeValue
-        value: 5
-      - id: EnergyIQ/HaystackTags
-        value: ["space", "room", "bathroom"]
-    associations:
-      - roleId: System/ParentChild
-        targetRtId: 6789a00000000000000020c2
-        targetCkTypeId: EnergyIQ/BuildingStorey
-
-  # OG - WC
-  - rtId: 6789a00000000000000025dc
-    ckTypeId: EnergyIQ/Space
-    attributes:
-      - id: EnergyIQ/GlobalId
-        value: space-hg-og-wc
-      - id: System/Name
-        value: WC OG
-      # ISO 4157-2/3
-      - id: EnergyIQ/RoomNumber
-        value: 1OG05
-      - id: EnergyIQ/RoomIdentifier
-        value: I#2005
-      - id: EnergyIQ/SpaceTypeValue
-        value: 3
-      - id: EnergyIQ/NetFloorArea
-        value: 3.0
-      - id: EnergyIQ/CeilingHeight
-        value: 2.6
-      - id: EnergyIQ/Temperature
-        value: 20.0
-      - id: EnergyIQ/VentilationLevel
-        value: 100.0
-      - id: EnergyIQ/OperatingModeValue
-        value: 5
-      - id: EnergyIQ/HaystackTags
-        value: ["space", "room", "toilet"]
-    associations:
-      - roleId: System/ParentChild
-        targetRtId: 6789a00000000000000020c2
-        targetCkTypeId: EnergyIQ/BuildingStorey
-
-  # OG - Dachterrasse
-  - rtId: 6789a00000000000000026dd
-    ckTypeId: EnergyIQ/Space
-    attributes:
-      - id: EnergyIQ/GlobalId
-        value: space-hg-og-dachterrasse
-      - id: System/Name
-        value: Dachterrasse
-      # ISO 4157-2/3
-      - id: EnergyIQ/RoomNumber
-        value: 1OG06
-      - id: EnergyIQ/RoomIdentifier
-        value: I#2006
-      - id: EnergyIQ/SpaceTypeValue
-        value: 14
-      - id: EnergyIQ/NetFloorArea
-        value: 18.0
-      - id: EnergyIQ/HaystackTags
-        value: ["space", "outdoor", "terrace", "rooftop"]
-    associations:
-      - roleId: System/ParentChild
-        targetRtId: 6789a00000000000000020c2
-        targetCkTypeId: EnergyIQ/BuildingStorey
-
-  # ============================================================
-  # HAUPTGEBÄUDE - DG (Dachgeschoss)
-  # ============================================================
   - rtId: 6789a00000000000000030c3
     ckTypeId: EnergyIQ/BuildingStorey
     attributes:
@@ -614,7 +137,6 @@ entities:
         value: true
       - id: EnergyIQ/GrossFloorArea
         value: 75.0
-      # ISO 4157-1
       - id: EnergyIQ/StoreyNumber
         value: 3
       - id: EnergyIQ/FloorDesignation
@@ -624,228 +146,9 @@ entities:
         targetRtId: 6789a00000000000000001b1
         targetCkTypeId: EnergyIQ/Building
 
-  # DG - Aufenthaltsraum
-  - rtId: 6789a00000000000000031de
-    ckTypeId: EnergyIQ/Space
-    attributes:
-      - id: EnergyIQ/GlobalId
-        value: space-hg-dg-aufenthalt
-      - id: System/Name
-        value: Aufenthaltsraum
-      # ISO 4157-2/3
-      - id: EnergyIQ/RoomNumber
-        value: DG01
-      - id: EnergyIQ/RoomIdentifier
-        value: I#3001
-      - id: EnergyIQ/SpaceTypeValue
-        value: 14
-      - id: EnergyIQ/NetFloorArea
-        value: 25.0
-      - id: EnergyIQ/CeilingHeight
-        value: 2.8
-      - id: EnergyIQ/DesignOccupancy
-        value: 4
-      - id: EnergyIQ/Temperature
-        value: 21.0
-      - id: EnergyIQ/Humidity
-        value: 45.0
-      - id: EnergyIQ/CO2Level
-        value: 550
-      - id: EnergyIQ/TemperatureSetpointHeating
-        value: 21.0
-      - id: EnergyIQ/HeatingValvePosition
-        value: 40.0
-      - id: EnergyIQ/VentilationLevel
-        value: 45.0
-      - id: EnergyIQ/OperatingModeValue
-        value: 0
-      - id: EnergyIQ/HaystackTags
-        value: ["space", "room", "hvacZone", "lounge"]
-    associations:
-      - roleId: System/ParentChild
-        targetRtId: 6789a00000000000000030c3
-        targetCkTypeId: EnergyIQ/BuildingStorey
-
-  # DG - Büro 1
-  - rtId: 6789a00000000000000032df
-    ckTypeId: EnergyIQ/Space
-    attributes:
-      - id: EnergyIQ/GlobalId
-        value: space-hg-dg-buero1
-      - id: System/Name
-        value: Büro DG 1
-      # ISO 4157-2/3
-      - id: EnergyIQ/RoomNumber
-        value: DG02
-      - id: EnergyIQ/RoomIdentifier
-        value: I#3002
-      - id: EnergyIQ/SpaceTypeValue
-        value: 0
-      - id: EnergyIQ/NetFloorArea
-        value: 12.0
-      - id: EnergyIQ/CeilingHeight
-        value: 2.5
-      - id: EnergyIQ/DesignOccupancy
-        value: 1
-      - id: EnergyIQ/Temperature
-        value: 22.0
-      - id: EnergyIQ/Humidity
-        value: 42.0
-      - id: EnergyIQ/CO2Level
-        value: 620
-      - id: EnergyIQ/Illuminance
-        value: 500
-      - id: EnergyIQ/TemperatureSetpointHeating
-        value: 21.0
-      - id: EnergyIQ/IlluminanceSetpoint
-        value: 500
-      - id: EnergyIQ/HeatingValvePosition
-        value: 45.0
-      - id: EnergyIQ/VentilationLevel
-        value: 55.0
-      - id: EnergyIQ/LightingLevel
-        value: 80.0
-      - id: EnergyIQ/OperatingModeValue
-        value: 0
-      - id: EnergyIQ/HaystackTags
-        value: ["space", "room", "hvacZone", "office"]
-    associations:
-      - roleId: System/ParentChild
-        targetRtId: 6789a00000000000000030c3
-        targetCkTypeId: EnergyIQ/BuildingStorey
-
-  # DG - Büro 2
-  - rtId: 6789a00000000000000033e0
-    ckTypeId: EnergyIQ/Space
-    attributes:
-      - id: EnergyIQ/GlobalId
-        value: space-hg-dg-buero2
-      - id: System/Name
-        value: Büro DG 2
-      # ISO 4157-2/3
-      - id: EnergyIQ/RoomNumber
-        value: DG03
-      - id: EnergyIQ/RoomIdentifier
-        value: I#3003
-      - id: EnergyIQ/SpaceTypeValue
-        value: 0
-      - id: EnergyIQ/NetFloorArea
-        value: 10.0
-      - id: EnergyIQ/CeilingHeight
-        value: 2.5
-      - id: EnergyIQ/DesignOccupancy
-        value: 1
-      - id: EnergyIQ/Temperature
-        value: 21.5
-      - id: EnergyIQ/Humidity
-        value: 44.0
-      - id: EnergyIQ/CO2Level
-        value: 580
-      - id: EnergyIQ/Illuminance
-        value: 480
-      - id: EnergyIQ/TemperatureSetpointHeating
-        value: 21.0
-      - id: EnergyIQ/IlluminanceSetpoint
-        value: 500
-      - id: EnergyIQ/HeatingValvePosition
-        value: 38.0
-      - id: EnergyIQ/VentilationLevel
-        value: 50.0
-      - id: EnergyIQ/LightingLevel
-        value: 75.0
-      - id: EnergyIQ/OperatingModeValue
-        value: 0
-      - id: EnergyIQ/HaystackTags
-        value: ["space", "room", "hvacZone", "office"]
-    associations:
-      - roleId: System/ParentChild
-        targetRtId: 6789a00000000000000030c3
-        targetCkTypeId: EnergyIQ/BuildingStorey
-
-  # DG - Bad
-  - rtId: 6789a00000000000000034e1
-    ckTypeId: EnergyIQ/Space
-    attributes:
-      - id: EnergyIQ/GlobalId
-        value: space-hg-dg-bad
-      - id: System/Name
-        value: Bad DG
-      # ISO 4157-2/3
-      - id: EnergyIQ/RoomNumber
-        value: DG04
-      - id: EnergyIQ/RoomIdentifier
-        value: I#3004
-      - id: EnergyIQ/SpaceTypeValue
-        value: 14
-      - id: EnergyIQ/NetFloorArea
-        value: 6.0
-      - id: EnergyIQ/CeilingHeight
-        value: 2.4
-      - id: EnergyIQ/Temperature
-        value: 22.0
-      - id: EnergyIQ/Humidity
-        value: 60.0
-      - id: EnergyIQ/TemperatureSetpointHeating
-        value: 22.0
-      - id: EnergyIQ/HeatingValvePosition
-        value: 50.0
-      - id: EnergyIQ/VentilationLevel
-        value: 80.0
-      - id: EnergyIQ/OperatingModeValue
-        value: 5
-      - id: EnergyIQ/HaystackTags
-        value: ["space", "room", "bathroom"]
-    associations:
-      - roleId: System/ParentChild
-        targetRtId: 6789a00000000000000030c3
-        targetCkTypeId: EnergyIQ/BuildingStorey
-
-  # DG - Balkon
-  - rtId: 6789a00000000000000035e2
-    ckTypeId: EnergyIQ/Space
-    attributes:
-      - id: EnergyIQ/GlobalId
-        value: space-hg-dg-balkon
-      - id: System/Name
-        value: Balkon
-      # ISO 4157-2/3
-      - id: EnergyIQ/RoomNumber
-        value: DG05
-      - id: EnergyIQ/RoomIdentifier
-        value: I#3005
-      - id: EnergyIQ/SpaceTypeValue
-        value: 14
-      - id: EnergyIQ/NetFloorArea
-        value: 8.0
-      - id: EnergyIQ/HaystackTags
-        value: ["space", "outdoor", "balcony"]
-    associations:
-      - roleId: System/ParentChild
-        targetRtId: 6789a00000000000000030c3
-        targetCkTypeId: EnergyIQ/BuildingStorey
-
   # ============================================================
-  # BUILDING 2 - Nebengebäude
+  # STOREYS Nebengebäude
   # ============================================================
-  - rtId: 6789a00000000000000002b2
-    ckTypeId: EnergyIQ/Building
-    attributes:
-      - id: EnergyIQ/GlobalId
-        value: bldg-nebengebaeude
-      - id: System/Name
-        value: Nebengebäude
-      - id: System/Description
-        value: Einstöckiges Nebengebäude mit Garage und Werkstatt
-      - id: EnergyIQ/GrossFloorArea
-        value: 60.0
-      - id: EnergyIQ/HaystackTags
-        value: ["site", "building", "garage"]
-    associations:
-      - roleId: System/ParentChild
-        targetRtId: 6789a00000000000000000a1
-        targetCkTypeId: EnergyIQ/Site
-
-  # Nebengebäude - EG
   - rtId: 6789a00000000000000040c4
     ckTypeId: EnergyIQ/BuildingStorey
     attributes:
@@ -861,7 +164,6 @@ entities:
         value: true
       - id: EnergyIQ/GrossFloorArea
         value: 60.0
-      # ISO 4157-1
       - id: EnergyIQ/StoreyNumber
         value: 1
       - id: EnergyIQ/FloorDesignation
@@ -871,7 +173,1475 @@ entities:
         targetRtId: 6789a00000000000000002b2
         targetCkTypeId: EnergyIQ/Building
 
-  # Nebengebäude - Garage
+  # ============================================================
+  # SPACES Hauptgebäude EG - Wohnbereich (offener Grundriss)
+  # ============================================================
+  - rtId: 6789a00000000000000011d1
+    ckTypeId: EnergyIQ/Space
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: space-hg-eg-wohnbereich
+      - id: System/Name
+        value: Wohnbereich
+      - id: System/Description
+        value: Offener Wohn-, Ess- und Küchenbereich
+      - id: EnergyIQ/RoomNumber
+        value: EG01
+      - id: EnergyIQ/RoomIdentifier
+        value: I#1001
+      - id: EnergyIQ/SpaceTypeValue
+        value: 15  # LivingRoom
+      - id: EnergyIQ/NetFloorArea
+        value: 45.0
+      - id: EnergyIQ/CeilingHeight
+        value: 2.6
+      - id: EnergyIQ/OperatingModeValue
+        value: 0  # Comfort
+      - id: EnergyIQ/ThermalRequirementsRecord
+        value:
+          ckRecordId: EnergyIQ/PsetSpaceThermalRequirements
+          attributes:
+            - id: EnergyIQ/SpaceTemperature
+              value: 21.0
+            - id: EnergyIQ/SpaceTemperatureMin
+              value: 21.0
+            - id: EnergyIQ/SpaceTemperatureMax
+              value: 25.0
+            - id: EnergyIQ/CO2SetpointMax
+              value: 1000.0
+      - id: EnergyIQ/LightingRequirementsRecord
+        value:
+          ckRecordId: EnergyIQ/PsetSpaceLightingRequirements
+          attributes:
+            - id: EnergyIQ/IlluminanceTarget
+              value: 300.0
+      - id: EnergyIQ/OccupancyRequirementsRecord
+        value:
+          ckRecordId: EnergyIQ/PsetSpaceOccupancyRequirements
+          attributes:
+            - id: EnergyIQ/OccupancyTypeValue
+              value: living
+            - id: EnergyIQ/OccupancyNumberPeak
+              value: 6
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6789a00000000000000010c1
+        targetCkTypeId: EnergyIQ/BuildingStorey
+
+  # Sensors Wohnbereich
+  - rtId: 6789a00000000000010011a1
+    ckTypeId: EnergyIQ/TemperatureSensor
+    attributes:
+      - id: System/Name
+        value: Temp-Wohnbereich
+      - id: EnergyIQ/Temperature
+        value: 21.5
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000011d1
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000010011a2
+    ckTypeId: EnergyIQ/HumiditySensor
+    attributes:
+      - id: System/Name
+        value: Hum-Wohnbereich
+      - id: EnergyIQ/Humidity
+        value: 48.0
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000011d1
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000010011a3
+    ckTypeId: EnergyIQ/CO2Sensor
+    attributes:
+      - id: System/Name
+        value: CO2-Wohnbereich
+      - id: EnergyIQ/CO2Level
+        value: 650.0
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000011d1
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000010011a4
+    ckTypeId: EnergyIQ/IlluminanceSensor
+    attributes:
+      - id: System/Name
+        value: Lux-Wohnbereich
+      - id: EnergyIQ/Illuminance
+        value: 350.0
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000011d1
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000010011a5
+    ckTypeId: EnergyIQ/PresenceSensor
+    attributes:
+      - id: System/Name
+        value: PIR-Wohnbereich
+      - id: EnergyIQ/PresenceDetected
+        value: true
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000011d1
+        targetCkTypeId: EnergyIQ/Space
+
+  # Terminal Wohnbereich - Reversible Fußbodenheizung (passivkühl-fähig)
+  - rtId: 6789a00000000000020011b1
+    ckTypeId: EnergyIQ/RadiantSurface
+    attributes:
+      - id: System/Name
+        value: FBH-Wohnbereich
+      - id: System/Description
+        value: Reversible Fußbodenheizung (Heizen + Passivkühlung)
+      - id: EnergyIQ/IsReversibleTerminal
+        value: true
+      - id: EnergyIQ/TerminalOperatingModeValue
+        value: 1  # Heating
+      - id: EnergyIQ/RadiantSurfaceArea
+        value: 42.0
+      - id: EnergyIQ/TerminalSupplyTemp
+        value: 32.0
+      - id: EnergyIQ/TerminalReturnTemp
+        value: 27.5
+      - id: EnergyIQ/TerminalNominalPower
+        value: 2.5
+    associations:
+      - roleId: EnergyIQ/SpaceTerminals
+        targetRtId: 6789a00000000000000011d1
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000020011b2
+    ckTypeId: EnergyIQ/Valve
+    attributes:
+      - id: System/Name
+        value: V-FBH-Wohnbereich
+      - id: EnergyIQ/ValveTypeValue
+        value: 2  # Reversible
+      - id: EnergyIQ/ValvePosition
+        value: 35.0
+      - id: EnergyIQ/ValvePositionSetpoint
+        value: 35.0
+    associations:
+      - roleId: EnergyIQ/TerminalActuators
+        targetRtId: 6789a00000000000020011b1
+        targetCkTypeId: EnergyIQ/RadiantSurface
+
+  # AirTerminal Wohnbereich
+  - rtId: 6789a00000000000020011c1
+    ckTypeId: EnergyIQ/AirTerminal
+    attributes:
+      - id: System/Name
+        value: LT-Wohnbereich
+      - id: EnergyIQ/AirTerminalBoxType
+        value: Diffuser
+      - id: EnergyIQ/AirflowRate
+        value: 60.0
+      - id: EnergyIQ/AirflowSetpoint
+        value: 60.0
+    associations:
+      - roleId: EnergyIQ/SpaceTerminals
+        targetRtId: 6789a00000000000000011d1
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000020011c2
+    ckTypeId: EnergyIQ/Damper
+    attributes:
+      - id: System/Name
+        value: K-LT-Wohnbereich
+      - id: EnergyIQ/DamperPosition
+        value: 45.0
+      - id: EnergyIQ/DamperPositionSetpoint
+        value: 45.0
+    associations:
+      - roleId: EnergyIQ/TerminalActuators
+        targetRtId: 6789a00000000000020011c1
+        targetCkTypeId: EnergyIQ/AirTerminal
+
+  # ============================================================
+  # SPACES Hauptgebäude EG - Büro
+  # ============================================================
+  - rtId: 6789a00000000000000012d2
+    ckTypeId: EnergyIQ/Space
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: space-hg-eg-buero
+      - id: System/Name
+        value: Büro EG
+      - id: EnergyIQ/RoomNumber
+        value: EG02
+      - id: EnergyIQ/RoomIdentifier
+        value: I#1002
+      - id: EnergyIQ/SpaceTypeValue
+        value: 0  # Office
+      - id: EnergyIQ/NetFloorArea
+        value: 12.0
+      - id: EnergyIQ/CeilingHeight
+        value: 2.6
+      - id: EnergyIQ/OperatingModeValue
+        value: 0
+      - id: EnergyIQ/ThermalRequirementsRecord
+        value:
+          ckRecordId: EnergyIQ/PsetSpaceThermalRequirements
+          attributes:
+            - id: EnergyIQ/SpaceTemperature
+              value: 21.0
+            - id: EnergyIQ/SpaceTemperatureMin
+              value: 21.0
+            - id: EnergyIQ/SpaceTemperatureMax
+              value: 24.0
+      - id: EnergyIQ/OccupancyRequirementsRecord
+        value:
+          ckRecordId: EnergyIQ/PsetSpaceOccupancyRequirements
+          attributes:
+            - id: EnergyIQ/OccupancyTypeValue
+              value: office
+            - id: EnergyIQ/OccupancyNumberPeak
+              value: 1
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6789a00000000000000010c1
+        targetCkTypeId: EnergyIQ/BuildingStorey
+
+  - rtId: 6789a00000000000010012a1
+    ckTypeId: EnergyIQ/TemperatureSensor
+    attributes:
+      - id: System/Name
+        value: Temp-Buero-EG
+      - id: EnergyIQ/Temperature
+        value: 22.0
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000012d2
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000010012a2
+    ckTypeId: EnergyIQ/HumiditySensor
+    attributes:
+      - id: System/Name
+        value: Hum-Buero-EG
+      - id: EnergyIQ/Humidity
+        value: 45.0
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000012d2
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000010012a3
+    ckTypeId: EnergyIQ/CO2Sensor
+    attributes:
+      - id: System/Name
+        value: CO2-Buero-EG
+      - id: EnergyIQ/CO2Level
+        value: 580.0
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000012d2
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000020012b1
+    ckTypeId: EnergyIQ/RadiantSurface
+    attributes:
+      - id: System/Name
+        value: FBH-Buero-EG
+      - id: EnergyIQ/IsReversibleTerminal
+        value: true
+      - id: EnergyIQ/TerminalOperatingModeValue
+        value: 1
+      - id: EnergyIQ/RadiantSurfaceArea
+        value: 11.0
+    associations:
+      - roleId: EnergyIQ/SpaceTerminals
+        targetRtId: 6789a00000000000000012d2
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000020012b2
+    ckTypeId: EnergyIQ/Valve
+    attributes:
+      - id: System/Name
+        value: V-FBH-Buero-EG
+      - id: EnergyIQ/ValveTypeValue
+        value: 2
+      - id: EnergyIQ/ValvePosition
+        value: 40.0
+    associations:
+      - roleId: EnergyIQ/TerminalActuators
+        targetRtId: 6789a00000000000020012b1
+        targetCkTypeId: EnergyIQ/RadiantSurface
+
+  - rtId: 6789a00000000000020012c1
+    ckTypeId: EnergyIQ/AirTerminal
+    attributes:
+      - id: System/Name
+        value: LT-Buero-EG
+      - id: EnergyIQ/AirflowRate
+        value: 30.0
+    associations:
+      - roleId: EnergyIQ/SpaceTerminals
+        targetRtId: 6789a00000000000000012d2
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000020012c2
+    ckTypeId: EnergyIQ/Damper
+    attributes:
+      - id: System/Name
+        value: K-LT-Buero-EG
+      - id: EnergyIQ/DamperPosition
+        value: 50.0
+    associations:
+      - roleId: EnergyIQ/TerminalActuators
+        targetRtId: 6789a00000000000020012c1
+        targetCkTypeId: EnergyIQ/AirTerminal
+
+  # ============================================================
+  # SPACES Hauptgebäude EG - WC
+  # ============================================================
+  - rtId: 6789a00000000000000013d3
+    ckTypeId: EnergyIQ/Space
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: space-hg-eg-wc
+      - id: System/Name
+        value: WC EG
+      - id: EnergyIQ/RoomNumber
+        value: EG03
+      - id: EnergyIQ/RoomIdentifier
+        value: I#1003
+      - id: EnergyIQ/SpaceTypeValue
+        value: 3  # Toilet
+      - id: EnergyIQ/NetFloorArea
+        value: 3.0
+      - id: EnergyIQ/CeilingHeight
+        value: 2.6
+      - id: EnergyIQ/OperatingModeValue
+        value: 5  # Auto
+      - id: EnergyIQ/ThermalRequirementsRecord
+        value:
+          ckRecordId: EnergyIQ/PsetSpaceThermalRequirements
+          attributes:
+            - id: EnergyIQ/SpaceTemperature
+              value: 20.0
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6789a00000000000000010c1
+        targetCkTypeId: EnergyIQ/BuildingStorey
+
+  - rtId: 6789a00000000000010013a1
+    ckTypeId: EnergyIQ/TemperatureSensor
+    attributes:
+      - id: System/Name
+        value: Temp-WC-EG
+      - id: EnergyIQ/Temperature
+        value: 20.0
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000013d3
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000020013c1
+    ckTypeId: EnergyIQ/AirTerminal
+    attributes:
+      - id: System/Name
+        value: LT-WC-EG
+      - id: System/Description
+        value: Abluft-Auslass (100% bei Auto)
+      - id: EnergyIQ/AirflowRate
+        value: 50.0
+    associations:
+      - roleId: EnergyIQ/SpaceTerminals
+        targetRtId: 6789a00000000000000013d3
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000020013c2
+    ckTypeId: EnergyIQ/Damper
+    attributes:
+      - id: System/Name
+        value: K-LT-WC-EG
+      - id: EnergyIQ/DamperPosition
+        value: 100.0
+    associations:
+      - roleId: EnergyIQ/TerminalActuators
+        targetRtId: 6789a00000000000020013c1
+        targetCkTypeId: EnergyIQ/AirTerminal
+
+  # ============================================================
+  # SPACES Hauptgebäude EG - Bad
+  # ============================================================
+  - rtId: 6789a00000000000000014d4
+    ckTypeId: EnergyIQ/Space
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: space-hg-eg-bad
+      - id: System/Name
+        value: Bad EG
+      - id: EnergyIQ/RoomNumber
+        value: EG04
+      - id: EnergyIQ/RoomIdentifier
+        value: I#1004
+      - id: EnergyIQ/SpaceTypeValue
+        value: 17  # Bathroom
+      - id: EnergyIQ/NetFloorArea
+        value: 8.0
+      - id: EnergyIQ/CeilingHeight
+        value: 2.6
+      - id: EnergyIQ/OperatingModeValue
+        value: 5
+      - id: EnergyIQ/ThermalRequirementsRecord
+        value:
+          ckRecordId: EnergyIQ/PsetSpaceThermalRequirements
+          attributes:
+            - id: EnergyIQ/SpaceTemperature
+              value: 23.0
+            - id: EnergyIQ/SpaceHumidityMax
+              value: 70.0
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6789a00000000000000010c1
+        targetCkTypeId: EnergyIQ/BuildingStorey
+
+  - rtId: 6789a00000000000010014a1
+    ckTypeId: EnergyIQ/TemperatureSensor
+    attributes:
+      - id: System/Name
+        value: Temp-Bad-EG
+      - id: EnergyIQ/Temperature
+        value: 23.0
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000014d4
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000010014a2
+    ckTypeId: EnergyIQ/HumiditySensor
+    attributes:
+      - id: System/Name
+        value: Hum-Bad-EG
+      - id: EnergyIQ/Humidity
+        value: 65.0
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000014d4
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000020014b1
+    ckTypeId: EnergyIQ/RadiantSurface
+    attributes:
+      - id: System/Name
+        value: FBH-Bad-EG
+      - id: EnergyIQ/TerminalOperatingModeValue
+        value: 1
+    associations:
+      - roleId: EnergyIQ/SpaceTerminals
+        targetRtId: 6789a00000000000000014d4
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000020014b2
+    ckTypeId: EnergyIQ/Valve
+    attributes:
+      - id: System/Name
+        value: V-FBH-Bad-EG
+      - id: EnergyIQ/ValveTypeValue
+        value: 0  # Heating
+      - id: EnergyIQ/ValvePosition
+        value: 55.0
+    associations:
+      - roleId: EnergyIQ/TerminalActuators
+        targetRtId: 6789a00000000000020014b1
+        targetCkTypeId: EnergyIQ/RadiantSurface
+
+  - rtId: 6789a00000000000020014c1
+    ckTypeId: EnergyIQ/AirTerminal
+    attributes:
+      - id: System/Name
+        value: LT-Bad-EG
+      - id: EnergyIQ/AirflowRate
+        value: 40.0
+    associations:
+      - roleId: EnergyIQ/SpaceTerminals
+        targetRtId: 6789a00000000000000014d4
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000020014c2
+    ckTypeId: EnergyIQ/Damper
+    attributes:
+      - id: System/Name
+        value: K-LT-Bad-EG
+      - id: EnergyIQ/DamperPosition
+        value: 80.0
+    associations:
+      - roleId: EnergyIQ/TerminalActuators
+        targetRtId: 6789a00000000000020014c1
+        targetCkTypeId: EnergyIQ/AirTerminal
+
+  # ============================================================
+  # SPACES Hauptgebäude EG - Technikraum
+  # ============================================================
+  - rtId: 6789a00000000000000015d5
+    ckTypeId: EnergyIQ/Space
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: space-hg-eg-technik
+      - id: System/Name
+        value: Technikraum
+      - id: EnergyIQ/RoomNumber
+        value: EG05
+      - id: EnergyIQ/RoomIdentifier
+        value: I#1005
+      - id: EnergyIQ/SpaceTypeValue
+        value: 5  # TechnicalRoom
+      - id: EnergyIQ/NetFloorArea
+        value: 10.0
+      - id: EnergyIQ/CeilingHeight
+        value: 2.6
+      - id: EnergyIQ/OperatingModeValue
+        value: 3  # Protection
+      - id: EnergyIQ/ThermalRequirementsRecord
+        value:
+          ckRecordId: EnergyIQ/PsetSpaceThermalRequirements
+          attributes:
+            - id: EnergyIQ/SpaceTemperature
+              value: 16.0
+            - id: EnergyIQ/SpaceTemperatureMin
+              value: 10.0
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6789a00000000000000010c1
+        targetCkTypeId: EnergyIQ/BuildingStorey
+
+  - rtId: 6789a00000000000010015a1
+    ckTypeId: EnergyIQ/TemperatureSensor
+    attributes:
+      - id: System/Name
+        value: Temp-Technik
+      - id: EnergyIQ/Temperature
+        value: 18.0
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000015d5
+        targetCkTypeId: EnergyIQ/Space
+
+  # ============================================================
+  # SPACES Hauptgebäude EG - Vorraum
+  # ============================================================
+  - rtId: 6789a00000000000000016d6
+    ckTypeId: EnergyIQ/Space
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: space-hg-eg-vorraum
+      - id: System/Name
+        value: Vorraum
+      - id: EnergyIQ/RoomNumber
+        value: EG06
+      - id: EnergyIQ/RoomIdentifier
+        value: I#1006
+      - id: EnergyIQ/SpaceTypeValue
+        value: 2  # Corridor
+      - id: EnergyIQ/NetFloorArea
+        value: 8.0
+      - id: EnergyIQ/CeilingHeight
+        value: 2.6
+      - id: EnergyIQ/OperatingModeValue
+        value: 1  # Economy
+      - id: EnergyIQ/ThermalRequirementsRecord
+        value:
+          ckRecordId: EnergyIQ/PsetSpaceThermalRequirements
+          attributes:
+            - id: EnergyIQ/SpaceTemperature
+              value: 19.0
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6789a00000000000000010c1
+        targetCkTypeId: EnergyIQ/BuildingStorey
+
+  - rtId: 6789a00000000000010016a1
+    ckTypeId: EnergyIQ/TemperatureSensor
+    attributes:
+      - id: System/Name
+        value: Temp-Vorraum
+      - id: EnergyIQ/Temperature
+        value: 20.0
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000016d6
+        targetCkTypeId: EnergyIQ/Space
+
+  # ============================================================
+  # SPACES Hauptgebäude OG - Schlafzimmer
+  # ============================================================
+  - rtId: 6789a00000000000000021d8
+    ckTypeId: EnergyIQ/Space
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: space-hg-og-schlafzimmer
+      - id: System/Name
+        value: Schlafzimmer
+      - id: EnergyIQ/RoomNumber
+        value: 1OG01
+      - id: EnergyIQ/RoomIdentifier
+        value: I#2001
+      - id: EnergyIQ/SpaceTypeValue
+        value: 16  # Bedroom
+      - id: EnergyIQ/NetFloorArea
+        value: 20.0
+      - id: EnergyIQ/CeilingHeight
+        value: 2.6
+      - id: EnergyIQ/OperatingModeValue
+        value: 0
+      - id: EnergyIQ/ThermalRequirementsRecord
+        value:
+          ckRecordId: EnergyIQ/PsetSpaceThermalRequirements
+          attributes:
+            - id: EnergyIQ/SpaceTemperature
+              value: 18.0
+            - id: EnergyIQ/SpaceTemperatureMin
+              value: 17.0
+            - id: EnergyIQ/SpaceTemperatureMax
+              value: 24.0
+      - id: EnergyIQ/OccupancyRequirementsRecord
+        value:
+          ckRecordId: EnergyIQ/PsetSpaceOccupancyRequirements
+          attributes:
+            - id: EnergyIQ/OccupancyTypeValue
+              value: sleeping
+            - id: EnergyIQ/OccupancyNumberPeak
+              value: 2
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6789a00000000000000020c2
+        targetCkTypeId: EnergyIQ/BuildingStorey
+
+  - rtId: 6789a00000000000010021a1
+    ckTypeId: EnergyIQ/TemperatureSensor
+    attributes:
+      - id: System/Name
+        value: Temp-Schlafzimmer
+      - id: EnergyIQ/Temperature
+        value: 19.0
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000021d8
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000010021a2
+    ckTypeId: EnergyIQ/HumiditySensor
+    attributes:
+      - id: System/Name
+        value: Hum-Schlafzimmer
+      - id: EnergyIQ/Humidity
+        value: 50.0
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000021d8
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000010021a3
+    ckTypeId: EnergyIQ/CO2Sensor
+    attributes:
+      - id: System/Name
+        value: CO2-Schlafzimmer
+      - id: EnergyIQ/CO2Level
+        value: 720.0
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000021d8
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000020021b1
+    ckTypeId: EnergyIQ/RadiantSurface
+    attributes:
+      - id: System/Name
+        value: FBH-Schlafzimmer
+      - id: EnergyIQ/IsReversibleTerminal
+        value: true
+      - id: EnergyIQ/TerminalOperatingModeValue
+        value: 1
+    associations:
+      - roleId: EnergyIQ/SpaceTerminals
+        targetRtId: 6789a00000000000000021d8
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000020021b2
+    ckTypeId: EnergyIQ/Valve
+    attributes:
+      - id: System/Name
+        value: V-FBH-Schlafzimmer
+      - id: EnergyIQ/ValveTypeValue
+        value: 2
+      - id: EnergyIQ/ValvePosition
+        value: 25.0
+    associations:
+      - roleId: EnergyIQ/TerminalActuators
+        targetRtId: 6789a00000000000020021b1
+        targetCkTypeId: EnergyIQ/RadiantSurface
+
+  - rtId: 6789a00000000000020021c1
+    ckTypeId: EnergyIQ/AirTerminal
+    attributes:
+      - id: System/Name
+        value: LT-Schlafzimmer
+      - id: EnergyIQ/AirflowRate
+        value: 25.0
+    associations:
+      - roleId: EnergyIQ/SpaceTerminals
+        targetRtId: 6789a00000000000000021d8
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000020021c2
+    ckTypeId: EnergyIQ/Damper
+    attributes:
+      - id: System/Name
+        value: K-LT-Schlafzimmer
+      - id: EnergyIQ/DamperPosition
+        value: 40.0
+    associations:
+      - roleId: EnergyIQ/TerminalActuators
+        targetRtId: 6789a00000000000020021c1
+        targetCkTypeId: EnergyIQ/AirTerminal
+
+  # ============================================================
+  # SPACES Hauptgebäude OG - Gästezimmer
+  # ============================================================
+  - rtId: 6789a00000000000000022d9
+    ckTypeId: EnergyIQ/Space
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: space-hg-og-gaestezimmer
+      - id: System/Name
+        value: Gästezimmer
+      - id: EnergyIQ/RoomNumber
+        value: 1OG02
+      - id: EnergyIQ/RoomIdentifier
+        value: I#2002
+      - id: EnergyIQ/SpaceTypeValue
+        value: 21  # GuestRoom
+      - id: EnergyIQ/NetFloorArea
+        value: 14.0
+      - id: EnergyIQ/CeilingHeight
+        value: 2.6
+      - id: EnergyIQ/OperatingModeValue
+        value: 2  # Standby
+      - id: EnergyIQ/ThermalRequirementsRecord
+        value:
+          ckRecordId: EnergyIQ/PsetSpaceThermalRequirements
+          attributes:
+            - id: EnergyIQ/SpaceTemperature
+              value: 16.0
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6789a00000000000000020c2
+        targetCkTypeId: EnergyIQ/BuildingStorey
+
+  - rtId: 6789a00000000000010022a1
+    ckTypeId: EnergyIQ/TemperatureSensor
+    attributes:
+      - id: System/Name
+        value: Temp-Gaestezimmer
+      - id: EnergyIQ/Temperature
+        value: 18.0
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000022d9
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000020022b1
+    ckTypeId: EnergyIQ/RadiantSurface
+    attributes:
+      - id: System/Name
+        value: FBH-Gaestezimmer
+      - id: EnergyIQ/TerminalOperatingModeValue
+        value: 4  # Standby
+    associations:
+      - roleId: EnergyIQ/SpaceTerminals
+        targetRtId: 6789a00000000000000022d9
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000020022b2
+    ckTypeId: EnergyIQ/Valve
+    attributes:
+      - id: System/Name
+        value: V-FBH-Gaestezimmer
+      - id: EnergyIQ/ValveTypeValue
+        value: 0
+      - id: EnergyIQ/ValvePosition
+        value: 0.0
+    associations:
+      - roleId: EnergyIQ/TerminalActuators
+        targetRtId: 6789a00000000000020022b1
+        targetCkTypeId: EnergyIQ/RadiantSurface
+
+  # ============================================================
+  # SPACES Hauptgebäude OG - Kinderzimmer
+  # ============================================================
+  - rtId: 6789a00000000000000023da
+    ckTypeId: EnergyIQ/Space
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: space-hg-og-kinderzimmer
+      - id: System/Name
+        value: Kinderzimmer
+      - id: EnergyIQ/RoomNumber
+        value: 1OG03
+      - id: EnergyIQ/RoomIdentifier
+        value: I#2003
+      - id: EnergyIQ/SpaceTypeValue
+        value: 20  # ChildrensRoom
+      - id: EnergyIQ/NetFloorArea
+        value: 16.0
+      - id: EnergyIQ/CeilingHeight
+        value: 2.6
+      - id: EnergyIQ/OperatingModeValue
+        value: 0
+      - id: EnergyIQ/ThermalRequirementsRecord
+        value:
+          ckRecordId: EnergyIQ/PsetSpaceThermalRequirements
+          attributes:
+            - id: EnergyIQ/SpaceTemperature
+              value: 21.0
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6789a00000000000000020c2
+        targetCkTypeId: EnergyIQ/BuildingStorey
+
+  - rtId: 6789a00000000000010023a1
+    ckTypeId: EnergyIQ/TemperatureSensor
+    attributes:
+      - id: System/Name
+        value: Temp-Kinderzimmer
+      - id: EnergyIQ/Temperature
+        value: 21.0
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000023da
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000010023a2
+    ckTypeId: EnergyIQ/HumiditySensor
+    attributes:
+      - id: System/Name
+        value: Hum-Kinderzimmer
+      - id: EnergyIQ/Humidity
+        value: 48.0
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000023da
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000010023a3
+    ckTypeId: EnergyIQ/CO2Sensor
+    attributes:
+      - id: System/Name
+        value: CO2-Kinderzimmer
+      - id: EnergyIQ/CO2Level
+        value: 600.0
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000023da
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000020023b1
+    ckTypeId: EnergyIQ/RadiantSurface
+    attributes:
+      - id: System/Name
+        value: FBH-Kinderzimmer
+      - id: EnergyIQ/TerminalOperatingModeValue
+        value: 1
+    associations:
+      - roleId: EnergyIQ/SpaceTerminals
+        targetRtId: 6789a00000000000000023da
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000020023b2
+    ckTypeId: EnergyIQ/Valve
+    attributes:
+      - id: System/Name
+        value: V-FBH-Kinderzimmer
+      - id: EnergyIQ/ValveTypeValue
+        value: 0
+      - id: EnergyIQ/ValvePosition
+        value: 45.0
+    associations:
+      - roleId: EnergyIQ/TerminalActuators
+        targetRtId: 6789a00000000000020023b1
+        targetCkTypeId: EnergyIQ/RadiantSurface
+
+  - rtId: 6789a00000000000020023c1
+    ckTypeId: EnergyIQ/AirTerminal
+    attributes:
+      - id: System/Name
+        value: LT-Kinderzimmer
+    associations:
+      - roleId: EnergyIQ/SpaceTerminals
+        targetRtId: 6789a00000000000000023da
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000020023c2
+    ckTypeId: EnergyIQ/Damper
+    attributes:
+      - id: System/Name
+        value: K-LT-Kinderzimmer
+      - id: EnergyIQ/DamperPosition
+        value: 50.0
+    associations:
+      - roleId: EnergyIQ/TerminalActuators
+        targetRtId: 6789a00000000000020023c1
+        targetCkTypeId: EnergyIQ/AirTerminal
+
+  # ============================================================
+  # SPACES Hauptgebäude OG - Bad OG
+  # ============================================================
+  - rtId: 6789a00000000000000024db
+    ckTypeId: EnergyIQ/Space
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: space-hg-og-bad
+      - id: System/Name
+        value: Bad OG
+      - id: EnergyIQ/RoomNumber
+        value: 1OG04
+      - id: EnergyIQ/RoomIdentifier
+        value: I#2004
+      - id: EnergyIQ/SpaceTypeValue
+        value: 17  # Bathroom
+      - id: EnergyIQ/NetFloorArea
+        value: 10.0
+      - id: EnergyIQ/CeilingHeight
+        value: 2.6
+      - id: EnergyIQ/OperatingModeValue
+        value: 5
+      - id: EnergyIQ/ThermalRequirementsRecord
+        value:
+          ckRecordId: EnergyIQ/PsetSpaceThermalRequirements
+          attributes:
+            - id: EnergyIQ/SpaceTemperature
+              value: 23.0
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6789a00000000000000020c2
+        targetCkTypeId: EnergyIQ/BuildingStorey
+
+  - rtId: 6789a00000000000010024a1
+    ckTypeId: EnergyIQ/TemperatureSensor
+    attributes:
+      - id: System/Name
+        value: Temp-Bad-OG
+      - id: EnergyIQ/Temperature
+        value: 23.0
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000024db
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000010024a2
+    ckTypeId: EnergyIQ/HumiditySensor
+    attributes:
+      - id: System/Name
+        value: Hum-Bad-OG
+      - id: EnergyIQ/Humidity
+        value: 70.0
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000024db
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000020024b1
+    ckTypeId: EnergyIQ/RadiantSurface
+    attributes:
+      - id: System/Name
+        value: FBH-Bad-OG
+      - id: EnergyIQ/TerminalOperatingModeValue
+        value: 1
+    associations:
+      - roleId: EnergyIQ/SpaceTerminals
+        targetRtId: 6789a00000000000000024db
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000020024b2
+    ckTypeId: EnergyIQ/Valve
+    attributes:
+      - id: System/Name
+        value: V-FBH-Bad-OG
+      - id: EnergyIQ/ValveTypeValue
+        value: 0
+      - id: EnergyIQ/ValvePosition
+        value: 60.0
+    associations:
+      - roleId: EnergyIQ/TerminalActuators
+        targetRtId: 6789a00000000000020024b1
+        targetCkTypeId: EnergyIQ/RadiantSurface
+
+  - rtId: 6789a00000000000020024c1
+    ckTypeId: EnergyIQ/AirTerminal
+    attributes:
+      - id: System/Name
+        value: LT-Bad-OG
+      - id: EnergyIQ/AirflowRate
+        value: 50.0
+    associations:
+      - roleId: EnergyIQ/SpaceTerminals
+        targetRtId: 6789a00000000000000024db
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000020024c2
+    ckTypeId: EnergyIQ/Damper
+    attributes:
+      - id: System/Name
+        value: K-LT-Bad-OG
+      - id: EnergyIQ/DamperPosition
+        value: 100.0
+    associations:
+      - roleId: EnergyIQ/TerminalActuators
+        targetRtId: 6789a00000000000020024c1
+        targetCkTypeId: EnergyIQ/AirTerminal
+
+  # ============================================================
+  # SPACES Hauptgebäude OG - WC OG
+  # ============================================================
+  - rtId: 6789a00000000000000025dc
+    ckTypeId: EnergyIQ/Space
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: space-hg-og-wc
+      - id: System/Name
+        value: WC OG
+      - id: EnergyIQ/RoomNumber
+        value: 1OG05
+      - id: EnergyIQ/RoomIdentifier
+        value: I#2005
+      - id: EnergyIQ/SpaceTypeValue
+        value: 3
+      - id: EnergyIQ/NetFloorArea
+        value: 3.0
+      - id: EnergyIQ/CeilingHeight
+        value: 2.6
+      - id: EnergyIQ/OperatingModeValue
+        value: 5
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6789a00000000000000020c2
+        targetCkTypeId: EnergyIQ/BuildingStorey
+
+  - rtId: 6789a00000000000010025a1
+    ckTypeId: EnergyIQ/TemperatureSensor
+    attributes:
+      - id: System/Name
+        value: Temp-WC-OG
+      - id: EnergyIQ/Temperature
+        value: 20.0
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000025dc
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000020025c1
+    ckTypeId: EnergyIQ/AirTerminal
+    attributes:
+      - id: System/Name
+        value: LT-WC-OG
+    associations:
+      - roleId: EnergyIQ/SpaceTerminals
+        targetRtId: 6789a00000000000000025dc
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000020025c2
+    ckTypeId: EnergyIQ/Damper
+    attributes:
+      - id: System/Name
+        value: K-LT-WC-OG
+      - id: EnergyIQ/DamperPosition
+        value: 100.0
+    associations:
+      - roleId: EnergyIQ/TerminalActuators
+        targetRtId: 6789a00000000000020025c1
+        targetCkTypeId: EnergyIQ/AirTerminal
+
+  # ============================================================
+  # SPACES Hauptgebäude DG - Aufenthaltsraum
+  # ============================================================
+  - rtId: 6789a00000000000000031de
+    ckTypeId: EnergyIQ/Space
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: space-hg-dg-aufenthalt
+      - id: System/Name
+        value: Aufenthaltsraum
+      - id: EnergyIQ/RoomNumber
+        value: DG01
+      - id: EnergyIQ/RoomIdentifier
+        value: I#3001
+      - id: EnergyIQ/SpaceTypeValue
+        value: 19  # Lounge
+      - id: EnergyIQ/NetFloorArea
+        value: 25.0
+      - id: EnergyIQ/CeilingHeight
+        value: 2.8
+      - id: EnergyIQ/OperatingModeValue
+        value: 0
+      - id: EnergyIQ/ThermalRequirementsRecord
+        value:
+          ckRecordId: EnergyIQ/PsetSpaceThermalRequirements
+          attributes:
+            - id: EnergyIQ/SpaceTemperature
+              value: 21.0
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6789a00000000000000030c3
+        targetCkTypeId: EnergyIQ/BuildingStorey
+
+  - rtId: 6789a00000000000010031a1
+    ckTypeId: EnergyIQ/TemperatureSensor
+    attributes:
+      - id: System/Name
+        value: Temp-Aufenthalt
+      - id: EnergyIQ/Temperature
+        value: 21.0
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000031de
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000010031a2
+    ckTypeId: EnergyIQ/HumiditySensor
+    attributes:
+      - id: System/Name
+        value: Hum-Aufenthalt
+      - id: EnergyIQ/Humidity
+        value: 45.0
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000031de
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000010031a3
+    ckTypeId: EnergyIQ/CO2Sensor
+    attributes:
+      - id: System/Name
+        value: CO2-Aufenthalt
+      - id: EnergyIQ/CO2Level
+        value: 550.0
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000031de
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000020031b1
+    ckTypeId: EnergyIQ/RadiantSurface
+    attributes:
+      - id: System/Name
+        value: FBH-Aufenthalt
+      - id: EnergyIQ/IsReversibleTerminal
+        value: true
+    associations:
+      - roleId: EnergyIQ/SpaceTerminals
+        targetRtId: 6789a00000000000000031de
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000020031b2
+    ckTypeId: EnergyIQ/Valve
+    attributes:
+      - id: System/Name
+        value: V-FBH-Aufenthalt
+      - id: EnergyIQ/ValveTypeValue
+        value: 2
+      - id: EnergyIQ/ValvePosition
+        value: 40.0
+    associations:
+      - roleId: EnergyIQ/TerminalActuators
+        targetRtId: 6789a00000000000020031b1
+        targetCkTypeId: EnergyIQ/RadiantSurface
+
+  # ============================================================
+  # SPACES Hauptgebäude DG - Büro 1
+  # ============================================================
+  - rtId: 6789a00000000000000032df
+    ckTypeId: EnergyIQ/Space
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: space-hg-dg-buero1
+      - id: System/Name
+        value: Büro DG 1
+      - id: EnergyIQ/RoomNumber
+        value: DG02
+      - id: EnergyIQ/RoomIdentifier
+        value: I#3002
+      - id: EnergyIQ/SpaceTypeValue
+        value: 0  # Office
+      - id: EnergyIQ/NetFloorArea
+        value: 12.0
+      - id: EnergyIQ/CeilingHeight
+        value: 2.5
+      - id: EnergyIQ/OperatingModeValue
+        value: 0
+      - id: EnergyIQ/ThermalRequirementsRecord
+        value:
+          ckRecordId: EnergyIQ/PsetSpaceThermalRequirements
+          attributes:
+            - id: EnergyIQ/SpaceTemperature
+              value: 21.0
+      - id: EnergyIQ/LightingRequirementsRecord
+        value:
+          ckRecordId: EnergyIQ/PsetSpaceLightingRequirements
+          attributes:
+            - id: EnergyIQ/IlluminanceTarget
+              value: 500.0
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6789a00000000000000030c3
+        targetCkTypeId: EnergyIQ/BuildingStorey
+
+  - rtId: 6789a00000000000010032a1
+    ckTypeId: EnergyIQ/TemperatureSensor
+    attributes:
+      - id: System/Name
+        value: Temp-Buero-DG1
+      - id: EnergyIQ/Temperature
+        value: 22.0
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000032df
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000010032a2
+    ckTypeId: EnergyIQ/HumiditySensor
+    attributes:
+      - id: System/Name
+        value: Hum-Buero-DG1
+      - id: EnergyIQ/Humidity
+        value: 42.0
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000032df
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000010032a3
+    ckTypeId: EnergyIQ/CO2Sensor
+    attributes:
+      - id: System/Name
+        value: CO2-Buero-DG1
+      - id: EnergyIQ/CO2Level
+        value: 620.0
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000032df
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000010032a4
+    ckTypeId: EnergyIQ/IlluminanceSensor
+    attributes:
+      - id: System/Name
+        value: Lux-Buero-DG1
+      - id: EnergyIQ/Illuminance
+        value: 500.0
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000032df
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000020032b1
+    ckTypeId: EnergyIQ/RadiantSurface
+    attributes:
+      - id: System/Name
+        value: FBH-Buero-DG1
+      - id: EnergyIQ/IsReversibleTerminal
+        value: true
+    associations:
+      - roleId: EnergyIQ/SpaceTerminals
+        targetRtId: 6789a00000000000000032df
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000020032b2
+    ckTypeId: EnergyIQ/Valve
+    attributes:
+      - id: System/Name
+        value: V-FBH-Buero-DG1
+      - id: EnergyIQ/ValveTypeValue
+        value: 2
+      - id: EnergyIQ/ValvePosition
+        value: 45.0
+    associations:
+      - roleId: EnergyIQ/TerminalActuators
+        targetRtId: 6789a00000000000020032b1
+        targetCkTypeId: EnergyIQ/RadiantSurface
+
+  # ============================================================
+  # SPACES Hauptgebäude DG - Büro 2
+  # ============================================================
+  - rtId: 6789a00000000000000033e0
+    ckTypeId: EnergyIQ/Space
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: space-hg-dg-buero2
+      - id: System/Name
+        value: Büro DG 2
+      - id: EnergyIQ/RoomNumber
+        value: DG03
+      - id: EnergyIQ/RoomIdentifier
+        value: I#3003
+      - id: EnergyIQ/SpaceTypeValue
+        value: 0
+      - id: EnergyIQ/NetFloorArea
+        value: 10.0
+      - id: EnergyIQ/CeilingHeight
+        value: 2.5
+      - id: EnergyIQ/OperatingModeValue
+        value: 0
+      - id: EnergyIQ/ThermalRequirementsRecord
+        value:
+          ckRecordId: EnergyIQ/PsetSpaceThermalRequirements
+          attributes:
+            - id: EnergyIQ/SpaceTemperature
+              value: 21.0
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6789a00000000000000030c3
+        targetCkTypeId: EnergyIQ/BuildingStorey
+
+  - rtId: 6789a00000000000010033a1
+    ckTypeId: EnergyIQ/TemperatureSensor
+    attributes:
+      - id: System/Name
+        value: Temp-Buero-DG2
+      - id: EnergyIQ/Temperature
+        value: 21.5
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000033e0
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000020033b1
+    ckTypeId: EnergyIQ/RadiantSurface
+    attributes:
+      - id: System/Name
+        value: FBH-Buero-DG2
+    associations:
+      - roleId: EnergyIQ/SpaceTerminals
+        targetRtId: 6789a00000000000000033e0
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000020033b2
+    ckTypeId: EnergyIQ/Valve
+    attributes:
+      - id: System/Name
+        value: V-FBH-Buero-DG2
+      - id: EnergyIQ/ValveTypeValue
+        value: 0
+      - id: EnergyIQ/ValvePosition
+        value: 38.0
+    associations:
+      - roleId: EnergyIQ/TerminalActuators
+        targetRtId: 6789a00000000000020033b1
+        targetCkTypeId: EnergyIQ/RadiantSurface
+
+  # ============================================================
+  # SPACES Hauptgebäude DG - Bad DG
+  # ============================================================
+  - rtId: 6789a00000000000000034e1
+    ckTypeId: EnergyIQ/Space
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: space-hg-dg-bad
+      - id: System/Name
+        value: Bad DG
+      - id: EnergyIQ/RoomNumber
+        value: DG04
+      - id: EnergyIQ/RoomIdentifier
+        value: I#3004
+      - id: EnergyIQ/SpaceTypeValue
+        value: 17
+      - id: EnergyIQ/NetFloorArea
+        value: 6.0
+      - id: EnergyIQ/CeilingHeight
+        value: 2.4
+      - id: EnergyIQ/OperatingModeValue
+        value: 5
+      - id: EnergyIQ/ThermalRequirementsRecord
+        value:
+          ckRecordId: EnergyIQ/PsetSpaceThermalRequirements
+          attributes:
+            - id: EnergyIQ/SpaceTemperature
+              value: 22.0
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6789a00000000000000030c3
+        targetCkTypeId: EnergyIQ/BuildingStorey
+
+  - rtId: 6789a00000000000010034a1
+    ckTypeId: EnergyIQ/TemperatureSensor
+    attributes:
+      - id: System/Name
+        value: Temp-Bad-DG
+      - id: EnergyIQ/Temperature
+        value: 22.0
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000034e1
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000010034a2
+    ckTypeId: EnergyIQ/HumiditySensor
+    attributes:
+      - id: System/Name
+        value: Hum-Bad-DG
+      - id: EnergyIQ/Humidity
+        value: 60.0
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000034e1
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000020034b1
+    ckTypeId: EnergyIQ/RadiantSurface
+    attributes:
+      - id: System/Name
+        value: FBH-Bad-DG
+    associations:
+      - roleId: EnergyIQ/SpaceTerminals
+        targetRtId: 6789a00000000000000034e1
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000020034b2
+    ckTypeId: EnergyIQ/Valve
+    attributes:
+      - id: System/Name
+        value: V-FBH-Bad-DG
+      - id: EnergyIQ/ValveTypeValue
+        value: 0
+      - id: EnergyIQ/ValvePosition
+        value: 50.0
+    associations:
+      - roleId: EnergyIQ/TerminalActuators
+        targetRtId: 6789a00000000000020034b1
+        targetCkTypeId: EnergyIQ/RadiantSurface
+
+  - rtId: 6789a00000000000020034c1
+    ckTypeId: EnergyIQ/AirTerminal
+    attributes:
+      - id: System/Name
+        value: LT-Bad-DG
+      - id: EnergyIQ/AirflowRate
+        value: 40.0
+    associations:
+      - roleId: EnergyIQ/SpaceTerminals
+        targetRtId: 6789a00000000000000034e1
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000020034c2
+    ckTypeId: EnergyIQ/Damper
+    attributes:
+      - id: System/Name
+        value: K-LT-Bad-DG
+      - id: EnergyIQ/DamperPosition
+        value: 80.0
+    associations:
+      - roleId: EnergyIQ/TerminalActuators
+        targetRtId: 6789a00000000000020034c1
+        targetCkTypeId: EnergyIQ/AirTerminal
+
+  # ============================================================
+  # SPACES Nebengebäude - Garage
+  # ============================================================
   - rtId: 6789a00000000000000041e3
     ckTypeId: EnergyIQ/Space
     attributes:
@@ -879,31 +1649,46 @@ entities:
         value: space-ng-garage
       - id: System/Name
         value: Garage
-      # ISO 4157-2/3 (Nebengebäude: NG prefix)
       - id: EnergyIQ/RoomNumber
         value: NG-EG01
       - id: EnergyIQ/RoomIdentifier
         value: I#1001
       - id: EnergyIQ/SpaceTypeValue
-        value: 7  # Parking
+        value: 23  # Garage
       - id: EnergyIQ/NetFloorArea
         value: 30.0
       - id: EnergyIQ/CeilingHeight
         value: 2.8
-      - id: EnergyIQ/Temperature
-        value: 12.0
-      - id: EnergyIQ/TemperatureSetpointHeating
-        value: 8.0
       - id: EnergyIQ/OperatingModeValue
         value: 3  # Protection
-      - id: EnergyIQ/HaystackTags
-        value: ["space", "room", "garage", "parking"]
+      - id: EnergyIQ/ThermalRequirementsRecord
+        value:
+          ckRecordId: EnergyIQ/PsetSpaceThermalRequirements
+          attributes:
+            - id: EnergyIQ/SpaceTemperature
+              value: 8.0
+            - id: EnergyIQ/SpaceTemperatureMin
+              value: 5.0
     associations:
       - roleId: System/ParentChild
         targetRtId: 6789a00000000000000040c4
         targetCkTypeId: EnergyIQ/BuildingStorey
 
-  # Nebengebäude - Werkstatt
+  - rtId: 6789a00000000000010041a1
+    ckTypeId: EnergyIQ/TemperatureSensor
+    attributes:
+      - id: System/Name
+        value: Temp-Garage
+      - id: EnergyIQ/Temperature
+        value: 12.0
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000041e3
+        targetCkTypeId: EnergyIQ/Space
+
+  # ============================================================
+  # SPACES Nebengebäude - Werkstatt
+  # ============================================================
   - rtId: 6789a00000000000000042e4
     ckTypeId: EnergyIQ/Space
     attributes:
@@ -911,7 +1696,6 @@ entities:
         value: space-ng-werkstatt
       - id: System/Name
         value: Werkstatt
-      # ISO 4157-2/3 (Nebengebäude: NG prefix)
       - id: EnergyIQ/RoomNumber
         value: NG-EG02
       - id: EnergyIQ/RoomIdentifier
@@ -922,22 +1706,60 @@ entities:
         value: 18.0
       - id: EnergyIQ/CeilingHeight
         value: 2.8
-      - id: EnergyIQ/Temperature
-        value: 16.0
-      - id: EnergyIQ/TemperatureSetpointHeating
-        value: 15.0
-      - id: EnergyIQ/HeatingValvePosition
-        value: 20.0
       - id: EnergyIQ/OperatingModeValue
         value: 1  # Economy
-      - id: EnergyIQ/HaystackTags
-        value: ["space", "room", "workshop"]
+      - id: EnergyIQ/ThermalRequirementsRecord
+        value:
+          ckRecordId: EnergyIQ/PsetSpaceThermalRequirements
+          attributes:
+            - id: EnergyIQ/SpaceTemperature
+              value: 15.0
     associations:
       - roleId: System/ParentChild
         targetRtId: 6789a00000000000000040c4
         targetCkTypeId: EnergyIQ/BuildingStorey
 
-  # Nebengebäude - Waschküche
+  - rtId: 6789a00000000000010042a1
+    ckTypeId: EnergyIQ/TemperatureSensor
+    attributes:
+      - id: System/Name
+        value: Temp-Werkstatt
+      - id: EnergyIQ/Temperature
+        value: 16.0
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000042e4
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000020042b1
+    ckTypeId: EnergyIQ/Radiator
+    attributes:
+      - id: System/Name
+        value: HK-Werkstatt
+      - id: System/Description
+        value: Klassischer Heizkörper (kein FBH-Kreis im Nebengebäude)
+    associations:
+      - roleId: EnergyIQ/SpaceTerminals
+        targetRtId: 6789a00000000000000042e4
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000020042b2
+    ckTypeId: EnergyIQ/Valve
+    attributes:
+      - id: System/Name
+        value: V-HK-Werkstatt
+      - id: EnergyIQ/ValveTypeValue
+        value: 0
+      - id: EnergyIQ/ValvePosition
+        value: 20.0
+    associations:
+      - roleId: EnergyIQ/TerminalActuators
+        targetRtId: 6789a00000000000020042b1
+        targetCkTypeId: EnergyIQ/Radiator
+
+  # ============================================================
+  # SPACES Nebengebäude - Waschküche
+  # ============================================================
   - rtId: 6789a00000000000000043e5
     ckTypeId: EnergyIQ/Space
     attributes:
@@ -945,98 +1767,230 @@ entities:
         value: space-ng-waschkueche
       - id: System/Name
         value: Waschküche
-      # ISO 4157-2/3 (Nebengebäude: NG prefix)
       - id: EnergyIQ/RoomNumber
         value: NG-EG03
       - id: EnergyIQ/RoomIdentifier
         value: I#1003
       - id: EnergyIQ/SpaceTypeValue
-        value: 14  # Other
+        value: 22  # Laundry
       - id: EnergyIQ/NetFloorArea
         value: 10.0
       - id: EnergyIQ/CeilingHeight
         value: 2.8
-      - id: EnergyIQ/Temperature
-        value: 18.0
-      - id: EnergyIQ/Humidity
-        value: 55.0
-      - id: EnergyIQ/TemperatureSetpointHeating
-        value: 18.0
-      - id: EnergyIQ/HeatingValvePosition
-        value: 30.0
-      - id: EnergyIQ/VentilationLevel
-        value: 60.0
       - id: EnergyIQ/OperatingModeValue
-        value: 5  # Auto
-      - id: EnergyIQ/HaystackTags
-        value: ["space", "room", "laundry"]
+        value: 5
+      - id: EnergyIQ/ThermalRequirementsRecord
+        value:
+          ckRecordId: EnergyIQ/PsetSpaceThermalRequirements
+          attributes:
+            - id: EnergyIQ/SpaceTemperature
+              value: 18.0
     associations:
       - roleId: System/ParentChild
         targetRtId: 6789a00000000000000040c4
         targetCkTypeId: EnergyIQ/BuildingStorey
 
-  # ============================================================
-  # AUßENBEREICHE (als Spaces ohne Stockwerk-Zuordnung)
-  # ============================================================
+  - rtId: 6789a00000000000010043a1
+    ckTypeId: EnergyIQ/TemperatureSensor
+    attributes:
+      - id: System/Name
+        value: Temp-Waschkueche
+      - id: EnergyIQ/Temperature
+        value: 18.0
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000043e5
+        targetCkTypeId: EnergyIQ/Space
 
-  # Zufahrt
-  - rtId: 6789a00000000000000050e6
-    ckTypeId: EnergyIQ/Space
+  - rtId: 6789a00000000000010043a2
+    ckTypeId: EnergyIQ/HumiditySensor
+    attributes:
+      - id: System/Name
+        value: Hum-Waschkueche
+      - id: EnergyIQ/Humidity
+        value: 55.0
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000043e5
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000020043b1
+    ckTypeId: EnergyIQ/Radiator
+    attributes:
+      - id: System/Name
+        value: HK-Waschkueche
+    associations:
+      - roleId: EnergyIQ/SpaceTerminals
+        targetRtId: 6789a00000000000000043e5
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000020043b2
+    ckTypeId: EnergyIQ/Valve
+    attributes:
+      - id: System/Name
+        value: V-HK-Waschkueche
+      - id: EnergyIQ/ValveTypeValue
+        value: 0
+      - id: EnergyIQ/ValvePosition
+        value: 30.0
+    associations:
+      - roleId: EnergyIQ/TerminalActuators
+        targetRtId: 6789a00000000000020043b1
+        targetCkTypeId: EnergyIQ/Radiator
+
+  - rtId: 6789a00000000000020043c1
+    ckTypeId: EnergyIQ/AirTerminal
+    attributes:
+      - id: System/Name
+        value: LT-Waschkueche
+    associations:
+      - roleId: EnergyIQ/SpaceTerminals
+        targetRtId: 6789a00000000000000043e5
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000020043c2
+    ckTypeId: EnergyIQ/Damper
+    attributes:
+      - id: System/Name
+        value: K-LT-Waschkueche
+      - id: EnergyIQ/DamperPosition
+        value: 60.0
+    associations:
+      - roleId: EnergyIQ/TerminalActuators
+        targetRtId: 6789a00000000000020043c1
+        targetCkTypeId: EnergyIQ/AirTerminal
+
+  # ============================================================
+  # EXTERNAL SPACES - Außenbereiche (IfcExternalSpatialElement)
+  # ============================================================
+  - rtId: 6789a00000000000000017d7
+    ckTypeId: EnergyIQ/ExternalSpace
     attributes:
       - id: EnergyIQ/GlobalId
-        value: space-aussen-zufahrt
+        value: ext-hg-eg-terrasse
+      - id: System/Name
+        value: Terrasse
+      - id: EnergyIQ/RoomNumber
+        value: EG07
+      - id: EnergyIQ/RoomIdentifier
+        value: I#1007
+      - id: EnergyIQ/SpaceTypeValue
+        value: 14
+      - id: EnergyIQ/PredefinedType
+        value: TERRACE
+      - id: EnergyIQ/NetFloorArea
+        value: 25.0
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6789a00000000000000010c1
+        targetCkTypeId: EnergyIQ/BuildingStorey
+
+  - rtId: 6789a00000000000000026dd
+    ckTypeId: EnergyIQ/ExternalSpace
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: ext-hg-og-dachterrasse
+      - id: System/Name
+        value: Dachterrasse
+      - id: EnergyIQ/RoomNumber
+        value: 1OG06
+      - id: EnergyIQ/RoomIdentifier
+        value: I#2006
+      - id: EnergyIQ/SpaceTypeValue
+        value: 14
+      - id: EnergyIQ/PredefinedType
+        value: ROOFTERRACE
+      - id: EnergyIQ/NetFloorArea
+        value: 18.0
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6789a00000000000000020c2
+        targetCkTypeId: EnergyIQ/BuildingStorey
+
+  - rtId: 6789a00000000000000035e2
+    ckTypeId: EnergyIQ/ExternalSpace
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: ext-hg-dg-balkon
+      - id: System/Name
+        value: Balkon
+      - id: EnergyIQ/RoomNumber
+        value: DG05
+      - id: EnergyIQ/RoomIdentifier
+        value: I#3005
+      - id: EnergyIQ/SpaceTypeValue
+        value: 14
+      - id: EnergyIQ/PredefinedType
+        value: BALCONY
+      - id: EnergyIQ/NetFloorArea
+        value: 8.0
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6789a00000000000000030c3
+        targetCkTypeId: EnergyIQ/BuildingStorey
+
+  - rtId: 6789a00000000000000050e6
+    ckTypeId: EnergyIQ/ExternalSpace
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: ext-site-zufahrt
       - id: System/Name
         value: Zufahrt
-      # ISO 4157-2/3 (Außenbereich: A prefix)
       - id: EnergyIQ/RoomNumber
         value: A01
       - id: EnergyIQ/RoomIdentifier
         value: I#0001
-      - id: EnergyIQ/SpaceTypeValue
-        value: 14
+      - id: EnergyIQ/PredefinedType
+        value: DRIVEWAY
       - id: EnergyIQ/NetFloorArea
         value: 40.0
-      - id: EnergyIQ/HaystackTags
-        value: ["space", "outdoor", "driveway"]
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6789a00000000000000000a1
+        targetCkTypeId: EnergyIQ/Site
 
-  # Garten
   - rtId: 6789a00000000000000051e7
-    ckTypeId: EnergyIQ/Space
+    ckTypeId: EnergyIQ/ExternalSpace
     attributes:
       - id: EnergyIQ/GlobalId
-        value: space-aussen-garten
+        value: ext-site-garten
       - id: System/Name
         value: Garten
-      # ISO 4157-2/3 (Außenbereich: A prefix)
       - id: EnergyIQ/RoomNumber
         value: A02
       - id: EnergyIQ/RoomIdentifier
         value: I#0002
-      - id: EnergyIQ/SpaceTypeValue
-        value: 14
+      - id: EnergyIQ/PredefinedType
+        value: GARDEN
       - id: EnergyIQ/NetFloorArea
         value: 200.0
-      - id: EnergyIQ/HaystackTags
-        value: ["space", "outdoor", "garden"]
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6789a00000000000000000a1
+        targetCkTypeId: EnergyIQ/Site
 
   # ============================================================
-  # TECHNICAL SYSTEMS - Heizung
+  # PLANT EQUIPMENT - HeatPump (reversibel, Heizen + Passivkühlung)
   # ============================================================
   - rtId: 6789a00000000000000060f1
-    ckTypeId: EnergyIQ/Boiler
+    ckTypeId: EnergyIQ/HeatPump
     attributes:
       - id: EnergyIQ/Identifier
         value: HZG-01
       - id: System/Name
         value: Wärmepumpe
       - id: System/Description
-        value: Luft-Wasser-Wärmepumpe für Heizung und Warmwasser
-      - id: EnergyIQ/SystemTypeValue
-        value: 0  # Heating
-      - id: EnergyIQ/IsRunning
+        value: Luft-Wasser-Wärmepumpe mit Passivkühlung über Bodenheizschläuche (Umschaltmodul)
+      - id: EnergyIQ/HeatSourceValue
+        value: 0  # Air
+      - id: EnergyIQ/IsReversibleAggregate
         value: true
-      - id: EnergyIQ/FaultState
-        value: false
+      - id: EnergyIQ/HeatPumpOperatingModeValue
+        value: 2  # Heating
+      - id: EnergyIQ/HeatingCapacity
+        value: 8.0
+      - id: EnergyIQ/CoolingCapacity
+        value: 6.0
       - id: EnergyIQ/SupplyTemp
         value: 35.0
       - id: EnergyIQ/ReturnTemp
@@ -1045,23 +1999,96 @@ entities:
         value: 35.0
       - id: EnergyIQ/ModulationLevel
         value: 65.0
-      - id: EnergyIQ/Efficiency
-        value: 380.0  # COP 3.8
-      - id: EnergyIQ/HaystackTags
-        value: ["equip", "hvac", "heatPump", "hot", "water"]
+      - id: EnergyIQ/SourceInletTemp
+        value: 5.0
+      - id: EnergyIQ/SourceOutletTemp
+        value: 1.0
+      - id: EnergyIQ/COP
+        value: 3.8
+      - id: EnergyIQ/SCOP
+        value: 4.2
+      - id: EnergyIQ/IsRunning
+        value: true
+      - id: EnergyIQ/FaultState
+        value: false
     associations:
       - roleId: System/ParentChild
         targetRtId: 6789a00000000000000001b1
         targetCkTypeId: EnergyIQ/Building
-      - roleId: EnergyIQ/SystemSpaces
-        targetRtId: 6789a00000000000000011d1
-        targetCkTypeId: EnergyIQ/Space
-      - roleId: EnergyIQ/SystemSpaces
-        targetRtId: 6789a00000000000000021d8
-        targetCkTypeId: EnergyIQ/Space
+
+  # Umschaltventil Heizen/Kühlen (an HeatPump attached)
+  - rtId: 6789a00000000000000060f2
+    ckTypeId: EnergyIQ/Valve
+    attributes:
+      - id: System/Name
+        value: V-Umschalt-HzgKlt
+      - id: System/Description
+        value: Umschaltventil zwischen Heiz- und Passivkühlmodus
+      - id: EnergyIQ/ValveTypeValue
+        value: 3  # ChangeoverHeatingCooling
+      - id: EnergyIQ/ValvePosition
+        value: 0.0  # Position 0 = Heizmodus
+    associations:
+      - roleId: EnergyIQ/EquipmentActuators
+        targetRtId: 6789a00000000000000060f1
+        targetCkTypeId: EnergyIQ/HeatPump
+
+  # Vorlauftemp-Sensor an HeatPump
+  - rtId: 6789a00000000000010060a1
+    ckTypeId: EnergyIQ/TemperatureSensor
+    attributes:
+      - id: System/Name
+        value: Temp-WP-Vorlauf
+      - id: EnergyIQ/Temperature
+        value: 35.0
+    associations:
+      - roleId: EnergyIQ/EquipmentSensors
+        targetRtId: 6789a00000000000000060f1
+        targetCkTypeId: EnergyIQ/HeatPump
+
+  - rtId: 6789a00000000000010060a2
+    ckTypeId: EnergyIQ/TemperatureSensor
+    attributes:
+      - id: System/Name
+        value: Temp-WP-Ruecklauf
+      - id: EnergyIQ/Temperature
+        value: 28.0
+    associations:
+      - roleId: EnergyIQ/EquipmentSensors
+        targetRtId: 6789a00000000000000060f1
+        targetCkTypeId: EnergyIQ/HeatPump
 
   # ============================================================
-  # TECHNICAL SYSTEMS - Lüftung (KWL)
+  # PLANT - ThermalEnergyStorage (Pufferspeicher)
+  # ============================================================
+  - rtId: 6789a00000000000000063f4
+    ckTypeId: EnergyIQ/ThermalEnergyStorage
+    attributes:
+      - id: EnergyIQ/Identifier
+        value: PUF-01
+      - id: System/Name
+        value: Heizpufferspeicher
+      - id: System/Description
+        value: 500 l Schichtenspeicher im Technikraum
+      - id: EnergyIQ/StorageVolume
+        value: 500.0
+      - id: EnergyIQ/StorageTempTop
+        value: 38.0
+      - id: EnergyIQ/StorageTempMiddle
+        value: 32.0
+      - id: EnergyIQ/StorageTempBottom
+        value: 27.0
+      - id: EnergyIQ/StorageChargeLevel
+        value: 60.0
+      - id: EnergyIQ/IsRunning
+        value: true
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6789a00000000000000001b1
+        targetCkTypeId: EnergyIQ/Building
+
+  # ============================================================
+  # PLANT - AirHandlingUnit (KWL)
   # ============================================================
   - rtId: 6789a00000000000000061f2
     ckTypeId: EnergyIQ/AirHandlingUnit
@@ -1096,24 +2123,13 @@ entities:
         value: 45.0
       - id: EnergyIQ/HeatRecoveryEfficiency
         value: 85.0
-      - id: EnergyIQ/HaystackTags
-        value: ["equip", "hvac", "ahu", "ventilation", "heatRecovery"]
     associations:
       - roleId: System/ParentChild
         targetRtId: 6789a00000000000000001b1
         targetCkTypeId: EnergyIQ/Building
-      - roleId: EnergyIQ/SystemSpaces
-        targetRtId: 6789a00000000000000011d1
-        targetCkTypeId: EnergyIQ/Space
-      - roleId: EnergyIQ/SystemSpaces
-        targetRtId: 6789a00000000000000012d2
-        targetCkTypeId: EnergyIQ/Space
-      - roleId: EnergyIQ/SystemSpaces
-        targetRtId: 6789a00000000000000021d8
-        targetCkTypeId: EnergyIQ/Space
 
   # ============================================================
-  # TECHNICAL SYSTEMS - Umwälzpumpe Heizkreis
+  # PLANT - Heizkreispumpe
   # ============================================================
   - rtId: 6789a00000000000000062f3
     ckTypeId: EnergyIQ/Pump
@@ -1136,16 +2152,15 @@ entities:
         value: 60.0
       - id: EnergyIQ/PowerConsumption
         value: 0.045
-      - id: EnergyIQ/HaystackTags
-        value: ["equip", "pump", "hot", "water"]
     associations:
       - roleId: System/ParentChild
         targetRtId: 6789a00000000000000001b1
         targetCkTypeId: EnergyIQ/Building
 
   # ============================================================
-  # BUILDING ELEMENTS - Beispiel Fenster im Wohnbereich
+  # BUILDING ELEMENTS - Beispiele
   # ============================================================
+  # Südfenster Wohnbereich + Kontakt-Sensor
   - rtId: 6789a00000000000000070f4
     ckTypeId: EnergyIQ/Window
     attributes:
@@ -1161,14 +2176,24 @@ entities:
         value: false
       - id: EnergyIQ/OpeningPosition
         value: 0.0
-      - id: EnergyIQ/HaystackTags
-        value: ["window", "sensor"]
     associations:
       - roleId: EnergyIQ/SpaceElements
         targetRtId: 6789a00000000000000011d1
         targetCkTypeId: EnergyIQ/Space
 
-  # Sonnenschutz für das Fenster
+  - rtId: 6789a00000000000010070a1
+    ckTypeId: EnergyIQ/WindowContactSensor
+    attributes:
+      - id: System/Name
+        value: WC-Fenster-Wohnbereich-Sued
+      - id: EnergyIQ/ContactState
+        value: true  # geschlossen
+    associations:
+      - roleId: EnergyIQ/EquipmentSensors
+        targetRtId: 6789a00000000000000070f4
+        targetCkTypeId: EnergyIQ/Window
+
+  # Raffstore Süd Wohnbereich + Motor
   - rtId: 6789a00000000000000071f5
     ckTypeId: EnergyIQ/ShadingDevice
     attributes:
@@ -1186,14 +2211,26 @@ entities:
         value: 30.0
       - id: EnergyIQ/SlatAngleSetpoint
         value: 45.0
-      - id: EnergyIQ/HaystackTags
-        value: ["blind", "shading", "cmd"]
     associations:
       - roleId: EnergyIQ/SpaceElements
         targetRtId: 6789a00000000000000011d1
         targetCkTypeId: EnergyIQ/Space
 
-  # Leuchte im Büro DG
+  - rtId: 6789a00000000000020071a1
+    ckTypeId: EnergyIQ/Motor
+    attributes:
+      - id: System/Name
+        value: M-Raffstore-Wohnbereich
+      - id: EnergyIQ/MotorState
+        value: false
+      - id: EnergyIQ/MotorSpeed
+        value: 0.0
+    associations:
+      - roleId: EnergyIQ/EquipmentActuators
+        targetRtId: 6789a00000000000000071f5
+        targetCkTypeId: EnergyIQ/ShadingDevice
+
+  # Deckenleuchte Büro DG 1
   - rtId: 6789a00000000000000072f6
     ckTypeId: EnergyIQ/Luminaire
     attributes:
@@ -1211,15 +2248,13 @@ entities:
         value: 80.0
       - id: EnergyIQ/DimmingLevelSetpoint
         value: 80.0
-      - id: EnergyIQ/HaystackTags
-        value: ["light", "luminaire", "cmd"]
     associations:
       - roleId: EnergyIQ/SpaceElements
         targetRtId: 6789a00000000000000032df
         targetCkTypeId: EnergyIQ/Space
 
   # ============================================================
-  # PHOTOVOLTAIC SYSTEM - PV-Anlage
+  # PHOTOVOLTAIC SYSTEM (unverändert)
   # ============================================================
   - rtId: 6789a00000000000000080a1
     ckTypeId: EnergyIQ/PhotovoltaicSystem
@@ -1244,18 +2279,11 @@ entities:
         value: true
       - id: EnergyIQ/FaultState
         value: false
-      - id: EnergyIQ/HaystackTags
-        value: ["equip", "solar", "pv", "elec", "meter"]
     associations:
       - roleId: System/ParentChild
         targetRtId: 6789a00000000000000001b1
         targetCkTypeId: EnergyIQ/Building
 
-  # ============================================================
-  # PV STRINGS
-  # ============================================================
-
-  # String 1: Hauptdach Ost
   - rtId: 6789a00000000000000081b1
     ckTypeId: EnergyIQ/PVString
     attributes:
@@ -1263,12 +2291,10 @@ entities:
         value: STR-01
       - id: System/Name
         value: Hauptdach Ost
-      - id: System/Description
-        value: Ostseite Hauptgebäude Dach
       - id: EnergyIQ/RatedPowerKWp
         value: 4.8
       - id: EnergyIQ/Orientation
-        value: 90.0  # Ost
+        value: 90.0
       - id: EnergyIQ/Tilt
         value: 30.0
       - id: EnergyIQ/ModuleCount
@@ -1283,16 +2309,11 @@ entities:
         value: 380.0
       - id: EnergyIQ/IsRunning
         value: true
-      - id: EnergyIQ/FaultState
-        value: false
-      - id: EnergyIQ/HaystackTags
-        value: ["equip", "solar", "pv", "string"]
     associations:
       - roleId: System/ParentChild
         targetRtId: 6789a00000000000000080a1
         targetCkTypeId: EnergyIQ/PhotovoltaicSystem
 
-  # String 2: Hauptdach Süd
   - rtId: 6789a00000000000000082b2
     ckTypeId: EnergyIQ/PVString
     attributes:
@@ -1300,12 +2321,10 @@ entities:
         value: STR-02
       - id: System/Name
         value: Hauptdach Süd
-      - id: System/Description
-        value: Südseite Hauptgebäude Dach
       - id: EnergyIQ/RatedPowerKWp
         value: 6.0
       - id: EnergyIQ/Orientation
-        value: 180.0  # Süd
+        value: 180.0
       - id: EnergyIQ/Tilt
         value: 35.0
       - id: EnergyIQ/ModuleCount
@@ -1320,16 +2339,11 @@ entities:
         value: 420.0
       - id: EnergyIQ/IsRunning
         value: true
-      - id: EnergyIQ/FaultState
-        value: false
-      - id: EnergyIQ/HaystackTags
-        value: ["equip", "solar", "pv", "string"]
     associations:
       - roleId: System/ParentChild
         targetRtId: 6789a00000000000000080a1
         targetCkTypeId: EnergyIQ/PhotovoltaicSystem
 
-  # String 3: Nebengebäude Dach
   - rtId: 6789a00000000000000083b3
     ckTypeId: EnergyIQ/PVString
     attributes:
@@ -1337,14 +2351,12 @@ entities:
         value: STR-03
       - id: System/Name
         value: Nebengebäude Dach
-      - id: System/Description
-        value: Flachdach Nebengebäude (Garage/Werkstatt)
       - id: EnergyIQ/RatedPowerKWp
         value: 4.0
       - id: EnergyIQ/Orientation
-        value: 180.0  # Süd
+        value: 180.0
       - id: EnergyIQ/Tilt
-        value: 15.0  # Flachdach, leicht geneigt
+        value: 15.0
       - id: EnergyIQ/ModuleCount
         value: 10
       - id: EnergyIQ/ModuleType
@@ -1357,16 +2369,11 @@ entities:
         value: 350.0
       - id: EnergyIQ/IsRunning
         value: true
-      - id: EnergyIQ/FaultState
-        value: false
-      - id: EnergyIQ/HaystackTags
-        value: ["equip", "solar", "pv", "string"]
     associations:
       - roleId: System/ParentChild
         targetRtId: 6789a00000000000000080a1
         targetCkTypeId: EnergyIQ/PhotovoltaicSystem
 
-  # String 4: PV-Zaun
   - rtId: 6789a00000000000000084b4
     ckTypeId: EnergyIQ/PVString
     attributes:
@@ -1374,14 +2381,12 @@ entities:
         value: STR-04
       - id: System/Name
         value: PV-Zaun
-      - id: System/Description
-        value: Bifaziale Module als Grundstückszaun Südseite
       - id: EnergyIQ/RatedPowerKWp
         value: 3.6
       - id: EnergyIQ/Orientation
-        value: 180.0  # Süd
+        value: 180.0
       - id: EnergyIQ/Tilt
-        value: 90.0  # Vertikal
+        value: 90.0
       - id: EnergyIQ/ModuleCount
         value: 12
       - id: EnergyIQ/ModuleType
@@ -1394,20 +2399,11 @@ entities:
         value: 320.0
       - id: EnergyIQ/IsRunning
         value: true
-      - id: EnergyIQ/FaultState
-        value: false
-      - id: EnergyIQ/HaystackTags
-        value: ["equip", "solar", "pv", "string", "bifacial"]
     associations:
       - roleId: System/ParentChild
         targetRtId: 6789a00000000000000080a1
         targetCkTypeId: EnergyIQ/PhotovoltaicSystem
 
-  # ============================================================
-  # INVERTERS - Wechselrichter
-  # ============================================================
-
-  # Wechselrichter 1 (für String 1+2)
   - rtId: 6789a00000000000000085c1
     ckTypeId: EnergyIQ/Inverter
     attributes:
@@ -1415,8 +2411,6 @@ entities:
         value: INV-01
       - id: System/Name
         value: Wechselrichter 1
-      - id: System/Description
-        value: Hybrid-Wechselrichter für Hauptdach Ost+Süd mit Batterieanbindung
       - id: EnergyIQ/RatedPowerKVA
         value: 10.0
       - id: EnergyIQ/DcPower
@@ -1431,20 +2425,13 @@ entities:
         value: 50.0
       - id: EnergyIQ/InverterEfficiency
         value: 96.5
-      - id: EnergyIQ/Temperature
-        value: 42.0
       - id: EnergyIQ/IsRunning
         value: true
-      - id: EnergyIQ/FaultState
-        value: false
-      - id: EnergyIQ/HaystackTags
-        value: ["equip", "inverter", "dc", "ac", "elec"]
     associations:
       - roleId: System/ParentChild
         targetRtId: 6789a00000000000000080a1
         targetCkTypeId: EnergyIQ/PhotovoltaicSystem
 
-  # Wechselrichter 2 (für String 3+4)
   - rtId: 6789a00000000000000086c2
     ckTypeId: EnergyIQ/Inverter
     attributes:
@@ -1452,8 +2439,6 @@ entities:
         value: INV-02
       - id: System/Name
         value: Wechselrichter 2
-      - id: System/Description
-        value: Wechselrichter für Nebengebäude und PV-Zaun
       - id: EnergyIQ/RatedPowerKVA
         value: 8.0
       - id: EnergyIQ/DcPower
@@ -1468,22 +2453,13 @@ entities:
         value: 50.0
       - id: EnergyIQ/InverterEfficiency
         value: 96.2
-      - id: EnergyIQ/Temperature
-        value: 38.0
       - id: EnergyIQ/IsRunning
         value: true
-      - id: EnergyIQ/FaultState
-        value: false
-      - id: EnergyIQ/HaystackTags
-        value: ["equip", "inverter", "dc", "ac", "elec"]
     associations:
       - roleId: System/ParentChild
         targetRtId: 6789a00000000000000080a1
         targetCkTypeId: EnergyIQ/PhotovoltaicSystem
 
-  # ============================================================
-  # BATTERY STORAGE - Batteriespeicher
-  # ============================================================
   - rtId: 6789a00000000000000087d1
     ckTypeId: EnergyIQ/BatteryStorage
     attributes:
@@ -1491,8 +2467,6 @@ entities:
         value: BAT-01
       - id: System/Name
         value: Batteriespeicher
-      - id: System/Description
-        value: LiFePO4 Heimspeicher im Technikraum
       - id: EnergyIQ/RatedCapacityKWh
         value: 15.0
       - id: EnergyIQ/MaxChargePower
@@ -1515,11 +2489,188 @@ entities:
         value: false
       - id: EnergyIQ/IsRunning
         value: true
-      - id: EnergyIQ/FaultState
-        value: false
-      - id: EnergyIQ/HaystackTags
-        value: ["equip", "battery", "storage", "elec"]
     associations:
       - roleId: System/ParentChild
+        targetRtId: 6789a00000000000000080a1
+        targetCkTypeId: EnergyIQ/PhotovoltaicSystem
+
+  # ============================================================
+  # SCHEDULES (geteilt zwischen Räumen)
+  # ============================================================
+  - rtId: 6789a00000000000005000a1
+    ckTypeId: EnergyIQ/Schedule
+    attributes:
+      - id: System/Name
+        value: Wohnen-Werktag
+      - id: System/Description
+        value: Komfortbelegung für Wohnräume, Mo-Fr
+      - id: EnergyIQ/ScheduleTypeValue
+        value: 0  # Occupancy
+      - id: EnergyIQ/ScheduleActive
+        value: true
+      - id: EnergyIQ/ScheduleEntries
+        value:
+          - ckRecordId: EnergyIQ/ScheduleEntry
+            attributes:
+              - id: EnergyIQ/DaysOfWeek
+                value: '[0, 1, 2, 3, 4]'
+              - id: EnergyIQ/StartTime
+                value: "06:00"
+              - id: EnergyIQ/EndTime
+                value: "22:00"
+              - id: EnergyIQ/OperatingModeValue
+                value: 0
+    associations:
+      - roleId: EnergyIQ/SpaceSchedules
+        targetRtId: 6789a00000000000000011d1
+        targetCkTypeId: EnergyIQ/Space
+      - roleId: EnergyIQ/SpaceSchedules
+        targetRtId: 6789a00000000000000031de
+        targetCkTypeId: EnergyIQ/Space
+      - roleId: EnergyIQ/SpaceSchedules
+        targetRtId: 6789a00000000000000023da
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000005000a2
+    ckTypeId: EnergyIQ/Schedule
+    attributes:
+      - id: System/Name
+        value: Wohnen-Wochenende
+      - id: EnergyIQ/ScheduleTypeValue
+        value: 0
+      - id: EnergyIQ/ScheduleActive
+        value: true
+      - id: EnergyIQ/ScheduleEntries
+        value:
+          - ckRecordId: EnergyIQ/ScheduleEntry
+            attributes:
+              - id: EnergyIQ/DaysOfWeek
+                value: '[5, 6]'
+              - id: EnergyIQ/StartTime
+                value: "08:00"
+              - id: EnergyIQ/EndTime
+                value: "23:00"
+              - id: EnergyIQ/OperatingModeValue
+                value: 0
+    associations:
+      - roleId: EnergyIQ/SpaceSchedules
+        targetRtId: 6789a00000000000000011d1
+        targetCkTypeId: EnergyIQ/Space
+      - roleId: EnergyIQ/SpaceSchedules
+        targetRtId: 6789a00000000000000031de
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000005000a3
+    ckTypeId: EnergyIQ/Schedule
+    attributes:
+      - id: System/Name
+        value: Schlafzimmer-Nacht
+      - id: EnergyIQ/ScheduleTypeValue
+        value: 1  # Heating
+      - id: EnergyIQ/ScheduleActive
+        value: true
+      - id: EnergyIQ/ScheduleEntries
+        value:
+          - ckRecordId: EnergyIQ/ScheduleEntry
+            attributes:
+              - id: EnergyIQ/DaysOfWeek
+                value: '[0, 1, 2, 3, 4, 5, 6]'
+              - id: EnergyIQ/StartTime
+                value: "22:00"
+              - id: EnergyIQ/EndTime
+                value: "06:00"
+              - id: EnergyIQ/OperatingModeValue
+                value: 1  # Economy
+    associations:
+      - roleId: EnergyIQ/SpaceSchedules
+        targetRtId: 6789a00000000000000021d8
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000005000a4
+    ckTypeId: EnergyIQ/Schedule
+    attributes:
+      - id: System/Name
+        value: Buero-Werktag
+      - id: EnergyIQ/ScheduleTypeValue
+        value: 0
+      - id: EnergyIQ/ScheduleActive
+        value: true
+      - id: EnergyIQ/ScheduleEntries
+        value:
+          - ckRecordId: EnergyIQ/ScheduleEntry
+            attributes:
+              - id: EnergyIQ/DaysOfWeek
+                value: '[0, 1, 2, 3, 4]'
+              - id: EnergyIQ/StartTime
+                value: "08:00"
+              - id: EnergyIQ/EndTime
+                value: "18:00"
+              - id: EnergyIQ/OperatingModeValue
+                value: 0
+    associations:
+      - roleId: EnergyIQ/SpaceSchedules
+        targetRtId: 6789a00000000000000012d2
+        targetCkTypeId: EnergyIQ/Space
+      - roleId: EnergyIQ/SpaceSchedules
+        targetRtId: 6789a00000000000000032df
+        targetCkTypeId: EnergyIQ/Space
+      - roleId: EnergyIQ/SpaceSchedules
+        targetRtId: 6789a00000000000000033e0
+        targetCkTypeId: EnergyIQ/Space
+
+  # ============================================================
+  # DISTRIBUTION SYSTEMS
+  # ============================================================
+  - rtId: 6789a00000000000006000d1
+    ckTypeId: EnergyIQ/DistributionSystem
+    attributes:
+      - id: System/Name
+        value: Heizkreis Hauptgebäude
+      - id: System/Description
+        value: Niedertemperatur-Heizkreis (reversibel zur Passivkühlung)
+      - id: EnergyIQ/DistributionSystemTypeValue
+        value: 0  # Heating
+      - id: EnergyIQ/TotalEnergyConsumed
+        value: 12450.0
+      - id: EnergyIQ/TotalEnergyDelivered
+        value: 47310.0
+      - id: EnergyIQ/SystemEfficiency
+        value: 3.8
+    associations:
+      - roleId: EnergyIQ/SystemMembers
+        targetRtId: 6789a00000000000000060f1
+        targetCkTypeId: EnergyIQ/HeatPump
+      - roleId: EnergyIQ/SystemMembers
+        targetRtId: 6789a00000000000000063f4
+        targetCkTypeId: EnergyIQ/ThermalEnergyStorage
+      - roleId: EnergyIQ/SystemMembers
+        targetRtId: 6789a00000000000000062f3
+        targetCkTypeId: EnergyIQ/Pump
+
+  - rtId: 6789a00000000000006000d2
+    ckTypeId: EnergyIQ/DistributionSystem
+    attributes:
+      - id: System/Name
+        value: Lüftung Hauptgebäude
+      - id: EnergyIQ/DistributionSystemTypeValue
+        value: 2  # Ventilation
+      - id: EnergyIQ/SystemEfficiency
+        value: 85.0
+    associations:
+      - roleId: EnergyIQ/SystemMembers
+        targetRtId: 6789a00000000000000061f2
+        targetCkTypeId: EnergyIQ/AirHandlingUnit
+
+  - rtId: 6789a00000000000006000d3
+    ckTypeId: EnergyIQ/DistributionSystem
+    attributes:
+      - id: System/Name
+        value: Elektrisch (PV + Eigenverbrauch)
+      - id: EnergyIQ/DistributionSystemTypeValue
+        value: 9  # Solar
+      - id: EnergyIQ/TotalEnergyDelivered
+        value: 15420.0
+    associations:
+      - roleId: EnergyIQ/SystemMembers
         targetRtId: 6789a00000000000000080a1
         targetCkTypeId: EnergyIQ/PhotovoltaicSystem

@@ -1,0 +1,33 @@
+ckTypeId: EnergyIQ/Site
+phSpec: ph::Site
+markers:
+  - site
+tags:
+  - { name: dis, sourceAttribute: System/Name }
+attributes:
+  - ckAttribute: LongName
+    phTag: navName
+    kind: Str
+  - ckAttribute: RefLatitude
+    phTag: geoCoord.lat
+    kind: Number
+  - ckAttribute: RefLongitude
+    phTag: geoCoord.lng
+    kind: Number
+  - ckAttribute: RefElevation
+    phTag: geoElevation
+    kind: Number
+    unit: "m"
+  # Address record fields flatten to PH geoAddr, geoStreet, geoCity, etc.
+  - ckAttribute: AddressValue.Street
+    phTag: geoStreet
+    kind: Str
+  - ckAttribute: AddressValue.PostalCode
+    phTag: geoPostalCode
+    kind: Str
+  - ckAttribute: AddressValue.City
+    phTag: geoCity
+    kind: Str
+  - ckAttribute: AddressValue.Country
+    phTag: geoCountry
+    kind: Str

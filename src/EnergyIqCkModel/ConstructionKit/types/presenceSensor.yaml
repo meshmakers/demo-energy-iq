@@ -1,0 +1,9 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: PresenceSensor
+  derivedFromCkTypeId: ${this}/Sensor
+  description: "Occupancy / presence sensor / PIR (IFC: IfcSensor/MOVEMENTSENSOR). Boolean."
+  attributes:
+  - id: ${this}/PresenceDetected
+    name: CurrentValue
+    isOptional: true

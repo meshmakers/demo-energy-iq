@@ -1,0 +1,48 @@
+ckTypeId: EnergyIQ/ChilledBeam
+phSpec: ph::Equip
+markers:
+  - equip
+  - chilledBeam
+  - cold
+  - water
+  - cooling
+tags:
+  - { name: dis, sourceAttribute: System/Name }
+refs:
+  - phRef: spaceRef
+    sourceRole: EnergyIQ/SpaceTerminals
+    direction: parent
+    targetCkTypeId: EnergyIQ/Space
+  - phRef: equipRef
+    sourceRole: EnergyIQ/TerminalServedBy
+    direction: parent
+attributes:
+  - ckAttribute: IsReversibleTerminal
+    phTag: reversible
+    kind: Bool
+  - ckAttribute: NominalPower
+    phTag: nomPower
+    kind: Number
+    unit: "kW"
+  - ckAttribute: TerminalOperatingModeValue
+    phTag: hvacMode
+    kind: Str
+    enumMapping:
+      0: off
+      1: heating
+      2: cooling
+      3: ventilating
+      4: standby
+points:
+  - ckAttribute: SupplyTemp
+    markers: [point, sensor, water, leaving, temp]
+    kind: Number
+    unit: "°C"
+    refTo: { phRef: equipRef, target: self }
+    navName: supplyTemp
+  - ckAttribute: ReturnTemp
+    markers: [point, sensor, water, entering, temp]
+    kind: Number
+    unit: "°C"
+    refTo: { phRef: equipRef, target: self }
+    navName: returnTemp

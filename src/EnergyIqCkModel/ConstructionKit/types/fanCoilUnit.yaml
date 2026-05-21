@@ -1,0 +1,23 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: FanCoilUnit
+  derivedFromCkTypeId: ${this}/HydronicTerminal
+  description: "Fan coil unit (IFC: IfcUnitaryEquipment + IfcFan). Forced-air + hydronic coil(s); 2-pipe uses one valve + IsReversible, 4-pipe has separate heating and cooling valves."
+  attributes:
+  - id: ${this}/FanCoilHeatingValvePosition
+    name: HeatingValvePosition
+    isOptional: true
+  - id: ${this}/FanCoilCoolingValvePosition
+    name: CoolingValvePosition
+    isOptional: true
+  - id: ${this}/FanCoilFanSpeed
+    name: FanSpeed
+    isOptional: true
+  - id: ${this}/FanCoilFanStage
+    name: FanStage
+    isOptional: true
+  - id: ${this}/FanCoilFanSpeedSetpoint
+    name: FanSpeedSetpoint
+    isOptional: true
+  # Individual valves can additionally be modeled as separate Valve actuators
+  # via TerminalActuators for fine-grained control modelling.

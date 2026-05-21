@@ -1,0 +1,26 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+enums:
+- enumId: DistributionSystemType
+  values:
+  - key: 0
+    name: Heating
+  - key: 1
+    name: Cooling
+  - key: 2
+    name: Ventilation
+  - key: 3
+    name: Electrical
+  - key: 4
+    name: Sanitary
+  - key: 5
+    name: DomesticHotWater
+  - key: 6
+    name: DomesticColdWater
+  - key: 7
+    name: Drainage
+  - key: 8
+    name: Communication
+  - key: 9
+    name: Solar
+  - key: 10
+    name: Other

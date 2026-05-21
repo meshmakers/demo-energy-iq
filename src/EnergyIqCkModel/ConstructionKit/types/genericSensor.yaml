@@ -1,0 +1,9 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: GenericSensor
+  derivedFromCkTypeId: ${this}/Sensor
+  description: "Fallback sensor type for proprietary / vendor-specific or unclassified measurements. CurrentValue is String to carry any payload (numeric, enum, custom)."
+  attributes:
+  - id: ${this}/GenericStringValue
+    name: CurrentValue
+    isOptional: true

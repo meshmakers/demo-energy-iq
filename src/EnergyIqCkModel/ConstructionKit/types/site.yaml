@@ -21,14 +21,4 @@ types:
   - id: ${this}/RefElevation
     name: RefElevation
     isOptional: true
-  # Haystack compatibility
-  - id: ${this}/HaystackTags
-    name: HaystackTags
-    isOptional: true
-  - id: ${this}/HaystackRefs
-    name: HaystackRefs
-    isOptional: true
-  - id: ${this}/HaystackMeta
-    name: HaystackMeta
-    isOptional: true
   # Children (Building) via inherited System/ParentChild from Basic/Tree

@@ -1,0 +1,76 @@
+ckTypeId: EnergyIQ/Inverter
+phSpec: ph::Equip
+markers:
+  - equip
+  - inverter
+  - elec
+  - ac
+  - dc
+tags:
+  - { name: dis, sourceAttribute: System/Name }
+refs:
+  - phRef: equipRef
+    sourceRole: System/ParentChild
+    direction: parent
+    targetCkTypeId: EnergyIQ/PhotovoltaicSystem
+attributes:
+  - ckAttribute: Identifier
+    phTag: navName
+    kind: Str
+  - ckAttribute: RatedPowerKVA
+    phTag: ratedPower
+    kind: Number
+    unit: "kVA"
+points:
+  - ckAttribute: DcPower
+    markers: [point, sensor, dc, power]
+    kind: Number
+    unit: "kW"
+    refTo: { phRef: equipRef, target: self }
+    navName: dcPower
+  - ckAttribute: AcPower
+    markers: [point, sensor, ac, power]
+    kind: Number
+    unit: "kW"
+    refTo: { phRef: equipRef, target: self }
+    navName: acPower
+  - ckAttribute: DcVoltage
+    markers: [point, sensor, dc, volt]
+    kind: Number
+    unit: "V"
+    refTo: { phRef: equipRef, target: self }
+    navName: dcVoltage
+  - ckAttribute: AcVoltage
+    markers: [point, sensor, ac, volt]
+    kind: Number
+    unit: "V"
+    refTo: { phRef: equipRef, target: self }
+    navName: acVoltage
+  - ckAttribute: Frequency
+    markers: [point, sensor, ac, freq]
+    kind: Number
+    unit: "Hz"
+    refTo: { phRef: equipRef, target: self }
+    navName: frequency
+  - ckAttribute: InverterEfficiency
+    markers: [point, sensor, efficiency]
+    kind: Number
+    unit: "%"
+    refTo: { phRef: equipRef, target: self }
+    navName: efficiency
+  - ckAttribute: Temperature
+    markers: [point, sensor, equip, temp]
+    kind: Number
+    unit: "°C"
+    refTo: { phRef: equipRef, target: self }
+    navName: temp
+  - ckAttribute: IsRunning
+    markers: [point, sensor, run]
+    kind: Bool
+    refTo: { phRef: equipRef, target: self }
+    navName: run
+  - ckAttribute: FaultState
+    markers: [point, sensor, fault]
+    kind: Bool
+    refTo: { phRef: equipRef, target: self }
+    navName: fault

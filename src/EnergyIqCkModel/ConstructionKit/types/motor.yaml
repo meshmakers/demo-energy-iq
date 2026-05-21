@@ -1,0 +1,18 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: Motor
+  derivedFromCkTypeId: ${this}/Actuator
+  description: "Motor / variable-speed drive (IFC: IfcMotorConnection / IfcActuator). Use for shading drives, pump VSDs, fan motors."
+  attributes:
+  - id: ${this}/MotorState
+    name: State
+    isOptional: true
+  - id: ${this}/MotorSpeed
+    name: Speed
+    isOptional: true
+  - id: ${this}/MotorSpeedSetpoint
+    name: SpeedSetpoint
+    isOptional: true
+  - id: ${this}/PowerConsumption
+    name: PowerConsumption
+    isOptional: true

@@ -1,0 +1,44 @@
+ckTypeId: EnergyIQ/Valve
+phSpec: ph::Equip
+markers:
+  - equip
+  - valve
+tags:
+  - { name: dis, sourceAttribute: System/Name }
+refs:
+  - phRef: equipRef
+    sourceRole: EnergyIQ/EquipmentActuators
+    direction: parent
+  - phRef: terminalRef
+    sourceRole: EnergyIQ/TerminalActuators
+    direction: parent
+  - phRef: spaceRef
+    sourceRole: EnergyIQ/SpaceActuators
+    direction: parent
+    targetCkTypeId: EnergyIQ/Space
+attributes:
+  - ckAttribute: ValveTypeValue
+    phTag: valveType
+    kind: Str
+    enumMapping:
+      0: heating
+      1: cooling
+      2: reversible
+      3: changeover
+      4: mixing
+      5: bypass
+      6: isolation
+points:
+  - ckAttribute: Position
+    markers: [point, sensor, valve, position]
+    kind: Number
+    unit: "%"
+    refTo: { phRef: equipRef, target: self }
+    navName: pos
+  - ckAttribute: PositionSetpoint
+    markers: [point, sp, cmd, valve, position]
+    kind: Number
+    unit: "%"
+    refTo: { phRef: equipRef, target: self }
+    navName: posSp
+    writable: true

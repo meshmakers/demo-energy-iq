@@ -1,0 +1,35 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: ExternalSpace
+  derivedFromCkTypeId: ${Basic}/TreeNode
+  description: "External spatial element - terrace, balcony, garden, driveway (IFC: IfcExternalSpatialElement). Distinct from Space - typically no indoor sensors, no thermal/lighting requirements."
+  attributes:
+  - id: ${this}/GlobalId
+    name: GlobalId
+    isOptional: true
+  - id: ${this}/LongName
+    name: LongName
+    isOptional: true
+  - id: ${this}/SpaceTypeValue
+    name: SpaceType
+    isOptional: true
+  - id: ${this}/PredefinedType
+    name: PredefinedType
+    isOptional: true
+  - id: ${this}/NetFloorArea
+    name: Area
+    isOptional: true
+  - id: ${this}/RoomNumber
+    name: RoomNumber
+    isOptional: true
+  - id: ${this}/RoomIdentifier
+    name: RoomIdentifier
+    isOptional: true
+  associations:
+  # Parent is Site or Building or BuildingStorey via inherited System/ParentChild
+  # External spaces can still host outdoor sensors (weather, irradiance)
+  - id: ${this}/SpaceSensors
+    targetCkTypeId: ${this}/Sensor
+  # And building elements (e.g. luminaires for outdoor lighting, shading)
+  - id: ${this}/SpaceElements
+    targetCkTypeId: ${this}/BuildingElement

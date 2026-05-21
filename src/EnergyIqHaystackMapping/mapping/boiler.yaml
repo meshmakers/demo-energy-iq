@@ -1,0 +1,67 @@
+ckTypeId: EnergyIQ/Boiler
+phSpec: ph::Equip
+markers:
+  - equip
+  - boiler
+  - hot
+  - water
+  - hvac
+tags:
+  - { name: dis, sourceAttribute: System/Name }
+refs:
+  - phRef: siteRef
+    sourceRole: System/ParentChild
+    direction: ancestor
+    targetCkTypeId: EnergyIQ/Site
+attributes:
+  - ckAttribute: Identifier
+    phTag: navName
+    kind: Str
+points:
+  - ckAttribute: SupplyTemp
+    markers: [point, sensor, water, leaving, temp]
+    kind: Number
+    unit: "°C"
+    refTo: { phRef: equipRef, target: self }
+    navName: supplyTemp
+  - ckAttribute: ReturnTemp
+    markers: [point, sensor, water, entering, temp]
+    kind: Number
+    unit: "°C"
+    refTo: { phRef: equipRef, target: self }
+    navName: returnTemp
+  - ckAttribute: SupplyTempSetpoint
+    markers: [point, sp, cmd, water, leaving, temp]
+    kind: Number
+    unit: "°C"
+    refTo: { phRef: equipRef, target: self }
+    navName: supplyTempSp
+    writable: true
+  - ckAttribute: ModulationLevel
+    markers: [point, sensor, modulation, level]
+    kind: Number
+    unit: "%"
+    refTo: { phRef: equipRef, target: self }
+    navName: modulation
+  - ckAttribute: FuelConsumption
+    markers: [point, sensor, fuel, consumption, energy]
+    kind: Number
+    unit: "kWh"
+    refTo: { phRef: equipRef, target: self }
+    navName: fuelConsumption
+  - ckAttribute: Efficiency
+    markers: [point, sensor, efficiency]
+    kind: Number
+    unit: "%"
+    refTo: { phRef: equipRef, target: self }
+    navName: efficiency
+  - ckAttribute: IsRunning
+    markers: [point, sensor, run]
+    kind: Bool
+    refTo: { phRef: equipRef, target: self }
+    navName: run
+  - ckAttribute: FaultState
+    markers: [point, sensor, fault]
+    kind: Bool
+    refTo: { phRef: equipRef, target: self }
+    navName: fault

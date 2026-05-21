@@ -1,0 +1,57 @@
+ckTypeId: EnergyIQ/PhotovoltaicSystem
+phSpec: ph::Equip
+markers:
+  - equip
+  - solar
+  - plant
+  - elec
+tags:
+  - { name: dis, sourceAttribute: System/Name }
+refs:
+  - phRef: siteRef
+    sourceRole: System/ParentChild
+    direction: ancestor
+    targetCkTypeId: EnergyIQ/Site
+attributes:
+  - ckAttribute: Identifier
+    phTag: navName
+    kind: Str
+  - ckAttribute: TotalRatedPowerKWp
+    phTag: ratedPower
+    kind: Number
+    unit: "kW"
+points:
+  - ckAttribute: TotalCurrentPowerKW
+    markers: [point, sensor, solar, elec, power]
+    kind: Number
+    unit: "kW"
+    refTo: { phRef: equipRef, target: self }
+    navName: power
+  - ckAttribute: TotalEnergyProducedKWh
+    markers: [point, sensor, solar, energy]
+    kind: Number
+    unit: "kWh"
+    refTo: { phRef: equipRef, target: self }
+    navName: energy
+  - ckAttribute: GridFeedIn
+    markers: [point, sensor, elec, export, power]
+    kind: Number
+    unit: "kW"
+    refTo: { phRef: equipRef, target: self }
+    navName: gridFeedIn
+  - ckAttribute: SelfConsumption
+    markers: [point, sensor, elec, import, power]
+    kind: Number
+    unit: "kW"
+    refTo: { phRef: equipRef, target: self }
+    navName: selfConsumption
+  - ckAttribute: IsRunning
+    markers: [point, sensor, run]
+    kind: Bool
+    refTo: { phRef: equipRef, target: self }
+    navName: run
+  - ckAttribute: FaultState
+    markers: [point, sensor, fault]
+    kind: Bool
+    refTo: { phRef: equipRef, target: self }
+    navName: fault

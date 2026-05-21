@@ -1,0 +1,63 @@
+ckTypeId: EnergyIQ/RadiantSurface
+phSpec: ph::Equip
+# Radiant floor / ceiling / wall surface. Can be reversible (heating + passive cooling)
+# when IsReversibleTerminal=true.
+markers:
+  - equip
+  - radiantFloor
+  - hot
+  - water
+tags:
+  - { name: dis, sourceAttribute: System/Name }
+refs:
+  - phRef: spaceRef
+    sourceRole: EnergyIQ/SpaceTerminals
+    direction: parent
+    targetCkTypeId: EnergyIQ/Space
+  - phRef: equipRef
+    sourceRole: EnergyIQ/TerminalServedBy
+    direction: parent
+attributes:
+  - ckAttribute: IsReversibleTerminal
+    phTag: reversible
+    kind: Bool
+  - ckAttribute: ActiveArea
+    phTag: area
+    kind: Number
+    unit: "m²"
+  - ckAttribute: MaxSupplyTemp
+    phTag: designTempMax
+    kind: Number
+    unit: "°C"
+  - ckAttribute: NominalPower
+    phTag: nomPower
+    kind: Number
+    unit: "kW"
+  - ckAttribute: TerminalOperatingModeValue
+    phTag: hvacMode
+    kind: Str
+    enumMapping:
+      0: off
+      1: heating
+      2: cooling
+      3: ventilating
+      4: standby
+points:
+  - ckAttribute: SupplyTemp
+    markers: [point, sensor, water, leaving, temp]
+    kind: Number
+    unit: "°C"
+    refTo: { phRef: equipRef, target: self }
+    navName: supplyTemp
+  - ckAttribute: ReturnTemp
+    markers: [point, sensor, water, entering, temp]
+    kind: Number
+    unit: "°C"
+    refTo: { phRef: equipRef, target: self }
+    navName: returnTemp
+  - ckAttribute: FlowRate
+    markers: [point, sensor, water, flow]
+    kind: Number
+    unit: "L/min"
+    refTo: { phRef: equipRef, target: self }
+    navName: flow

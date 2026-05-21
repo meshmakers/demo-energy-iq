@@ -1,0 +1,8 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+associationRoles:
+- id: SpaceActuators
+  inboundName: ContainedActuators
+  outboundName: ActuatorInSpace
+  inboundMultiplicity: N
+  outboundMultiplicity: ZeroOrOne
+  description: "Actuators physically located in this space (room-level valves, dampers, dimmers not attached to a specific terminal/equipment)"

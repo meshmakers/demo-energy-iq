@@ -1,0 +1,18 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+attributes:
+- id: ScheduleTypeValue
+  valueType: Enum
+  valueCkEnumId: ${this}/ScheduleType
+  description: "Purpose of the schedule (Occupancy/Heating/Cooling/Ventilation/Lighting/Shading/Custom)"
+
+- id: ScheduleActive
+  valueType: Boolean
+  description: "Whether the schedule is currently active"
+
+- id: ScheduleValidFrom
+  valueType: DateTime
+  description: "Start of schedule validity (optional, for seasonal or temporary schedules)"
+
+- id: ScheduleValidTo
+  valueType: DateTime
+  description: "End of schedule validity (optional)"

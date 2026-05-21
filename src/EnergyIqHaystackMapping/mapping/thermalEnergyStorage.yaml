@@ -1,0 +1,52 @@
+ckTypeId: EnergyIQ/ThermalEnergyStorage
+phSpec: ph::Equip
+markers:
+  - equip
+  - tank
+  - thermalStorage
+  - hot
+  - water
+tags:
+  - { name: dis, sourceAttribute: System/Name }
+refs:
+  - phRef: siteRef
+    sourceRole: System/ParentChild
+    direction: ancestor
+    targetCkTypeId: EnergyIQ/Site
+attributes:
+  - ckAttribute: Identifier
+    phTag: navName
+    kind: Str
+  - ckAttribute: StorageCapacity
+    phTag: capacity
+    kind: Number
+    unit: "kWh"
+  - ckAttribute: StorageVolume
+    phTag: volume
+    kind: Number
+    unit: "L"
+points:
+  - ckAttribute: StorageTempTop
+    markers: [point, sensor, water, top, temp]
+    kind: Number
+    unit: "°C"
+    refTo: { phRef: equipRef, target: self }
+    navName: topTemp
+  - ckAttribute: StorageTempMiddle
+    markers: [point, sensor, water, middle, temp]
+    kind: Number
+    unit: "°C"
+    refTo: { phRef: equipRef, target: self }
+    navName: middleTemp
+  - ckAttribute: StorageTempBottom
+    markers: [point, sensor, water, bottom, temp]
+    kind: Number
+    unit: "°C"
+    refTo: { phRef: equipRef, target: self }
+    navName: bottomTemp
+  - ckAttribute: StorageChargeLevel
+    markers: [point, sensor, charge, level]
+    kind: Number
+    unit: "%"
+    refTo: { phRef: equipRef, target: self }
+    navName: chargeLevel

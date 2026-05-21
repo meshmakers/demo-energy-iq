@@ -1,0 +1,35 @@
+ckTypeId: EnergyIQ/Door
+phSpec: ph::Equip
+markers:
+  - equip
+  - door
+tags:
+  - { name: dis, sourceAttribute: System/Name }
+refs:
+  - phRef: spaceRef
+    sourceRole: EnergyIQ/SpaceElements
+    direction: parent
+    targetCkTypeId: EnergyIQ/Space
+attributes:
+  - ckAttribute: OverallHeight
+    phTag: height
+    kind: Number
+    unit: "mm"
+  - ckAttribute: OverallWidth
+    phTag: width
+    kind: Number
+    unit: "mm"
+  - ckAttribute: IsExternal
+    phTag: outdoor
+    kind: Bool
+points:
+  - ckAttribute: IsOpen
+    markers: [point, sensor, door, open]
+    kind: Bool
+    refTo: { phRef: equipRef, target: self }
+    navName: open
+  - ckAttribute: IsLocked
+    markers: [point, sensor, door, locked]
+    kind: Bool
+    refTo: { phRef: equipRef, target: self }
+    navName: locked

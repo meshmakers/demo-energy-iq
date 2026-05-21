@@ -1,0 +1,119 @@
+ckTypeId: EnergyIQ/HeatPump
+phSpec: ph::Equip
+markers:
+  - equip
+  - heatPump
+  - hvac
+  - hot
+  - water
+tags:
+  - { name: dis, sourceAttribute: System/Name }
+refs:
+  - phRef: siteRef
+    sourceRole: System/ParentChild
+    direction: ancestor
+    targetCkTypeId: EnergyIQ/Site
+attributes:
+  - ckAttribute: Identifier
+    phTag: navName
+    kind: Str
+  - ckAttribute: IsReversibleAggregate
+    phTag: reversible
+    kind: Bool
+  - ckAttribute: HeatSourceValue
+    phTag: heatSource
+    kind: Str
+    enumMapping:
+      0: air
+      1: ground
+      2: water
+      3: exhaust
+      4: hybrid
+  - ckAttribute: HeatingCapacity
+    phTag: heatingCapacity
+    kind: Number
+    unit: "kW"
+  - ckAttribute: CoolingCapacity
+    phTag: coolingCapacity
+    kind: Number
+    unit: "kW"
+  - ckAttribute: COP
+    phTag: cop
+    kind: Number
+  - ckAttribute: SCOP
+    phTag: scop
+    kind: Number
+  - ckAttribute: EER
+    phTag: eer
+    kind: Number
+  - ckAttribute: SEER
+    phTag: seer
+    kind: Number
+points:
+  - ckAttribute: HeatPumpOperatingModeValue
+    markers: [point, sensor, hvacMode]
+    kind: Str
+    enumMapping:
+      0: off
+      1: standby
+      2: heating
+      3: activeCooling
+      4: passiveCooling
+      5: domesticHotWater
+      6: defrost
+      7: fault
+    refTo: { phRef: equipRef, target: self }
+    navName: mode
+  - ckAttribute: SupplyTemp
+    markers: [point, sensor, water, leaving, temp]
+    kind: Number
+    unit: "°C"
+    refTo: { phRef: equipRef, target: self }
+    navName: supplyTemp
+  - ckAttribute: ReturnTemp
+    markers: [point, sensor, water, entering, temp]
+    kind: Number
+    unit: "°C"
+    refTo: { phRef: equipRef, target: self }
+    navName: returnTemp
+  - ckAttribute: SupplyTempSetpoint
+    markers: [point, sp, cmd, water, leaving, temp]
+    kind: Number
+    unit: "°C"
+    refTo: { phRef: equipRef, target: self }
+    navName: supplyTempSp
+    writable: true
+  - ckAttribute: ModulationLevel
+    markers: [point, sensor, modulation, level]
+    kind: Number
+    unit: "%"
+    refTo: { phRef: equipRef, target: self }
+    navName: modulation
+  - ckAttribute: PowerConsumption
+    markers: [point, sensor, elec, power]
+    kind: Number
+    unit: "kW"
+    refTo: { phRef: equipRef, target: self }
+    navName: power
+  - ckAttribute: SourceInletTemp
+    markers: [point, sensor, source, entering, temp]
+    kind: Number
+    unit: "°C"
+    refTo: { phRef: equipRef, target: self }
+    navName: sourceInletTemp
+  - ckAttribute: SourceOutletTemp
+    markers: [point, sensor, source, leaving, temp]
+    kind: Number
+    unit: "°C"
+    refTo: { phRef: equipRef, target: self }
+    navName: sourceOutletTemp
+  - ckAttribute: IsRunning
+    markers: [point, sensor, run]
+    kind: Bool
+    refTo: { phRef: equipRef, target: self }
+    navName: run
+  - ckAttribute: FaultState
+    markers: [point, sensor, fault]
+    kind: Bool
+    refTo: { phRef: equipRef, target: self }
+    navName: fault

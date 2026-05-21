@@ -1,0 +1,39 @@
+ckTypeId: EnergyIQ/Building
+phSpec: ph::Space
+markers:
+  - space
+  - building
+tags:
+  - { name: dis, sourceAttribute: System/Name }
+refs:
+  - phRef: siteRef
+    sourceRole: System/ParentChild
+    direction: ancestor
+    targetCkTypeId: EnergyIQ/Site
+attributes:
+  - ckAttribute: LongName
+    phTag: navName
+    kind: Str
+  - ckAttribute: GrossFloorArea
+    phTag: area
+    kind: Number
+    unit: "m²"
+  - ckAttribute: YearOfConstruction
+    phTag: yearBuilt
+    kind: Number
+  - ckAttribute: ElevationOfRefHeight
+    phTag: elevation
+    kind: Number
+    unit: "m"
+  - ckAttribute: AddressValue.Street
+    phTag: geoStreet
+    kind: Str
+  - ckAttribute: AddressValue.PostalCode
+    phTag: geoPostalCode
+    kind: Str
+  - ckAttribute: AddressValue.City
+    phTag: geoCity
+    kind: Str
+  - ckAttribute: AddressValue.Country
+    phTag: geoCountry
+    kind: Str

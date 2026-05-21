@@ -1,0 +1,65 @@
+ckTypeId: EnergyIQ/PVString
+phSpec: ph::Equip
+markers:
+  - equip
+  - solar
+  - array
+  - elec
+tags:
+  - { name: dis, sourceAttribute: System/Name }
+refs:
+  - phRef: equipRef
+    sourceRole: System/ParentChild
+    direction: parent
+    targetCkTypeId: EnergyIQ/PhotovoltaicSystem
+attributes:
+  - ckAttribute: Identifier
+    phTag: navName
+    kind: Str
+  - ckAttribute: RatedPowerKWp
+    phTag: ratedPower
+    kind: Number
+    unit: "kW"
+  - ckAttribute: Orientation
+    phTag: azimuth
+    kind: Number
+    unit: "deg"
+  - ckAttribute: Tilt
+    phTag: tilt
+    kind: Number
+    unit: "deg"
+  - ckAttribute: ModuleCount
+    phTag: moduleCount
+    kind: Number
+  - ckAttribute: ModuleType
+    phTag: moduleType
+    kind: Str
+points:
+  - ckAttribute: CurrentPowerKW
+    markers: [point, sensor, solar, elec, power]
+    kind: Number
+    unit: "kW"
+    refTo: { phRef: equipRef, target: self }
+    navName: power
+  - ckAttribute: EnergyProducedKWh
+    markers: [point, sensor, solar, energy]
+    kind: Number
+    unit: "kWh"
+    refTo: { phRef: equipRef, target: self }
+    navName: energy
+  - ckAttribute: DcVoltage
+    markers: [point, sensor, dc, volt]
+    kind: Number
+    unit: "V"
+    refTo: { phRef: equipRef, target: self }
+    navName: dcVoltage
+  - ckAttribute: IsRunning
+    markers: [point, sensor, run]
+    kind: Bool
+    refTo: { phRef: equipRef, target: self }
+    navName: run
+  - ckAttribute: FaultState
+    markers: [point, sensor, fault]
+    kind: Bool
+    refTo: { phRef: equipRef, target: self }
+    navName: fault

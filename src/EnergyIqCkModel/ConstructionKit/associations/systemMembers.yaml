@@ -1,0 +1,8 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+associationRoles:
+- id: SystemMembers
+  inboundName: SystemMembers
+  outboundName: MemberOfSystem
+  inboundMultiplicity: N
+  outboundMultiplicity: N
+  description: "Members of a logical DistributionSystem (e.g. heat pump, buffer tank, distribution pumps, all radiant surfaces belonging to one heating circuit)"

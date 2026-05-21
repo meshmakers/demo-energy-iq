@@ -1,0 +1,96 @@
+ckTypeId: EnergyIQ/AirHandlingUnit
+phSpec: ph::Equip
+markers:
+  - equip
+  - ahu
+  - hvac
+  - air
+tags:
+  - { name: dis, sourceAttribute: System/Name }
+refs:
+  - phRef: siteRef
+    sourceRole: System/ParentChild
+    direction: ancestor
+    targetCkTypeId: EnergyIQ/Site
+attributes:
+  - ckAttribute: Identifier
+    phTag: navName
+    kind: Str
+points:
+  - ckAttribute: SupplyAirTemp
+    markers: [point, sensor, air, discharge, temp]
+    kind: Number
+    unit: "°C"
+    refTo: { phRef: equipRef, target: self }
+    navName: supplyAirTemp
+  - ckAttribute: ReturnAirTemp
+    markers: [point, sensor, air, return, temp]
+    kind: Number
+    unit: "°C"
+    refTo: { phRef: equipRef, target: self }
+    navName: returnAirTemp
+  - ckAttribute: OutdoorAirTemp
+    markers: [point, sensor, air, outside, temp]
+    kind: Number
+    unit: "°C"
+    refTo: { phRef: equipRef, target: self }
+    navName: outdoorAirTemp
+  - ckAttribute: SupplyAirTempSetpoint
+    markers: [point, sp, cmd, air, discharge, temp]
+    kind: Number
+    unit: "°C"
+    refTo: { phRef: equipRef, target: self }
+    navName: supplyAirTempSp
+    writable: true
+  - ckAttribute: SupplyAirFlow
+    markers: [point, sensor, air, discharge, flow]
+    kind: Number
+    unit: "m³/h"
+    refTo: { phRef: equipRef, target: self }
+    navName: supplyAirFlow
+  - ckAttribute: FanSpeedSupply
+    markers: [point, sensor, fan, supply, speed]
+    kind: Number
+    unit: "%"
+    refTo: { phRef: equipRef, target: self }
+    navName: supplyFanSpeed
+  - ckAttribute: FanSpeedReturn
+    markers: [point, sensor, fan, return, speed]
+    kind: Number
+    unit: "%"
+    refTo: { phRef: equipRef, target: self }
+    navName: returnFanSpeed
+  - ckAttribute: FilterDifferentialPressure
+    markers: [point, sensor, filter, pressure]
+    kind: Number
+    unit: "Pa"
+    refTo: { phRef: equipRef, target: self }
+    navName: filterDp
+  - ckAttribute: HeatRecoveryEfficiency
+    markers: [point, sensor, heatRecovery, efficiency]
+    kind: Number
+    unit: "%"
+    refTo: { phRef: equipRef, target: self }
+    navName: heatRecoveryEff
+  - ckAttribute: HeatingCoilPosition
+    markers: [point, sensor, valve, position, hot, water]
+    kind: Number
+    unit: "%"
+    refTo: { phRef: equipRef, target: self }
+    navName: heatingCoilPos
+  - ckAttribute: CoolingCoilPosition
+    markers: [point, sensor, valve, position, chilled, water]
+    kind: Number
+    unit: "%"
+    refTo: { phRef: equipRef, target: self }
+    navName: coolingCoilPos
+  - ckAttribute: IsRunning
+    markers: [point, sensor, run]
+    kind: Bool
+    refTo: { phRef: equipRef, target: self }
+    navName: run
+  - ckAttribute: FaultState
+    markers: [point, sensor, fault]
+    kind: Bool
+    refTo: { phRef: equipRef, target: self }
+    navName: fault

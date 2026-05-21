@@ -1,0 +1,9 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: WindowContactSensor
+  derivedFromCkTypeId: ${this}/Sensor
+  description: "Window / door contact sensor (IFC: IfcSensor/CONTACTSENSOR). Boolean (true = closed/normal, false = open/triggered)."
+  attributes:
+  - id: ${this}/ContactState
+    name: CurrentValue
+    isOptional: true

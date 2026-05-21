@@ -1,0 +1,8 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+associationRoles:
+- id: TerminalServedBy
+  inboundName: ServesTerminals
+  outboundName: ServedBy
+  inboundMultiplicity: N
+  outboundMultiplicity: N
+  description: "Plant-equipment that supplies energy/medium to a terminal (e.g. heat pump or AHU serving multiple terminals)"

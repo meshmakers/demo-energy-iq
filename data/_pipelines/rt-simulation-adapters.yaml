@@ -1,12 +1,13 @@
 $schema: https://schemas.meshmakers.cloud/runtime-model.schema.json
 dependencies:
-  - System.Communication-2.0.0
-  - EnergyIQ-1.0.0
+  - System.Communication-[3.18,4.0)
+  - EnergyIQ-2.0.0
 
 # ============================================================
-# EnergyIQ Simulation Adapters
+# EnergyIQ Simulation Data Flows (v2)
 # ============================================================
-# Simulates sensor data for 6 main rooms, PV system, and HVAC
+# Simulates sensor data for 6 main rooms, PV system, and HVAC.
+# Targets the v2 entity structure: Sensors, Valves, Dampers, HeatPump.
 # Polling interval: 10 seconds
 # ============================================================
 
@@ -23,41 +24,35 @@ entities:
         value: EnergyIQ Simulation Pool
     associations: []
 
-  # Edge Adapter - Simulation adapter
+  # Adapter - Simulation adapter (Edge pool: no Helm chart needed)
   - rtId: 6789a00000000000000090a2
-    ckTypeId: System.Communication/EdgeAdapter
+    ckTypeId: System.Communication/Adapter
     attributes:
       - id: System/Name
         value: EnergyIQ Simulator
       - id: System/Description
         value: Simulation adapter for EnergyIQ demo data
-      - id: System.Communication/Deployment.ImageName
-        value: meshmakers/octo-communication-adapter-simulation
-      - id: System.Communication/Deployment.ImageVersion
-        value: "999.0.0.0"
+      - id: System.Communication/AdapterConfiguration
+        value: ""
     associations:
       - roleId: System.Communication/Manages
         targetRtId: 6789a00000000000000090a1
         targetCkTypeId: System.Communication/Pool
 
-  # Data Pipeline - Container for pipelines
+  # DataFlow - Container for pipelines
   - rtId: 6789a00000000000000090a3
-    ckTypeId: System.Communication/DataPipeline
+    ckTypeId: System.Communication/DataFlow
     attributes:
       - id: System/Name
-        value: EnergyIQ Simulation Pipeline
+        value: EnergyIQ Simulation DataFlow
       - id: System/Description
         value: Generates simulated sensor data for rooms, PV, and HVAC
-    associations:
-      - roleId: System/ParentChild
-        targetRtId: 6789a00000000000000090a2
-        targetCkTypeId: System.Communication/EdgeAdapter
 
   # ============================================================
-  # EDGE PIPELINE - Data Generation
+  # PIPELINE 1 - Data Generation (Simulation Adapter)
   # ============================================================
   - rtId: 6789a00000000000000090b1
-    ckTypeId: System.Communication/EdgePipeline
+    ckTypeId: System.Communication/Pipeline
     attributes:
       - id: System/Name
         value: Simulation Data Generator
@@ -95,186 +90,227 @@ entities:
                 - targetPath: fanBase
                   simulatorKey: Math.Sinus
                   configuration: "{periodMinutes:480, phaseOffsetMinutes:60}"
-            - type: LinearScaler@1
-              path: $.tempBase
-              targetPath: temperature
-              scaleInputMin: 0
-              scaleInputMax: 1
-              scaleOutputMin: 18
-              scaleOutputMax: 24
-            - type: LinearScaler@1
-              path: $.humidityBase
-              targetPath: humidity
-              scaleInputMin: 0
-              scaleInputMax: 1
-              scaleOutputMin: 35
-              scaleOutputMax: 65
-            - type: LinearScaler@1
-              path: $.co2Base
-              targetPath: co2Level
-              scaleInputMin: 0
-              scaleInputMax: 1
-              scaleOutputMin: 500
-              scaleOutputMax: 900
-            - type: LinearScaler@1
-              path: $.luxBase
-              targetPath: illuminance
-              scaleInputMin: 0
-              scaleInputMax: 1
-              scaleOutputMin: 100
-              scaleOutputMax: 700
-            - type: LinearScaler@1
-              path: $.valveBase
-              targetPath: heatingValvePosition
-              scaleInputMin: 0
-              scaleInputMax: 1
-              scaleOutputMin: 20
-              scaleOutputMax: 70
-            - type: LinearScaler@1
-              path: $.valveBase
-              targetPath: ventilationLevel
-              scaleInputMin: 0
-              scaleInputMax: 1
-              scaleOutputMin: 30
-              scaleOutputMax: 70
-            - type: LinearScaler@1
-              path: $.pvBase
-              targetPath: pvStringPower1
-              scaleInputMin: 0
-              scaleInputMax: 1
-              scaleOutputMin: 0
-              scaleOutputMax: 4.8
-            - type: LinearScaler@1
-              path: $.pvBase
-              targetPath: pvStringPower2
-              scaleInputMin: 0
-              scaleInputMax: 1
-              scaleOutputMin: 0
-              scaleOutputMax: 6.0
-            - type: LinearScaler@1
-              path: $.pvBase
-              targetPath: pvStringPower3
-              scaleInputMin: 0
-              scaleInputMax: 1
-              scaleOutputMin: 0
-              scaleOutputMax: 4.0
-            - type: LinearScaler@1
-              path: $.pvBase
-              targetPath: pvStringPower4
-              scaleInputMin: 0
-              scaleInputMax: 1
-              scaleOutputMin: 0
-              scaleOutputMax: 3.6
-            - type: LinearScaler@1
-              path: $.pvBase
-              targetPath: totalPvPower
-              scaleInputMin: 0
-              scaleInputMax: 1
-              scaleOutputMin: 0
-              scaleOutputMax: 18.4
-            - type: LinearScaler@1
-              path: $.pvBase
-              targetPath: inverterDcPower1
-              scaleInputMin: 0
-              scaleInputMax: 1
-              scaleOutputMin: 0
-              scaleOutputMax: 10.8
-            - type: LinearScaler@1
-              path: $.pvBase
-              targetPath: inverterAcPower1
-              scaleInputMin: 0
-              scaleInputMax: 1
-              scaleOutputMin: 0
-              scaleOutputMax: 10.4
-            - type: LinearScaler@1
-              path: $.pvBase
-              targetPath: inverterDcPower2
-              scaleInputMin: 0
-              scaleInputMax: 1
-              scaleOutputMin: 0
-              scaleOutputMax: 7.6
-            - type: LinearScaler@1
-              path: $.pvBase
-              targetPath: inverterAcPower2
-              scaleInputMin: 0
-              scaleInputMax: 1
-              scaleOutputMin: 0
-              scaleOutputMax: 7.3
-            - type: LinearScaler@1
-              path: $.pvBase
-              targetPath: gridFeedIn
-              scaleInputMin: 0
-              scaleInputMax: 1
-              scaleOutputMin: 0
-              scaleOutputMax: 12
-            - type: LinearScaler@1
-              path: $.pvBase
-              targetPath: selfConsumption
-              scaleInputMin: 0
-              scaleInputMax: 1
-              scaleOutputMin: 2
-              scaleOutputMax: 6
-            - type: LinearScaler@1
-              path: $.socBase
-              targetPath: stateOfCharge
-              scaleInputMin: 0
-              scaleInputMax: 1
-              scaleOutputMin: 30
-              scaleOutputMax: 90
-            - type: LinearScaler@1
-              path: $.socBase
-              targetPath: chargingPower
-              scaleInputMin: 0
-              scaleInputMax: 1
-              scaleOutputMin: 0
-              scaleOutputMax: 5
-            - type: LinearScaler@1
-              path: $.tempBase
-              targetPath: boilerSupplyTemp
-              scaleInputMin: 0
-              scaleInputMax: 1
-              scaleOutputMin: 28
-              scaleOutputMax: 40
-            - type: LinearScaler@1
-              path: $.tempBase
-              targetPath: boilerReturnTemp
-              scaleInputMin: 0
-              scaleInputMax: 1
-              scaleOutputMin: 22
-              scaleOutputMax: 32
-            - type: LinearScaler@1
-              path: $.valveBase
-              targetPath: boilerModulation
-              scaleInputMin: 0
-              scaleInputMax: 1
-              scaleOutputMin: 30
-              scaleOutputMax: 80
-            - type: LinearScaler@1
-              path: $.fanBase
-              targetPath: ahuFanSpeed
-              scaleInputMin: 0
-              scaleInputMax: 1
-              scaleOutputMin: 40
-              scaleOutputMax: 80
-            - type: LinearScaler@1
-              path: $.tempBase
-              targetPath: ahuSupplyAirTemp
-              scaleInputMin: 0
-              scaleInputMax: 1
-              scaleOutputMin: 18
-              scaleOutputMax: 22
+            - type: SelectByPath@1
+              selectPath:
+                - path: "$.tempBase"
+                  targetPath: temperature
+                  transformations:
+                    - type: LinearScaler@1
+                      scaleInputMin: 0
+                      scaleInputMax: 1
+                      scaleOutputMin: 18
+                      scaleOutputMax: 24
+                - path: "$.humidityBase"
+                  targetPath: humidity
+                  transformations:
+                    - type: LinearScaler@1
+                      scaleInputMin: 0
+                      scaleInputMax: 1
+                      scaleOutputMin: 35
+                      scaleOutputMax: 65
+                - path: "$.co2Base"
+                  targetPath: co2Level
+                  transformations:
+                    - type: LinearScaler@1
+                      scaleInputMin: 0
+                      scaleInputMax: 1
+                      scaleOutputMin: 500
+                      scaleOutputMax: 900
+                - path: "$.luxBase"
+                  targetPath: illuminance
+                  transformations:
+                    - type: LinearScaler@1
+                      scaleInputMin: 0
+                      scaleInputMax: 1
+                      scaleOutputMin: 100
+                      scaleOutputMax: 700
+                - path: "$.valveBase"
+                  targetPath: valvePosition
+                  transformations:
+                    - type: LinearScaler@1
+                      scaleInputMin: 0
+                      scaleInputMax: 1
+                      scaleOutputMin: 20
+                      scaleOutputMax: 70
+                - path: "$.valveBase"
+                  targetPath: damperPosition
+                  transformations:
+                    - type: LinearScaler@1
+                      scaleInputMin: 0
+                      scaleInputMax: 1
+                      scaleOutputMin: 30
+                      scaleOutputMax: 70
+                - path: "$.pvBase"
+                  targetPath: pvStringPower1
+                  transformations:
+                    - type: LinearScaler@1
+                      scaleInputMin: 0
+                      scaleInputMax: 1
+                      scaleOutputMin: 0
+                      scaleOutputMax: 4.8
+                - path: "$.pvBase"
+                  targetPath: pvStringPower2
+                  transformations:
+                    - type: LinearScaler@1
+                      scaleInputMin: 0
+                      scaleInputMax: 1
+                      scaleOutputMin: 0
+                      scaleOutputMax: 6.0
+                - path: "$.pvBase"
+                  targetPath: pvStringPower3
+                  transformations:
+                    - type: LinearScaler@1
+                      scaleInputMin: 0
+                      scaleInputMax: 1
+                      scaleOutputMin: 0
+                      scaleOutputMax: 4.0
+                - path: "$.pvBase"
+                  targetPath: pvStringPower4
+                  transformations:
+                    - type: LinearScaler@1
+                      scaleInputMin: 0
+                      scaleInputMax: 1
+                      scaleOutputMin: 0
+                      scaleOutputMax: 3.6
+                - path: "$.pvBase"
+                  targetPath: totalPvPower
+                  transformations:
+                    - type: LinearScaler@1
+                      scaleInputMin: 0
+                      scaleInputMax: 1
+                      scaleOutputMin: 0
+                      scaleOutputMax: 18.4
+                - path: "$.pvBase"
+                  targetPath: inverterDcPower1
+                  transformations:
+                    - type: LinearScaler@1
+                      scaleInputMin: 0
+                      scaleInputMax: 1
+                      scaleOutputMin: 0
+                      scaleOutputMax: 10.8
+                - path: "$.pvBase"
+                  targetPath: inverterAcPower1
+                  transformations:
+                    - type: LinearScaler@1
+                      scaleInputMin: 0
+                      scaleInputMax: 1
+                      scaleOutputMin: 0
+                      scaleOutputMax: 10.4
+                - path: "$.pvBase"
+                  targetPath: inverterDcPower2
+                  transformations:
+                    - type: LinearScaler@1
+                      scaleInputMin: 0
+                      scaleInputMax: 1
+                      scaleOutputMin: 0
+                      scaleOutputMax: 7.6
+                - path: "$.pvBase"
+                  targetPath: inverterAcPower2
+                  transformations:
+                    - type: LinearScaler@1
+                      scaleInputMin: 0
+                      scaleInputMax: 1
+                      scaleOutputMin: 0
+                      scaleOutputMax: 7.3
+                - path: "$.pvBase"
+                  targetPath: gridFeedIn
+                  transformations:
+                    - type: LinearScaler@1
+                      scaleInputMin: 0
+                      scaleInputMax: 1
+                      scaleOutputMin: 0
+                      scaleOutputMax: 12
+                - path: "$.pvBase"
+                  targetPath: selfConsumption
+                  transformations:
+                    - type: LinearScaler@1
+                      scaleInputMin: 0
+                      scaleInputMax: 1
+                      scaleOutputMin: 2
+                      scaleOutputMax: 6
+                - path: "$.socBase"
+                  targetPath: stateOfCharge
+                  transformations:
+                    - type: LinearScaler@1
+                      scaleInputMin: 0
+                      scaleInputMax: 1
+                      scaleOutputMin: 30
+                      scaleOutputMax: 90
+                - path: "$.socBase"
+                  targetPath: chargingPower
+                  transformations:
+                    - type: LinearScaler@1
+                      scaleInputMin: 0
+                      scaleInputMax: 1
+                      scaleOutputMin: 0
+                      scaleOutputMax: 5
+                - path: "$.tempBase"
+                  targetPath: hpSupplyTemp
+                  transformations:
+                    - type: LinearScaler@1
+                      scaleInputMin: 0
+                      scaleInputMax: 1
+                      scaleOutputMin: 28
+                      scaleOutputMax: 40
+                - path: "$.tempBase"
+                  targetPath: hpReturnTemp
+                  transformations:
+                    - type: LinearScaler@1
+                      scaleInputMin: 0
+                      scaleInputMax: 1
+                      scaleOutputMin: 22
+                      scaleOutputMax: 32
+                - path: "$.valveBase"
+                  targetPath: hpModulation
+                  transformations:
+                    - type: LinearScaler@1
+                      scaleInputMin: 0
+                      scaleInputMax: 1
+                      scaleOutputMin: 30
+                      scaleOutputMax: 80
+                - path: "$.fanBase"
+                  targetPath: ahuFanSpeed
+                  transformations:
+                    - type: LinearScaler@1
+                      scaleInputMin: 0
+                      scaleInputMax: 1
+                      scaleOutputMin: 40
+                      scaleOutputMax: 80
+                - path: "$.tempBase"
+                  targetPath: ahuSupplyAirTemp
+                  transformations:
+                    - type: LinearScaler@1
+                      scaleInputMin: 0
+                      scaleInputMax: 1
+                      scaleOutputMin: 18
+                      scaleOutputMax: 22
+            - type: Project@1
+              fields:
+                - path: "$.tempBase"
+                - path: "$.humidityBase"
+                - path: "$.co2Base"
+                - path: "$.luxBase"
+                - path: "$.pvBase"
+                - path: "$.socBase"
+                - path: "$.valveBase"
+                - path: "$.fanBase"
             - type: ToPipelineDataEvent@1
-              description: Send to event hub
+              description: Send to entity updater
+              targetPipelineRtId: 6789a00000000000000090c1
     associations:
       - roleId: System/ParentChild
         targetRtId: 6789a00000000000000090a3
-        targetCkTypeId: System.Communication/DataPipeline
+        targetCkTypeId: System.Communication/DataFlow
+      - roleId: System.Communication/Executes
+        targetRtId: 6789a00000000000000090a2
+        targetCkTypeId: System.Communication/Adapter
 
   # ============================================================
-  # MESH PIPELINE - Database Updates
+  # PIPELINE 2 - Database Updates (Mesh Adapter)
+  # Targets v2 Sensor/Valve/Damper entities instead of Space attributes.
   # ============================================================
   - rtId: 6789a00000000000000090c1
-    ckTypeId: System.Communication/MeshPipeline
+    ckTypeId: System.Communication/Pipeline
     attributes:
       - id: System/Name
         value: EnergyIQ Entity Updater
@@ -286,156 +322,379 @@ entities:
             - type: FromPipelineDataEvent@1
               description: Retrieve from event hub
           transformations:
+            # ===== Wohnbereich EG (Space 11d1) =====
             - type: CreateUpdateInfo@1
-              description: Update Wohnbereich EG
+              description: Update Wohnbereich Temp sensor
               targetPath: $._updateItems
               targetValueKind: Array
               targetValueWriteMode: Append
               updateKind: UPDATE
-              rtId: "6789a00000000000000011d1"
-              ckTypeId: EnergyIQ/Space
+              rtId: "6789a00000000000010011a1"
+              ckTypeId: EnergyIQ/TemperatureSensor
               attributeUpdates:
                 - attributeName: Temperature
                   attributeValueType: Double
                   valuePath: $.temperature
+            - type: CreateUpdateInfo@1
+              description: Update Wohnbereich Humidity sensor
+              targetPath: $._updateItems
+              targetValueKind: Array
+              targetValueWriteMode: Append
+              updateKind: UPDATE
+              rtId: "6789a00000000000010011a2"
+              ckTypeId: EnergyIQ/HumiditySensor
+              attributeUpdates:
                 - attributeName: Humidity
                   attributeValueType: Double
                   valuePath: $.humidity
+            - type: CreateUpdateInfo@1
+              description: Update Wohnbereich CO2 sensor
+              targetPath: $._updateItems
+              targetValueKind: Array
+              targetValueWriteMode: Append
+              updateKind: UPDATE
+              rtId: "6789a00000000000010011a3"
+              ckTypeId: EnergyIQ/CO2Sensor
+              attributeUpdates:
                 - attributeName: CO2Level
-                  attributeValueType: Int
+                  attributeValueType: Double
                   valuePath: $.co2Level
+            - type: CreateUpdateInfo@1
+              description: Update Wohnbereich Illuminance sensor
+              targetPath: $._updateItems
+              targetValueKind: Array
+              targetValueWriteMode: Append
+              updateKind: UPDATE
+              rtId: "6789a00000000000010011a4"
+              ckTypeId: EnergyIQ/IlluminanceSensor
+              attributeUpdates:
                 - attributeName: Illuminance
-                  attributeValueType: Int
+                  attributeValueType: Double
                   valuePath: $.illuminance
-                - attributeName: HeatingValvePosition
-                  attributeValueType: Double
-                  valuePath: $.heatingValvePosition
-                - attributeName: VentilationLevel
-                  attributeValueType: Double
-                  valuePath: $.ventilationLevel
             - type: CreateUpdateInfo@1
-              description: Update Buero EG
+              description: Update Wohnbereich FBH valve
               targetPath: $._updateItems
               targetValueKind: Array
               targetValueWriteMode: Append
               updateKind: UPDATE
-              rtId: "6789a00000000000000012d2"
-              ckTypeId: EnergyIQ/Space
+              rtId: "6789a00000000000020011b2"
+              ckTypeId: EnergyIQ/Valve
               attributeUpdates:
-                - attributeName: Temperature
+                - attributeName: ValvePosition
                   attributeValueType: Double
-                  valuePath: $.temperature
-                - attributeName: Humidity
-                  attributeValueType: Double
-                  valuePath: $.humidity
-                - attributeName: CO2Level
-                  attributeValueType: Int
-                  valuePath: $.co2Level
-                - attributeName: HeatingValvePosition
-                  attributeValueType: Double
-                  valuePath: $.heatingValvePosition
-                - attributeName: VentilationLevel
-                  attributeValueType: Double
-                  valuePath: $.ventilationLevel
+                  valuePath: $.valvePosition
             - type: CreateUpdateInfo@1
-              description: Update Schlafzimmer OG
+              description: Update Wohnbereich AirTerminal damper
               targetPath: $._updateItems
               targetValueKind: Array
               targetValueWriteMode: Append
               updateKind: UPDATE
-              rtId: "6789a00000000000000021d8"
-              ckTypeId: EnergyIQ/Space
+              rtId: "6789a00000000000020011c2"
+              ckTypeId: EnergyIQ/Damper
               attributeUpdates:
-                - attributeName: Temperature
+                - attributeName: DamperPosition
                   attributeValueType: Double
-                  valuePath: $.temperature
-                - attributeName: Humidity
-                  attributeValueType: Double
-                  valuePath: $.humidity
-                - attributeName: CO2Level
-                  attributeValueType: Int
-                  valuePath: $.co2Level
-                - attributeName: HeatingValvePosition
-                  attributeValueType: Double
-                  valuePath: $.heatingValvePosition
-                - attributeName: VentilationLevel
-                  attributeValueType: Double
-                  valuePath: $.ventilationLevel
+                  valuePath: $.damperPosition
+
+            # ===== Buero EG (Space 12d2) =====
             - type: CreateUpdateInfo@1
-              description: Update Kinderzimmer OG
+              description: Update Buero EG Temp sensor
               targetPath: $._updateItems
               targetValueKind: Array
               targetValueWriteMode: Append
               updateKind: UPDATE
-              rtId: "6789a00000000000000023da"
-              ckTypeId: EnergyIQ/Space
+              rtId: "6789a00000000000010012a1"
+              ckTypeId: EnergyIQ/TemperatureSensor
               attributeUpdates:
                 - attributeName: Temperature
                   attributeValueType: Double
                   valuePath: $.temperature
-                - attributeName: Humidity
-                  attributeValueType: Double
-                  valuePath: $.humidity
-                - attributeName: CO2Level
-                  attributeValueType: Int
-                  valuePath: $.co2Level
-                - attributeName: HeatingValvePosition
-                  attributeValueType: Double
-                  valuePath: $.heatingValvePosition
-                - attributeName: VentilationLevel
-                  attributeValueType: Double
-                  valuePath: $.ventilationLevel
             - type: CreateUpdateInfo@1
-              description: Update Aufenthaltsraum DG
+              description: Update Buero EG Humidity sensor
               targetPath: $._updateItems
               targetValueKind: Array
               targetValueWriteMode: Append
               updateKind: UPDATE
-              rtId: "6789a00000000000000031de"
-              ckTypeId: EnergyIQ/Space
+              rtId: "6789a00000000000010012a2"
+              ckTypeId: EnergyIQ/HumiditySensor
               attributeUpdates:
-                - attributeName: Temperature
-                  attributeValueType: Double
-                  valuePath: $.temperature
                 - attributeName: Humidity
                   attributeValueType: Double
                   valuePath: $.humidity
-                - attributeName: CO2Level
-                  attributeValueType: Int
-                  valuePath: $.co2Level
-                - attributeName: HeatingValvePosition
-                  attributeValueType: Double
-                  valuePath: $.heatingValvePosition
-                - attributeName: VentilationLevel
-                  attributeValueType: Double
-                  valuePath: $.ventilationLevel
             - type: CreateUpdateInfo@1
-              description: Update Buero DG 1
+              description: Update Buero EG CO2 sensor
               targetPath: $._updateItems
               targetValueKind: Array
               targetValueWriteMode: Append
               updateKind: UPDATE
-              rtId: "6789a00000000000000032df"
-              ckTypeId: EnergyIQ/Space
+              rtId: "6789a00000000000010012a3"
+              ckTypeId: EnergyIQ/CO2Sensor
+              attributeUpdates:
+                - attributeName: CO2Level
+                  attributeValueType: Double
+                  valuePath: $.co2Level
+            - type: CreateUpdateInfo@1
+              description: Update Buero EG FBH valve
+              targetPath: $._updateItems
+              targetValueKind: Array
+              targetValueWriteMode: Append
+              updateKind: UPDATE
+              rtId: "6789a00000000000020012b2"
+              ckTypeId: EnergyIQ/Valve
+              attributeUpdates:
+                - attributeName: ValvePosition
+                  attributeValueType: Double
+                  valuePath: $.valvePosition
+            - type: CreateUpdateInfo@1
+              description: Update Buero EG AirTerminal damper
+              targetPath: $._updateItems
+              targetValueKind: Array
+              targetValueWriteMode: Append
+              updateKind: UPDATE
+              rtId: "6789a00000000000020012c2"
+              ckTypeId: EnergyIQ/Damper
+              attributeUpdates:
+                - attributeName: DamperPosition
+                  attributeValueType: Double
+                  valuePath: $.damperPosition
+
+            # ===== Schlafzimmer OG (Space 21d8) =====
+            - type: CreateUpdateInfo@1
+              description: Update Schlafzimmer Temp sensor
+              targetPath: $._updateItems
+              targetValueKind: Array
+              targetValueWriteMode: Append
+              updateKind: UPDATE
+              rtId: "6789a00000000000010021a1"
+              ckTypeId: EnergyIQ/TemperatureSensor
               attributeUpdates:
                 - attributeName: Temperature
                   attributeValueType: Double
                   valuePath: $.temperature
+            - type: CreateUpdateInfo@1
+              description: Update Schlafzimmer Humidity sensor
+              targetPath: $._updateItems
+              targetValueKind: Array
+              targetValueWriteMode: Append
+              updateKind: UPDATE
+              rtId: "6789a00000000000010021a2"
+              ckTypeId: EnergyIQ/HumiditySensor
+              attributeUpdates:
                 - attributeName: Humidity
                   attributeValueType: Double
                   valuePath: $.humidity
+            - type: CreateUpdateInfo@1
+              description: Update Schlafzimmer CO2 sensor
+              targetPath: $._updateItems
+              targetValueKind: Array
+              targetValueWriteMode: Append
+              updateKind: UPDATE
+              rtId: "6789a00000000000010021a3"
+              ckTypeId: EnergyIQ/CO2Sensor
+              attributeUpdates:
                 - attributeName: CO2Level
-                  attributeValueType: Int
+                  attributeValueType: Double
                   valuePath: $.co2Level
+            - type: CreateUpdateInfo@1
+              description: Update Schlafzimmer FBH valve
+              targetPath: $._updateItems
+              targetValueKind: Array
+              targetValueWriteMode: Append
+              updateKind: UPDATE
+              rtId: "6789a00000000000020021b2"
+              ckTypeId: EnergyIQ/Valve
+              attributeUpdates:
+                - attributeName: ValvePosition
+                  attributeValueType: Double
+                  valuePath: $.valvePosition
+            - type: CreateUpdateInfo@1
+              description: Update Schlafzimmer AirTerminal damper
+              targetPath: $._updateItems
+              targetValueKind: Array
+              targetValueWriteMode: Append
+              updateKind: UPDATE
+              rtId: "6789a00000000000020021c2"
+              ckTypeId: EnergyIQ/Damper
+              attributeUpdates:
+                - attributeName: DamperPosition
+                  attributeValueType: Double
+                  valuePath: $.damperPosition
+
+            # ===== Kinderzimmer OG (Space 23da) =====
+            - type: CreateUpdateInfo@1
+              description: Update Kinderzimmer Temp sensor
+              targetPath: $._updateItems
+              targetValueKind: Array
+              targetValueWriteMode: Append
+              updateKind: UPDATE
+              rtId: "6789a00000000000010023a1"
+              ckTypeId: EnergyIQ/TemperatureSensor
+              attributeUpdates:
+                - attributeName: Temperature
+                  attributeValueType: Double
+                  valuePath: $.temperature
+            - type: CreateUpdateInfo@1
+              description: Update Kinderzimmer Humidity sensor
+              targetPath: $._updateItems
+              targetValueKind: Array
+              targetValueWriteMode: Append
+              updateKind: UPDATE
+              rtId: "6789a00000000000010023a2"
+              ckTypeId: EnergyIQ/HumiditySensor
+              attributeUpdates:
+                - attributeName: Humidity
+                  attributeValueType: Double
+                  valuePath: $.humidity
+            - type: CreateUpdateInfo@1
+              description: Update Kinderzimmer CO2 sensor
+              targetPath: $._updateItems
+              targetValueKind: Array
+              targetValueWriteMode: Append
+              updateKind: UPDATE
+              rtId: "6789a00000000000010023a3"
+              ckTypeId: EnergyIQ/CO2Sensor
+              attributeUpdates:
+                - attributeName: CO2Level
+                  attributeValueType: Double
+                  valuePath: $.co2Level
+            - type: CreateUpdateInfo@1
+              description: Update Kinderzimmer FBH valve
+              targetPath: $._updateItems
+              targetValueKind: Array
+              targetValueWriteMode: Append
+              updateKind: UPDATE
+              rtId: "6789a00000000000020023b2"
+              ckTypeId: EnergyIQ/Valve
+              attributeUpdates:
+                - attributeName: ValvePosition
+                  attributeValueType: Double
+                  valuePath: $.valvePosition
+            - type: CreateUpdateInfo@1
+              description: Update Kinderzimmer AirTerminal damper
+              targetPath: $._updateItems
+              targetValueKind: Array
+              targetValueWriteMode: Append
+              updateKind: UPDATE
+              rtId: "6789a00000000000020023c2"
+              ckTypeId: EnergyIQ/Damper
+              attributeUpdates:
+                - attributeName: DamperPosition
+                  attributeValueType: Double
+                  valuePath: $.damperPosition
+
+            # ===== Aufenthaltsraum DG (Space 31de) =====
+            - type: CreateUpdateInfo@1
+              description: Update Aufenthalt Temp sensor
+              targetPath: $._updateItems
+              targetValueKind: Array
+              targetValueWriteMode: Append
+              updateKind: UPDATE
+              rtId: "6789a00000000000010031a1"
+              ckTypeId: EnergyIQ/TemperatureSensor
+              attributeUpdates:
+                - attributeName: Temperature
+                  attributeValueType: Double
+                  valuePath: $.temperature
+            - type: CreateUpdateInfo@1
+              description: Update Aufenthalt Humidity sensor
+              targetPath: $._updateItems
+              targetValueKind: Array
+              targetValueWriteMode: Append
+              updateKind: UPDATE
+              rtId: "6789a00000000000010031a2"
+              ckTypeId: EnergyIQ/HumiditySensor
+              attributeUpdates:
+                - attributeName: Humidity
+                  attributeValueType: Double
+                  valuePath: $.humidity
+            - type: CreateUpdateInfo@1
+              description: Update Aufenthalt CO2 sensor
+              targetPath: $._updateItems
+              targetValueKind: Array
+              targetValueWriteMode: Append
+              updateKind: UPDATE
+              rtId: "6789a00000000000010031a3"
+              ckTypeId: EnergyIQ/CO2Sensor
+              attributeUpdates:
+                - attributeName: CO2Level
+                  attributeValueType: Double
+                  valuePath: $.co2Level
+            - type: CreateUpdateInfo@1
+              description: Update Aufenthalt FBH valve
+              targetPath: $._updateItems
+              targetValueKind: Array
+              targetValueWriteMode: Append
+              updateKind: UPDATE
+              rtId: "6789a00000000000020031b2"
+              ckTypeId: EnergyIQ/Valve
+              attributeUpdates:
+                - attributeName: ValvePosition
+                  attributeValueType: Double
+                  valuePath: $.valvePosition
+
+            # ===== Buero DG 1 (Space 32df) =====
+            - type: CreateUpdateInfo@1
+              description: Update Buero DG1 Temp sensor
+              targetPath: $._updateItems
+              targetValueKind: Array
+              targetValueWriteMode: Append
+              updateKind: UPDATE
+              rtId: "6789a00000000000010032a1"
+              ckTypeId: EnergyIQ/TemperatureSensor
+              attributeUpdates:
+                - attributeName: Temperature
+                  attributeValueType: Double
+                  valuePath: $.temperature
+            - type: CreateUpdateInfo@1
+              description: Update Buero DG1 Humidity sensor
+              targetPath: $._updateItems
+              targetValueKind: Array
+              targetValueWriteMode: Append
+              updateKind: UPDATE
+              rtId: "6789a00000000000010032a2"
+              ckTypeId: EnergyIQ/HumiditySensor
+              attributeUpdates:
+                - attributeName: Humidity
+                  attributeValueType: Double
+                  valuePath: $.humidity
+            - type: CreateUpdateInfo@1
+              description: Update Buero DG1 CO2 sensor
+              targetPath: $._updateItems
+              targetValueKind: Array
+              targetValueWriteMode: Append
+              updateKind: UPDATE
+              rtId: "6789a00000000000010032a3"
+              ckTypeId: EnergyIQ/CO2Sensor
+              attributeUpdates:
+                - attributeName: CO2Level
+                  attributeValueType: Double
+                  valuePath: $.co2Level
+            - type: CreateUpdateInfo@1
+              description: Update Buero DG1 Illuminance sensor
+              targetPath: $._updateItems
+              targetValueKind: Array
+              targetValueWriteMode: Append
+              updateKind: UPDATE
+              rtId: "6789a00000000000010032a4"
+              ckTypeId: EnergyIQ/IlluminanceSensor
+              attributeUpdates:
                 - attributeName: Illuminance
-                  attributeValueType: Int
+                  attributeValueType: Double
                   valuePath: $.illuminance
-                - attributeName: HeatingValvePosition
+            - type: CreateUpdateInfo@1
+              description: Update Buero DG1 FBH valve
+              targetPath: $._updateItems
+              targetValueKind: Array
+              targetValueWriteMode: Append
+              updateKind: UPDATE
+              rtId: "6789a00000000000020032b2"
+              ckTypeId: EnergyIQ/Valve
+              attributeUpdates:
+                - attributeName: ValvePosition
                   attributeValueType: Double
-                  valuePath: $.heatingValvePosition
-                - attributeName: VentilationLevel
-                  attributeValueType: Double
-                  valuePath: $.ventilationLevel
+                  valuePath: $.valvePosition
+
+            # ===== PV / Inverter / Battery (unchanged in v2) =====
             - type: CreateUpdateInfo@1
               description: Update PV System
               targetPath: $._updateItems
@@ -547,24 +806,28 @@ entities:
                 - attributeName: ChargingPower
                   attributeValueType: Double
                   valuePath: $.chargingPower
+
+            # ===== HeatPump (formerly Boiler in v1) =====
             - type: CreateUpdateInfo@1
-              description: Update Boiler
+              description: Update HeatPump
               targetPath: $._updateItems
               targetValueKind: Array
               targetValueWriteMode: Append
               updateKind: UPDATE
               rtId: "6789a00000000000000060f1"
-              ckTypeId: EnergyIQ/Boiler
+              ckTypeId: EnergyIQ/HeatPump
               attributeUpdates:
                 - attributeName: SupplyTemp
                   attributeValueType: Double
-                  valuePath: $.boilerSupplyTemp
+                  valuePath: $.hpSupplyTemp
                 - attributeName: ReturnTemp
                   attributeValueType: Double
-                  valuePath: $.boilerReturnTemp
+                  valuePath: $.hpReturnTemp
                 - attributeName: ModulationLevel
                   attributeValueType: Double
-                  valuePath: $.boilerModulation
+                  valuePath: $.hpModulation
+
+            # ===== AHU =====
             - type: CreateUpdateInfo@1
               description: Update AHU
               targetPath: $._updateItems
@@ -580,9 +843,13 @@ entities:
                 - attributeName: FanSpeedSupply
                   attributeValueType: Double
                   valuePath: $.ahuFanSpeed
+
             - type: ApplyChanges@1
               path: _updateItems
     associations:
       - roleId: System/ParentChild
         targetRtId: 6789a00000000000000090a3
-        targetCkTypeId: System.Communication/DataPipeline
+        targetCkTypeId: System.Communication/DataFlow
+      - roleId: System.Communication/Executes
+        targetRtId: 67f0a01ec4ff02221e0b5002
+        targetCkTypeId: System.Communication/Adapter

@@ -1,4 +1,4 @@
 param (
-    [string]$tenantId = "energyiqdemo"
+    [string]$tenantId = "energyiq"
 )
 octo-cli -c delete -tid $tenantId

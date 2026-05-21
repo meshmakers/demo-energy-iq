@@ -1,0 +1,43 @@
+ckTypeId: EnergyIQ/Motor
+phSpec: ph::Equip
+markers:
+  - equip
+  - motor
+tags:
+  - { name: dis, sourceAttribute: System/Name }
+refs:
+  - phRef: equipRef
+    sourceRole: EnergyIQ/EquipmentActuators
+    direction: parent
+  - phRef: terminalRef
+    sourceRole: EnergyIQ/TerminalActuators
+    direction: parent
+  - phRef: spaceRef
+    sourceRole: EnergyIQ/SpaceActuators
+    direction: parent
+    targetCkTypeId: EnergyIQ/Space
+points:
+  - ckAttribute: State
+    markers: [point, sensor, motor, run]
+    kind: Bool
+    refTo: { phRef: equipRef, target: self }
+    navName: run
+  - ckAttribute: Speed
+    markers: [point, sensor, motor, speed]
+    kind: Number
+    unit: "%"
+    refTo: { phRef: equipRef, target: self }
+    navName: speed
+  - ckAttribute: SpeedSetpoint
+    markers: [point, sp, cmd, motor, speed]
+    kind: Number
+    unit: "%"
+    refTo: { phRef: equipRef, target: self }
+    navName: speedSp
+    writable: true
+  - ckAttribute: PowerConsumption
+    markers: [point, sensor, motor, elec, power]
+    kind: Number
+    unit: "kW"
+    refTo: { phRef: equipRef, target: self }
+    navName: power

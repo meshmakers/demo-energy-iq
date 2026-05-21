@@ -1,0 +1,89 @@
+$schema: https://schemas.meshmakers.cloud/runtime-model.schema.json
+# Stream-data archives for EnergyIQ runtime measurements.
+#
+# In EnergyIQ-2.0.0 measurements live on dedicated Sensor entities (TemperatureSensor,
+# HumiditySensor, CO2Sensor, ...) instead of on Space. We therefore split the previous
+# single "SpaceArchive" (Temperature + Humidity + CO2Level + TemperatureSetpointHeating
+# columns on Space) into one RawArchive per sensor type.
+#
+# Imported as Status=Created; call IArchiveLifecycleService.ActivateAsync (or the
+# octo-cli ActivateArchive command) once after import to provision the per-archive
+# CrateDB table. The Path stays in PascalCase here (the engine maps Path -> CrateDB
+# column / camelCase on the storage side).
+#
+# Setpoints / Pset_* design targets are intentionally NOT archived: they are slow-moving
+# configuration, not time-series. Time-series belongs on the sensor that actually
+# reports the measurement. If a use case ever needs to track Pset_* changes over time
+# a dedicated audit archive should be added instead.
+dependencies:
+  - System.StreamData-[1.2,2.0)
+  - EnergyIQ-[2.0,3.0)
+entities:
+  # ============================================================
+  # Temperature time-series (one row per TemperatureSensor update)
+  # ============================================================
+  - rtId: 6a0e000000000000000a0001
+    ckTypeId: System.StreamData/RawArchive
+    rtWellKnownName: TemperatureSensorArchive
+    attributes:
+      - id: System.StreamData/Archive.TargetCkTypeId
+        value: EnergyIQ/TemperatureSensor
+      - id: System.StreamData/Archive.Status
+        value: 0
+      - id: System.StreamData/Archive.Columns
+        value:
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              # Path = attribute name at the type. On TemperatureSensor the
+              # underlying EnergyIQ/Temperature attribute is exposed as
+              # `CurrentValue` (consistent across all Sensor subtypes).
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: CurrentValue
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+
+  # ============================================================
+  # Humidity time-series (one row per HumiditySensor update)
+  # ============================================================
+  - rtId: 6a0e000000000000000a0002
+    ckTypeId: System.StreamData/RawArchive
+    rtWellKnownName: HumiditySensorArchive
+    attributes:
+      - id: System.StreamData/Archive.TargetCkTypeId
+        value: EnergyIQ/HumiditySensor
+      - id: System.StreamData/Archive.Status
+        value: 0
+      - id: System.StreamData/Archive.Columns
+        value:
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: CurrentValue
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+
+  # ============================================================
+  # CO2 time-series (one row per CO2Sensor update)
+  # ============================================================
+  - rtId: 6a0e000000000000000a0003
+    ckTypeId: System.StreamData/RawArchive
+    rtWellKnownName: CO2SensorArchive
+    attributes:
+      - id: System.StreamData/Archive.TargetCkTypeId
+        value: EnergyIQ/CO2Sensor
+      - id: System.StreamData/Archive.Status
+        value: 0
+      - id: System.StreamData/Archive.Columns
+        value:
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: CurrentValue
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true

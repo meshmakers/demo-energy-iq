@@ -1,0 +1,51 @@
+ckTypeId: EnergyIQ/Radiator
+phSpec: ph::Equip
+markers:
+  - equip
+  - radiator
+  - hot
+  - water
+  - heating
+tags:
+  - { name: dis, sourceAttribute: System/Name }
+refs:
+  - phRef: spaceRef
+    sourceRole: EnergyIQ/SpaceTerminals
+    direction: parent
+    targetCkTypeId: EnergyIQ/Space
+  - phRef: equipRef
+    sourceRole: EnergyIQ/TerminalServedBy
+    direction: parent
+attributes:
+  - ckAttribute: NominalPower
+    phTag: nomPower
+    kind: Number
+    unit: "kW"
+  - ckAttribute: TerminalOperatingModeValue
+    phTag: hvacMode
+    kind: Str
+    enumMapping:
+      0: off
+      1: heating
+      2: cooling
+      3: ventilating
+      4: standby
+points:
+  - ckAttribute: SupplyTemp
+    markers: [point, sensor, water, leaving, temp]
+    kind: Number
+    unit: "°C"
+    refTo: { phRef: equipRef, target: self }
+    navName: supplyTemp
+  - ckAttribute: ReturnTemp
+    markers: [point, sensor, water, entering, temp]
+    kind: Number
+    unit: "°C"
+    refTo: { phRef: equipRef, target: self }
+    navName: returnTemp
+  - ckAttribute: FlowRate
+    markers: [point, sensor, water, flow]
+    kind: Number
+    unit: "L/min"
+    refTo: { phRef: equipRef, target: self }
+    navName: flow

@@ -1,0 +1,15 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: Valve
+  derivedFromCkTypeId: ${this}/Actuator
+  description: "Valve actuator (IFC: IfcValve)."
+  attributes:
+  - id: ${this}/ValveTypeValue
+    name: ValveType
+    isOptional: true
+  - id: ${this}/ValvePosition
+    name: Position
+    isOptional: true
+  - id: ${this}/ValvePositionSetpoint
+    name: PositionSetpoint
+    isOptional: true

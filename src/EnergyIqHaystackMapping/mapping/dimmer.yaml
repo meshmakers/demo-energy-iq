@@ -1,0 +1,30 @@
+ckTypeId: EnergyIQ/Dimmer
+phSpec: ph::Equip
+markers:
+  - equip
+  - lighting
+  - dimmer
+tags:
+  - { name: dis, sourceAttribute: System/Name }
+refs:
+  - phRef: equipRef
+    sourceRole: EnergyIQ/EquipmentActuators
+    direction: parent
+  - phRef: spaceRef
+    sourceRole: EnergyIQ/SpaceActuators
+    direction: parent
+    targetCkTypeId: EnergyIQ/Space
+points:
+  - ckAttribute: Level
+    markers: [point, sensor, lighting, level]
+    kind: Number
+    unit: "%"
+    refTo: { phRef: equipRef, target: self }
+    navName: level
+  - ckAttribute: LevelSetpoint
+    markers: [point, sp, cmd, lighting, level]
+    kind: Number
+    unit: "%"
+    refTo: { phRef: equipRef, target: self }
+    navName: levelSp
+    writable: true

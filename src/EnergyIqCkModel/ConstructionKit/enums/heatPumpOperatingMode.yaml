@@ -1,0 +1,20 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+enums:
+- enumId: HeatPumpOperatingMode
+  values:
+  - key: 0
+    name: Off
+  - key: 1
+    name: Standby
+  - key: 2
+    name: Heating
+  - key: 3
+    name: ActiveCooling
+  - key: 4
+    name: PassiveCooling
+  - key: 5
+    name: DomesticHotWater
+  - key: 6
+    name: Defrost
+  - key: 7
+    name: Fault

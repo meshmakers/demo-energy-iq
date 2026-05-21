@@ -1,0 +1,29 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: RoomTerminal
+  derivedFromCkTypeId: ${this}/BuildingElement
+  isAbstract: true
+  description: "Abstract base class for room-level terminal units (VDI 3814: Raumterminal). Concrete subtypes are HydronicTerminal, AirTerminal, ElectricHeater."
+  attributes:
+  - id: ${this}/TerminalOperatingModeValue
+    name: OperatingMode
+    isOptional: true
+  - id: ${this}/TerminalNominalPower
+    name: NominalPower
+    isOptional: true
+  associations:
+  # Located in a space
+  - id: ${this}/SpaceTerminals
+    targetCkTypeId: ${this}/Space
+  # Actuators attached to the terminal (valves, dampers)
+  - id: ${this}/TerminalActuators
+    targetCkTypeId: ${this}/Actuator
+  # Local sensors at the terminal (e.g. local supply/return temp sensors)
+  - id: ${this}/EquipmentSensors
+    targetCkTypeId: ${this}/Sensor
+  # Served by plant equipment
+  - id: ${this}/TerminalServedBy
+    targetCkTypeId: ${this}/TechnicalSystem
+  # Membership in a DistributionSystem
+  - id: ${this}/SystemMembers
+    targetCkTypeId: ${this}/DistributionSystem

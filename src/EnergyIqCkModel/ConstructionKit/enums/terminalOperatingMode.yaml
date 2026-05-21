@@ -1,0 +1,14 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+enums:
+- enumId: TerminalOperatingMode
+  values:
+  - key: 0
+    name: Off
+  - key: 1
+    name: Heating
+  - key: 2
+    name: Cooling
+  - key: 3
+    name: Ventilating
+  - key: 4
+    name: Standby

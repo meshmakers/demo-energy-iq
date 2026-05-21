@@ -1,0 +1,24 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: DistributionSystem
+  derivedFromCkTypeId: ${Basic}/NamedEntity
+  description: "Logical grouping of equipment that belong to one distribution system - heating circuit, cooling circuit, ventilation system, electrical circuit, etc. (IFC: IfcDistributionSystem)."
+  attributes:
+  - id: ${this}/DistributionSystemTypeValue
+    name: SystemType
+    isOptional: true
+  - id: ${this}/TotalEnergyConsumed
+    name: TotalEnergyConsumed
+    isOptional: true
+  - id: ${this}/TotalEnergyDelivered
+    name: TotalEnergyDelivered
+    isOptional: true
+  - id: ${this}/SystemEfficiency
+    name: SystemEfficiency
+    isOptional: true
+  - id: ${this}/LastEnergyUpdate
+    name: LastEnergyUpdate
+    isOptional: true
+  associations:
+  - id: ${this}/SystemMembers
+    targetCkTypeId: ${Basic}/NamedEntity

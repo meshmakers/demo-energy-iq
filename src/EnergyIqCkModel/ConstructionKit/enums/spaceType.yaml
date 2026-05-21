@@ -2,6 +2,7 @@ $schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
 enums:
 - enumId: SpaceType
   values:
+  # Commercial / industrial
   - key: 0
     name: Office
   - key: 1
@@ -32,3 +33,26 @@ enums:
     name: Workshop
   - key: 14
     name: Other
+  # Residential
+  - key: 15
+    name: LivingRoom
+  - key: 16
+    name: Bedroom
+  - key: 17
+    name: Bathroom
+  - key: 18
+    name: DiningRoom
+  - key: 19
+    name: Lounge
+  - key: 20
+    name: ChildrensRoom
+  - key: 21
+    name: GuestRoom
+  - key: 22
+    name: Laundry
+  - key: 23
+    name: Garage
+  - key: 24
+    name: WalkInCloset
+  - key: 25
+    name: Anteroom

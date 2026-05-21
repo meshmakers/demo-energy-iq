@@ -1,0 +1,26 @@
+ckTypeId: EnergyIQ/WindowContactSensor
+phSpec: ph::Bool-Point
+markers:
+  - point
+  - sensor
+  - window
+tags:
+  - { name: dis, sourceAttribute: System/Name }
+  - { name: kind, value: "Bool" }
+refs:
+  - phRef: spaceRef
+    sourceRole: EnergyIQ/SpaceSensors
+    direction: parent
+    targetCkTypeId: EnergyIQ/Space
+  - phRef: equipRef
+    sourceRole: EnergyIQ/EquipmentSensors
+    direction: parent
+    # equipRef typically points to the Window the sensor is attached to
+attributes:
+  - ckAttribute: CurrentValue
+    phTag: curVal
+    kind: Bool
+    # Convention: true = closed (normal), false = open (triggered)
+  - ckAttribute: LastUpdate
+    phTag: curStatus
+    kind: Str

@@ -1,0 +1,27 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: Actuator
+  derivedFromCkTypeId: ${this}/BuildingElement
+  isAbstract: true
+  description: "Abstract base class for actuators (IFC: IfcActuator). Concrete subtypes: Valve, Damper, Dimmer, Motor."
+  attributes:
+  - id: ${this}/ActuatorManufacturer
+    name: Manufacturer
+    isOptional: true
+  - id: ${this}/ActuatorModel
+    name: Model
+    isOptional: true
+  - id: ${this}/LastValueUpdate
+    name: LastUpdate
+    isOptional: true
+  - id: ${this}/IsFaulty
+    name: IsFaulty
+    isOptional: true
+  associations:
+  # Located in a space, OR attached to an equipment, OR attached to a terminal
+  - id: ${this}/SpaceActuators
+    targetCkTypeId: ${this}/Space
+  - id: ${this}/EquipmentActuators
+    targetCkTypeId: ${this}/BuildingElement
+  - id: ${this}/TerminalActuators
+    targetCkTypeId: ${this}/RoomTerminal

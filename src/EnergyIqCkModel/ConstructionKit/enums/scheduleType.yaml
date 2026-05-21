@@ -1,0 +1,18 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+enums:
+- enumId: ScheduleType
+  values:
+  - key: 0
+    name: Occupancy
+  - key: 1
+    name: Heating
+  - key: 2
+    name: Cooling
+  - key: 3
+    name: Ventilation
+  - key: 4
+    name: Lighting
+  - key: 5
+    name: Shading
+  - key: 6
+    name: Custom

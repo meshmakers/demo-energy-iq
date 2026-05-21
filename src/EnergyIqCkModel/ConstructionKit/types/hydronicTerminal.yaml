@@ -1,0 +1,19 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: HydronicTerminal
+  derivedFromCkTypeId: ${this}/RoomTerminal
+  isAbstract: true
+  description: "Abstract water-based room terminal. Concrete subtypes: Radiator, RadiantSurface, ChilledBeam, FanCoilUnit."
+  attributes:
+  - id: ${this}/TerminalSupplyTemp
+    name: SupplyTemp
+    isOptional: true
+  - id: ${this}/TerminalReturnTemp
+    name: ReturnTemp
+    isOptional: true
+  - id: ${this}/TerminalFlowRate
+    name: FlowRate
+    isOptional: true
+  - id: ${this}/IsReversibleTerminal
+    name: IsReversible
+    isOptional: true

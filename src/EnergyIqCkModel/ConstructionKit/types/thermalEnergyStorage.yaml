@@ -1,0 +1,29 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: ThermalEnergyStorage
+  derivedFromCkTypeId: ${this}/TechnicalSystem
+  description: "Thermal energy storage / buffer tank (IFC: IfcTank/THERMALTANK). Stores heating or cooling energy for time-shift operation."
+  attributes:
+  - id: ${this}/StorageCapacity
+    name: StorageCapacity
+    isOptional: true
+  - id: ${this}/StorageVolume
+    name: StorageVolume
+    isOptional: true
+  - id: ${this}/StorageTempTop
+    name: StorageTempTop
+    isOptional: true
+  - id: ${this}/StorageTempMiddle
+    name: StorageTempMiddle
+    isOptional: true
+  - id: ${this}/StorageTempBottom
+    name: StorageTempBottom
+    isOptional: true
+  - id: ${this}/StorageChargeLevel
+    name: ChargeLevel
+    isOptional: true
+  associations:
+  - id: ${this}/EquipmentSensors
+    targetCkTypeId: ${this}/Sensor
+  - id: ${this}/SystemMembers
+    targetCkTypeId: ${this}/DistributionSystem

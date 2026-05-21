@@ -1,0 +1,62 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+attributes:
+# Shared terminal attributes
+- id: IsReversibleTerminal
+  valueType: Boolean
+  description: "True if the terminal can switch between heating and cooling (e.g. reversible underfloor radiant surface)"
+
+- id: TerminalOperatingModeValue
+  valueType: Enum
+  valueCkEnumId: ${this}/TerminalOperatingMode
+  description: "Current operating mode of the terminal (Off/Heating/Cooling/Ventilating/Standby)"
+
+- id: TerminalNominalPower
+  valueType: Double
+  description: "Nominal thermal power of the terminal (kW)"
+
+- id: TerminalSupplyTemp
+  valueType: Double
+  description: "Local supply temperature at the terminal inlet (°C)"
+
+- id: TerminalReturnTemp
+  valueType: Double
+  description: "Local return temperature at the terminal outlet (°C)"
+
+- id: TerminalFlowRate
+  valueType: Double
+  description: "Local flow rate through the terminal (l/min or m³/h)"
+
+# Radiator/RadiantSurface specific
+- id: RadiantSurfaceArea
+  valueType: Double
+  description: "Active surface area of the radiant terminal (m²)"
+
+- id: RadiantSurfaceMaxSupplyTemp
+  valueType: Double
+  description: "Maximum allowed supply temperature for the radiant surface (°C, dew-point safety for cooling)"
+
+# FanCoilUnit specific
+- id: FanCoilHeatingValvePosition
+  valueType: Double
+  description: "Heating coil valve position for 4-pipe fan coil unit (0-100%)"
+
+- id: FanCoilCoolingValvePosition
+  valueType: Double
+  description: "Cooling coil valve position for 4-pipe fan coil unit (0-100%)"
+
+- id: FanCoilFanSpeed
+  valueType: Double
+  description: "Fan speed of the fan coil unit (0-100%)"
+
+- id: FanCoilFanStage
+  valueType: Int
+  description: "Fan stage of the fan coil unit (typically 0-3 or 0-5)"
+
+- id: FanCoilFanSpeedSetpoint
+  valueType: Double
+  description: "Commanded fan speed of the fan coil unit (0-100%)"
+
+# AirTerminal specific
+- id: AirTerminalBoxType
+  valueType: String
+  description: "Type of air terminal (VAV, CAV, Diffuser, Grille, etc.)"

@@ -1,19 +1,21 @@
 $schema: https://schemas.meshmakers.cloud/runtime-model.schema.json
-dependencies: []
+dependencies:
+  - System.Communication-[3.0,4.0)
 entities:
-  - rtId: 67e10c68fe3e19891bbfd263
-    ckTypeId: System.Communication/MeshPipeline-1
-    associations:
-      - roleId: System/ParentChild-1
-        targetRtId: 67e10c68fe3e19891bbfd262
-        targetCkTypeId: System.Communication/DataPipeline-1
-        attributes: []
+  - rtId: 67e10c68fe3e19891bbfd262
+    ckTypeId: System.Communication/DataFlow
     attributes:
-      - id: System/Name-1
+      - id: System/Name
+        value: Excel Pipeline
+
+  - rtId: 67e10c68fe3e19891bbfd263
+    ckTypeId: System.Communication/Pipeline
+    attributes:
+      - id: System/Name
         value: Mesh Pipeline
-      - id: System/Enabled-1
+      - id: System/Enabled
         value: true
-      - id: System.Communication/PipelineDefinition-1
+      - id: System.Communication/PipelineDefinition
         value: >-
           triggers:
             - type: FromHttpRequest@1
@@ -21,11 +23,10 @@ entities:
               method: POST
           transformations:
             - type: ImportFromExcel@1
-      - id: System.Communication/StatusMessage-1
-  - rtId: 67e10c68fe3e19891bbfd262
-    ckTypeId: System.Communication/DataPipeline-1
-    associations: []
-    attributes:
-      - id: System/Name-1
-        value: Excel Pipeline
-      - id: System/Description-1
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 67e10c68fe3e19891bbfd262
+        targetCkTypeId: System.Communication/DataFlow
+      - roleId: System.Communication/Executes
+        targetRtId: 66004fda527ac79a03ecedd7
+        targetCkTypeId: System.Communication/Adapter

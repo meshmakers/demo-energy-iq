@@ -1,0 +1,9 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: IlluminanceSensor
+  derivedFromCkTypeId: ${this}/Sensor
+  description: "Illuminance / light level sensor (IFC: IfcSensor/LIGHTSENSOR). Unit: lux."
+  attributes:
+  - id: ${this}/Illuminance
+    name: CurrentValue
+    isOptional: true

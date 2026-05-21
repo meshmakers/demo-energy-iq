@@ -1,0 +1,17 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+# Record-typed attributes that carry Pset_* design/operational requirements on Space
+attributes:
+- id: ThermalRequirementsRecord
+  valueType: Record
+  valueCkRecordId: ${this}/PsetSpaceThermalRequirements
+  description: "IFC Pset_SpaceThermalRequirements - design thermal targets"
+
+- id: LightingRequirementsRecord
+  valueType: Record
+  valueCkRecordId: ${this}/PsetSpaceLightingRequirements
+  description: "IFC Pset_SpaceLightingRequirements - design lighting targets"
+
+- id: OccupancyRequirementsRecord
+  valueType: Record
+  valueCkRecordId: ${this}/PsetSpaceOccupancyRequirements
+  description: "IFC Pset_SpaceOccupancyRequirements - design occupancy parameters"

@@ -1,0 +1,47 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+attributes:
+- id: HeatPumpOperatingModeValue
+  valueType: Enum
+  valueCkEnumId: ${this}/HeatPumpOperatingMode
+  description: "Current operating mode of the heat pump (Off/Standby/Heating/ActiveCooling/PassiveCooling/DomesticHotWater/Defrost/Fault)"
+
+- id: HeatSourceValue
+  valueType: Enum
+  valueCkEnumId: ${this}/HeatSource
+  description: "Type of heat source (Air/Ground/Water/Exhaust/Hybrid)"
+
+- id: COP
+  valueType: Double
+  description: "Coefficient of Performance (instantaneous, dimensionless)"
+
+- id: SCOP
+  valueType: Double
+  description: "Seasonal Coefficient of Performance (dimensionless)"
+
+- id: EER
+  valueType: Double
+  description: "Energy Efficiency Ratio (cooling mode, dimensionless)"
+
+- id: SEER
+  valueType: Double
+  description: "Seasonal Energy Efficiency Ratio (cooling mode, dimensionless)"
+
+- id: HeatingCapacity
+  valueType: Double
+  description: "Rated heating capacity (kW)"
+
+- id: CoolingCapacity
+  valueType: Double
+  description: "Rated cooling capacity (kW)"
+
+- id: SourceInletTemp
+  valueType: Double
+  description: "Source-side inlet temperature (°C, e.g. outdoor air, brine, water)"
+
+- id: SourceOutletTemp
+  valueType: Double
+  description: "Source-side outlet temperature (°C)"
+
+- id: IsReversibleAggregate
+  valueType: Boolean
+  description: "True if the unit can switch between heating and cooling"

@@ -1,0 +1,24 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: Schedule
+  derivedFromCkTypeId: ${Basic}/NamedEntity
+  description: "Operational schedule (occupancy, heating, cooling, lighting, etc.) that can be shared across multiple spaces via M:N association. IFC analog: IfcWorkSchedule."
+  attributes:
+  - id: ${this}/ScheduleTypeValue
+    name: ScheduleType
+    isOptional: true
+  - id: ${this}/ScheduleEntries
+    name: Entries
+    isOptional: true
+  - id: ${this}/ScheduleActive
+    name: IsActive
+    isOptional: true
+  - id: ${this}/ScheduleValidFrom
+    name: ValidFrom
+    isOptional: true
+  - id: ${this}/ScheduleValidTo
+    name: ValidTo
+    isOptional: true
+  associations:
+  - id: ${this}/SpaceSchedules
+    targetCkTypeId: ${this}/Space

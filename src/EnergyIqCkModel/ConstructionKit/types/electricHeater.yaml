@@ -1,0 +1,12 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: ElectricHeater
+  derivedFromCkTypeId: ${this}/RoomTerminal
+  description: "Electric room heater - convector, IR panel, towel rail (IFC: IfcSpaceHeater/CONVECTOR with ELECTRIC USERDEFINED)."
+  attributes:
+  - id: ${this}/PowerConsumption
+    name: PowerConsumption
+    isOptional: true
+  - id: ${this}/ModulationLevel
+    name: PowerLevel
+    isOptional: true

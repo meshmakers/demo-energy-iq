@@ -1,0 +1,17 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+# IFC 4.3 Pset_SpaceOccupancyRequirements - design occupancy parameters
+records:
+- recordId: PsetSpaceOccupancyRequirements
+  attributes:
+  - id: ${this}/OccupancyTypeValue
+    name: OccupancyType
+    isOptional: true
+  - id: ${this}/OccupancyNumberPeak
+    name: OccupancyNumberPeak
+    isOptional: true
+  - id: ${this}/AreaPerOccupant
+    name: AreaPerOccupant
+    isOptional: true
+  - id: ${this}/OccupancyTimePerDay
+    name: OccupancyTimePerDay
+    isOptional: true

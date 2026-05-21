@@ -1,0 +1,31 @@
+ckTypeId: EnergyIQ/ElectricHeater
+phSpec: ph::Equip
+markers:
+  - equip
+  - elecHeat
+  - heating
+tags:
+  - { name: dis, sourceAttribute: System/Name }
+refs:
+  - phRef: spaceRef
+    sourceRole: EnergyIQ/SpaceTerminals
+    direction: parent
+    targetCkTypeId: EnergyIQ/Space
+attributes:
+  - ckAttribute: NominalPower
+    phTag: nomPower
+    kind: Number
+    unit: "kW"
+points:
+  - ckAttribute: PowerConsumption
+    markers: [point, sensor, elec, power]
+    kind: Number
+    unit: "kW"
+    refTo: { phRef: equipRef, target: self }
+    navName: power
+  - ckAttribute: ModulationLevel
+    markers: [point, sensor, cmd, level]
+    kind: Number
+    unit: "%"
+    refTo: { phRef: equipRef, target: self }
+    navName: level

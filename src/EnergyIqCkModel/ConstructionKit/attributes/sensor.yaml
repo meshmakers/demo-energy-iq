@@ -1,0 +1,35 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+attributes:
+# Shared sensor attributes
+- id: SensorManufacturer
+  valueType: String
+  description: "Manufacturer of the sensor device"
+
+- id: SensorModel
+  valueType: String
+  description: "Model designation of the sensor device"
+
+- id: SensorSerialNumber
+  valueType: String
+  description: "Serial number of the sensor device"
+
+- id: SensorAccuracy
+  valueType: Double
+  description: "Sensor accuracy (±, in the sensor's measurement unit)"
+
+- id: LastValueUpdate
+  valueType: DateTime
+  description: "Timestamp of the most recent measurement update"
+
+- id: IsFaulty
+  valueType: Boolean
+  description: "True if the sensor is in a fault state"
+
+# Generic value carriers used by sensor subtypes as CurrentValue
+- id: GenericStringValue
+  valueType: String
+  description: "Generic sensor value as string (for GenericSensor or proprietary measurements)"
+
+- id: ContactState
+  valueType: Boolean
+  description: "Binary contact state (true = closed/active, false = open/inactive)"

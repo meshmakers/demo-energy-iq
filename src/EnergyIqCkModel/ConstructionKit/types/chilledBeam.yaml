@@ -1,0 +1,6 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: ChilledBeam
+  derivedFromCkTypeId: ${this}/HydronicTerminal
+  description: "Chilled beam terminal (IFC: IfcCooledBeam). Passive or active cooling beam; some installations also support heating - set IsReversible=true in that case."
+  # Valve(s) modeled as separate Valve actuator(s) via TerminalActuators

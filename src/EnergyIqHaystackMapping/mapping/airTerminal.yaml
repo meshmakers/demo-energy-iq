@@ -1,0 +1,44 @@
+ckTypeId: EnergyIQ/AirTerminal
+phSpec: ph::Equip
+markers:
+  - equip
+  - air
+  - terminal
+tags:
+  - { name: dis, sourceAttribute: System/Name }
+refs:
+  - phRef: spaceRef
+    sourceRole: EnergyIQ/SpaceTerminals
+    direction: parent
+    targetCkTypeId: EnergyIQ/Space
+  - phRef: equipRef
+    sourceRole: EnergyIQ/TerminalServedBy
+    direction: parent
+attributes:
+  - ckAttribute: BoxType
+    phTag: airTerminalType
+    kind: Str
+    # Free text: VAV, CAV, Diffuser, Grille
+  - ckAttribute: TerminalOperatingModeValue
+    phTag: hvacMode
+    kind: Str
+    enumMapping:
+      0: off
+      1: heating
+      2: cooling
+      3: ventilating
+      4: standby
+points:
+  - ckAttribute: AirflowRate
+    markers: [point, sensor, air, flow]
+    kind: Number
+    unit: "m³/h"
+    refTo: { phRef: equipRef, target: self }
+    navName: flow
+  - ckAttribute: AirflowSetpoint
+    markers: [point, sp, cmd, air, flow]
+    kind: Number
+    unit: "m³/h"
+    refTo: { phRef: equipRef, target: self }
+    navName: flowSp
+    writable: true

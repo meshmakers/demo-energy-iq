@@ -1,0 +1,14 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+enums:
+- enumId: HeatSource
+  values:
+  - key: 0
+    name: Air
+  - key: 1
+    name: Ground
+  - key: 2
+    name: Water
+  - key: 3
+    name: Exhaust
+  - key: 4
+    name: Hybrid

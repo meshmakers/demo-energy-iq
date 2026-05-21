@@ -1,0 +1,28 @@
+ckTypeId: EnergyIQ/CO2Sensor
+phSpec: ph::Number-Point
+markers:
+  - point
+  - sensor
+  - co2
+  - air
+  - zone
+tags:
+  - { name: dis, sourceAttribute: System/Name }
+  - { name: kind, value: "Number" }
+  - { name: unit, value: "ppm" }
+refs:
+  - phRef: spaceRef
+    sourceRole: EnergyIQ/SpaceSensors
+    direction: parent
+    targetCkTypeId: EnergyIQ/Space
+  - phRef: equipRef
+    sourceRole: EnergyIQ/EquipmentSensors
+    direction: parent
+attributes:
+  - ckAttribute: CurrentValue
+    phTag: curVal
+    kind: Number
+    unit: "ppm"
+  - ckAttribute: LastUpdate
+    phTag: curStatus
+    kind: Str

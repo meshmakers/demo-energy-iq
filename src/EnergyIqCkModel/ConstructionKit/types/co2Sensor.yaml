@@ -1,0 +1,9 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: CO2Sensor
+  derivedFromCkTypeId: ${this}/Sensor
+  description: "CO2 concentration sensor (IFC: IfcSensor/CO2SENSOR). Unit: ppm."
+  attributes:
+  - id: ${this}/CO2Level
+    name: CurrentValue
+    isOptional: true

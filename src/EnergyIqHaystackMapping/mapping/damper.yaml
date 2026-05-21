@@ -1,0 +1,46 @@
+ckTypeId: EnergyIQ/Damper
+phSpec: ph::Equip
+markers:
+  - equip
+  - damper
+  - air
+tags:
+  - { name: dis, sourceAttribute: System/Name }
+refs:
+  - phRef: equipRef
+    sourceRole: EnergyIQ/EquipmentActuators
+    direction: parent
+  - phRef: terminalRef
+    sourceRole: EnergyIQ/TerminalActuators
+    direction: parent
+  - phRef: spaceRef
+    sourceRole: EnergyIQ/SpaceActuators
+    direction: parent
+    targetCkTypeId: EnergyIQ/Space
+points:
+  - ckAttribute: Position
+    markers: [point, sensor, damper, position]
+    kind: Number
+    unit: "%"
+    refTo: { phRef: equipRef, target: self }
+    navName: pos
+  - ckAttribute: PositionSetpoint
+    markers: [point, sp, cmd, damper, position]
+    kind: Number
+    unit: "%"
+    refTo: { phRef: equipRef, target: self }
+    navName: posSp
+    writable: true
+  - ckAttribute: AirflowRate
+    markers: [point, sensor, air, flow]
+    kind: Number
+    unit: "m³/h"
+    refTo: { phRef: equipRef, target: self }
+    navName: flow
+  - ckAttribute: AirflowSetpoint
+    markers: [point, sp, cmd, air, flow]
+    kind: Number
+    unit: "m³/h"
+    refTo: { phRef: equipRef, target: self }
+    navName: flowSp
+    writable: true

@@ -1,0 +1,6 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: Radiator
+  derivedFromCkTypeId: ${this}/HydronicTerminal
+  description: "Conventional water-based radiator (IFC: IfcSpaceHeater/RADIATOR). Single heating valve."
+  # Heating valve modeled as separate Valve actuator via TerminalActuators

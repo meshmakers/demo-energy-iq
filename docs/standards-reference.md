@@ -1,5 +1,7 @@
 # Standards Reference
 
+**EnergyIQ-2.0.0** mapping reference for ISO 16739-1:2024 (IFC 4.3), VDI 3814, ISO 4157, and Project Haystack 4.
+
 ## Overview: Standards Landscape
 
 ```
@@ -8,17 +10,19 @@
               ┌──────────┴──────────┐         ┌──────────┴──────────┐
               │                     │         │                     │
          ISO 16739              VDI 3814              Project
-           (IFC)                  (BA)               Haystack
+           (IFC 4.3)              (BA)               Haystack 4
               │                     │                    │
          "Structure"           "Functions"          "Semantics"
-         What is where?        How is it controlled? What does the
-         (Rooms, Walls)        (Controllers, Sched.) data point mean?
+         Spaces, Equip,         Anlagen-/             What does
+         Sensors, Actuators,    Raum-Automation,     this data
+         Pset_*                 Sensor/Aktor          point mean?
               │                     │                    │
               └──────────┬──────────┴────────────────────┘
                          │
                          ▼
-                    ┌─────────┐
-                    │EnergyIQ │  ← Combines all three
+                    ┌─────────┐         Projection (not mixin)
+                    │EnergyIQ │ ────────────► PH4-Lib / Renderer
+                    │ v2.0.0  │
                     └─────────┘
 ```
 
@@ -30,62 +34,103 @@
 
 **Industry Foundation Classes (IFC)** is an open international standard for Building Information Modeling (BIM). The current version IFC 4.3 (ISO 16739-1:2024) extends the scope to infrastructure (bridges, roads, railways).
 
-**Origin:** Architecture/Construction (buildingSMART)
-**Focus:** Planning & Construction ("As-Built")
-**Data:** Static (geometry, structure, properties)
+- **Origin:** Architecture / Construction (buildingSMART)
+- **Focus:** Planning, construction, and increasingly operations
+- **Data:** Static (geometry, structure, properties) + property sets for operational requirements
 
-### Relevant Concepts for EnergyIQ
+### Spatial Structure
 
-#### Spatial Structure
-
-IFC defines a hierarchical spatial decomposition:
+IFC defines a hierarchical spatial decomposition, established via `IfcRelAggregates`:
 
 ```
 IfcProject
-└── IfcSite                    → Site
-    └── IfcBuilding            → Building
-        └── IfcBuildingStorey  → BuildingStorey
-            └── IfcSpace       → Space
+└── IfcSite                            → EnergyIQ/Site
+    ├── IfcBuilding                    → EnergyIQ/Building
+    │   └── IfcBuildingStorey          → EnergyIQ/BuildingStorey
+    │       ├── IfcSpace               → EnergyIQ/Space
+    │       └── IfcExternalSpatialElement → EnergyIQ/ExternalSpace
+    └── IfcExternalSpatialElement      → EnergyIQ/ExternalSpace (e.g. Garten, Zufahrt)
 ```
 
-The relationships are established via `IfcRelAggregates`.
+The `ExternalSpace` type is new in v2 and mirrors `IfcExternalSpatialElement` (introduced in IFC 4.0) — outdoor areas don't carry indoor thermal/lighting requirements.
 
-#### Spatial Containment
+### Property Sets (Pset_*)
 
-Building elements are assigned to spaces via `IfcRelContainedInSpatialStructure`:
+IFC defines reusable property sets for additional properties. v2 implements three Pset_* concepts as CK records on Space, clearly separating design/operational *requirements* from runtime *measurements*:
 
-```
-IfcSpace ◄── IfcRelContainedInSpatialStructure ──► IfcWall, IfcDoor, IfcWindow, ...
-```
+| IFC Pset | EnergyIQ Record | Carries |
+|---|---|---|
+| `Pset_SpaceThermalRequirements` | `PsetSpaceThermalRequirements` | SpaceTemperature, SpaceTemperatureMin/Max, SpaceHumidity[Min/Max], CO2SetpointMax |
+| `Pset_SpaceLightingRequirements` | `PsetSpaceLightingRequirements` | IlluminanceTarget, IlluminanceMin, ArtificialLighting, NaturalLighting |
+| `Pset_SpaceOccupancyRequirements` | `PsetSpaceOccupancyRequirements` | OccupancyType, OccupancyNumberPeak, AreaPerOccupant, OccupancyTimePerDay |
 
-#### Property Sets
+### Building Elements
 
-IFC uses PropertySets for additional properties:
-- `Pset_SpaceCommon` – General space properties
-- `Pset_SpaceThermalRequirements` – Thermal requirements
-- `Pset_SpaceOccupancyRequirements` – Occupancy requirements
+| IFC Entity | EnergyIQ Type | Notes |
+|---|---|---|
+| IfcWall | Wall | |
+| IfcDoor | Door | + WindowContactSensor via EquipmentSensors |
+| IfcWindow | Window | + WindowContactSensor |
+| IfcShadingDevice | ShadingDevice | + Motor actuator via EquipmentActuators |
+| IfcLightFixture | Luminaire | + Dimmer actuator |
 
-**Mapping to OctoMesh:** PropertySets → Records or direct attributes
+### Sensors (NEW v2)
 
-#### Building Elements
+| IFC PredefinedType | EnergyIQ Type | Measurement |
+|---|---|---|
+| IfcSensor / TEMPERATURESENSOR | TemperatureSensor | Double, °C |
+| IfcSensor / HUMIDITYSENSOR | HumiditySensor | Double, %RH |
+| IfcSensor / CO2SENSOR | CO2Sensor | Double, ppm |
+| IfcSensor / LIGHTSENSOR | IlluminanceSensor | Double, lux |
+| IfcSensor / MOVEMENTSENSOR | PresenceSensor | Boolean |
+| IfcSensor / CONTACTSENSOR | WindowContactSensor | Boolean |
+| IfcSensor / USERDEFINED | GenericSensor | String (carrier) |
 
-| IFC Entity | EnergyIQ Type |
-|------------|---------------|
-| IfcWall | Wall |
-| IfcDoor | Door |
-| IfcWindow | Window |
-| IfcShadingDevice | ShadingDevice |
-| IfcLightFixture | Luminaire |
+### Actuators (NEW v2)
 
-#### Building Systems
+| IFC Entity | EnergyIQ Type | Notes |
+|---|---|---|
+| IfcValve | Valve | ValveType enum incl. Reversible/Changeover |
+| IfcDamper | Damper | |
+| IfcActuator / ELECTRICACTUATOR | Dimmer | Standalone DALI ballast etc. |
+| IfcMotorConnection / IfcActuator | Motor | Shading drive, pump VSD, fan motor |
 
-| IFC Entity | EnergyIQ Type |
-|------------|---------------|
-| IfcSystem | TechnicalSystem |
-| IfcDistributionSystem | HVACSystem |
-| IfcUnitaryEquipment | AirHandlingUnit |
+### Building Services Plant Equipment
+
+| IFC Entity / PredefinedType | EnergyIQ Type |
+|---|---|
+| IfcUnitaryEquipment / HEATPUMP | **HeatPump** *(NEW v2)* |
 | IfcBoiler | Boiler |
+| IfcChiller | Chiller |
 | IfcPump | Pump |
+| IfcUnitaryEquipment / AIRHANDLER | AirHandlingUnit |
+| IfcTank / THERMALTANK | **ThermalEnergyStorage** *(NEW v2)* |
+
+### Room Terminals (Distribution Endpoints) — NEW v2
+
+| IFC Entity / PredefinedType | EnergyIQ Type | Notes |
+|---|---|---|
+| IfcSpaceHeater / RADIATOR | Radiator | |
+| IfcSpaceHeater / RADIATOR (USERDEFINED radiantFloor/Ceiling) | RadiantSurface | Reversible H+C via IsReversibleTerminal |
+| IfcCooledBeam | ChilledBeam | |
+| IfcUnitaryEquipment + IfcFan | FanCoilUnit | 2-pipe or 4-pipe |
+| IfcAirTerminal / IfcAirTerminalBox | AirTerminal | VAV/CAV/Diffuser |
+| IfcSpaceHeater / CONVECTOR (ELECTRIC USERDEFINED) | ElectricHeater | |
+
+### Logical Systems
+
+| IFC Entity | EnergyIQ Type |
+|---|---|
+| IfcSystem | TechnicalSystem (abstract) |
+| IfcDistributionSystem | **DistributionSystem** *(NEW v2)* |
+| IfcSolarDevice | PVString |
+| IfcElectricFlowStorageDevice | BatteryStorage |
+
+### Schedules
+
+| IFC Entity | EnergyIQ Type |
+|---|---|
+| IfcWorkSchedule (analog) | **Schedule** *(NEW v2)* — M:N to Space, shared across rooms |
 
 ### Sources
 
@@ -95,20 +140,49 @@ IFC uses PropertySets for additional properties:
 
 ---
 
+## ISO 4157 (Designation Systems)
+
+EnergyIQ implements ISO 4157 for storey and room designation.
+
+### ISO 4157-1: Storey Numbering
+
+| EnergyIQ Attribute | Description | Example |
+|---|---|---|
+| `BuildingStorey.StoreyNumber` | Consecutive from bottom, 1 = ground | 1, 2, 3 |
+| `BuildingStorey.FloorDesignation` | National code | EG, 1.OG, 2.OG, DG, UG |
+
+### ISO 4157-2: Room Numbers (Daily Use)
+
+| EnergyIQ Attribute | Description | Example |
+|---|---|---|
+| `Space.RoomNumber` | Floor prefix + 2-digit sequential | EG01, 1OG02, DG03 |
+
+Pattern: `{FloorPrefix}{2-digit-sequence}` — Nebengebäude: `NG-EG01`. Outdoor (`ExternalSpace`): `A01`.
+
+### ISO 4157-3: Room Identifiers (Lifecycle)
+
+| EnergyIQ Attribute | Description | Example |
+|---|---|---|
+| `Space.RoomIdentifier` | Immutable: `I#` + storey + 3-digit | I#1001, I#2015, I#3001 |
+
+**Important:** Room identifiers are **immutable** throughout the building lifecycle.
+
+---
+
 ## VDI 3814 (Building Automation)
 
 ### Overview
 
-The **VDI Guideline 3814** describes the state of the art for planning and implementing building automation (BA) systems. It was fundamentally revised in 2019 and integrates the former VDI 3813.
+**VDI Guideline 3814** describes the state of the art for planning and implementing building automation (BA) systems. It was fundamentally revised in 2019 and integrates the former VDI 3813.
 
-**Origin:** Building services planning, Germany (VDI)
-**Focus:** Planning & documentation of BA systems
-**Data:** Function descriptions, data point lists
+- **Origin:** Building services planning, Germany (VDI)
+- **Focus:** Planning & documentation of BA systems
+- **Data:** Function descriptions, data point lists
 
 ### Guideline Series Structure
 
 | Part | Content |
-|------|---------|
+|---|---|
 | 1 | Fundamentals |
 | 2.1 | Requirements planning |
 | 2.2 | Planning content, system integration |
@@ -122,68 +196,82 @@ The **VDI Guideline 3814** describes the state of the art for planning and imple
 
 ```
 Building Automation (BA)
-├── Room Automation (RA)
-│   ├── Temperature control
-│   ├── Lighting control
-│   ├── Sun protection control
-│   └── Presence detection
-├── Plant Automation (PA)
-│   ├── HVAC systems (Heating, Ventilation, Air Conditioning)
-│   ├── Sanitary systems
-│   └── Electrical engineering
-└── BA Management
-    ├── Monitoring
-    ├── Operation
-    └── Optimization
+├── Raum-Automation (Room Automation)
+│   ├── Temperature control       ← EnergyIQ: TemperatureSensor + RadiantSurface + Valve
+│   ├── Lighting control          ← EnergyIQ: IlluminanceSensor + Luminaire / Dimmer
+│   ├── Sun protection control    ← EnergyIQ: ShadingDevice + Motor
+│   ├── Ventilation control       ← EnergyIQ: AirTerminal + Damper
+│   ├── Presence detection        ← EnergyIQ: PresenceSensor
+│   └── Window monitoring         ← EnergyIQ: WindowContactSensor
+├── Anlagen-Automation (Plant Automation)
+│   ├── HVAC systems              ← EnergyIQ: HeatPump, Boiler, Chiller, AHU, Pump
+│   ├── Thermal storage           ← EnergyIQ: ThermalEnergyStorage
+│   ├── Electrical & PV           ← EnergyIQ: PhotovoltaicSystem, Inverter, BatteryStorage
+│   └── Distribution              ← EnergyIQ: DistributionSystem (logical grouping)
+└── Management-Ebene
+    ├── Schedules                 ← EnergyIQ: Schedule (M:N to Space)
+    ├── Operating modes           ← EnergyIQ: OperatingMode (Comfort/Economy/…)
+    └── Optimization              ← EnergyIQ: external (analytics layer)
 ```
+
+### The Room / Plant Split in v2
+
+The v2 restructuring (`docs/space-restructuring-concept.md`) explicitly mirrors VDI 3814's split:
+
+- **Room level (Raumautomation):** sensors report room conditions, terminals deliver heating/cooling/ventilation locally, actuators control the terminals. `Space` carries master data + operating mode + schedule references; never measurements or terminal control signals.
+- **Plant level (Anlagenautomation):** TechnicalSystem subtypes generate heat/cold/air at building scale; they connect to room terminals via `TerminalServedBy`.
+
+This is the structural reason v1's "everything on Space" model was reorganized.
 
 ### BA Functions (Part 3.1)
 
-Basic building automation functions as function blocks:
+EnergyIQ maps the VDI 3814 function types to entity attributes / associations:
 
-#### General Functions
-- **Switching** – On/off control
-- **Limit monitoring** – Alarm on threshold violation
-- **Time schedule** – Time-controlled actions
-- **Counter** – Operating hours, energy
+| VDI Function | EnergyIQ Realization |
+|---|---|
+| Switching (on/off) | `Luminaire.IsOn`, `Pump.IsRunning`, `Motor.State`, etc. |
+| Limit monitoring | (Out of scope — application layer / Studio rules) |
+| Time schedule | `Schedule` entity + `Schedule.Entries` |
+| Counter (operating hours, energy) | `DistributionSystem.TotalEnergyConsumed`, `PVString.EnergyProducedKWh`, `BatteryStorage.CycleCount` |
+| PI/PID controller | (Plant-internal — not modeled at CK level) |
+| Sequence control | (Plant-internal) |
+| Pump control | `Pump.SpeedSetpoint` + `Pump.IsRunning` |
+| Valve control | `Valve.Position` + `Valve.PositionSetpoint` |
+| Damper control | `Damper.Position` + `Damper.PositionSetpoint` |
 
-#### Room Automation
-- **Temperature control** – PI/PID control for heating/cooling
-- **Lighting control** – Switching/dimming function
-- **Sun protection control** – Position and slats
-- **Presence detection** – Motion sensor logic
+### Data Point Types (VDI vs. EnergyIQ)
 
-#### Plant Automation
-- **PID controller** – Universal controller
-- **Sequence control** – Sequential control
-- **Pump control** – On/off with interlock
-- **Valve control** – Open/close/modulating
+VDI 3814 treats data points as standalone objects (BI/BO/AI/AO/CI). EnergyIQ v2 promotes those data points to **first-class Sensor / Actuator entities** — each VDI data point becomes its own RT entity with typed `CurrentValue` / `Position` / etc.
 
-### Data Point Types
+| VDI Data Point Type | Direction | EnergyIQ Equivalent |
+|---|---|---|
+| Binary input | Input | `PresenceSensor`, `WindowContactSensor` |
+| Binary output | Output | `Motor.State`, `Luminaire.IsOn` |
+| Analog input | Input | `TemperatureSensor`, `HumiditySensor`, `CO2Sensor`, `IlluminanceSensor` |
+| Analog output | Output | `Valve.Position`, `Damper.Position`, `Luminaire.DimmingLevel` |
+| Counter input | Input | (`DistributionSystem.TotalEnergyConsumed` aggregated, or via `GenericSensor`) |
 
-| Type | Direction | Signal | Example |
-|------|-----------|--------|---------|
-| Binary input | Input | Binary | Window contact |
-| Binary output | Output | Binary | Pump on/off |
-| Analog input | Input | Analog | Temperature |
-| Analog output | Output | Analog | Valve position |
-| Counter input | Input | Counter | Energy meter |
+### Operating Modes (VDI 3814)
 
-**Mapping to OctoMesh:**
-- In VDI 3814, data points are standalone objects
-- In EnergyIQ/OctoMesh: Data points = attributes on the object (OO approach)
+EnergyIQ implements the standard VDI 3814 room operating modes via the `OperatingMode` enum on `Space`:
+
+| Mode | Description |
+|---|---|
+| Comfort | Full conditioning, occupancy expected |
+| Economy | Reduced setpoints, lower energy use |
+| Standby | Minimal conditioning, ready for occupancy |
+| Protection | Freeze / overheat protection only |
+| Off | System disabled |
+| Auto | Schedule-driven mode selection |
 
 ### BA Identification (Part 4.1)
 
-System identification schema:
-```
-+Site=Building-Storey-Room.System:Component%Signal
-```
+VDI 3814-4.1 prescribes an identification schema. EnergyIQ does **not** generate VDI-style identifier strings automatically — the equivalent role is fulfilled by:
+- `Space.RoomNumber` / `Space.RoomIdentifier` (ISO 4157)
+- `TechnicalSystem.Identifier` (e.g. "HZG-01", "KWL-01", "PMP-HK01")
+- Entity-level descriptive `Name`s
 
-Example:
-```
-+Vienna=BldgA-GF-B001.HTG:SL%Temp
-```
+Generating canonical VDI identifier strings is a downstream concern (export tooling), not part of the core CK.
 
 ### Sources
 
@@ -193,205 +281,106 @@ Example:
 
 ---
 
-## Project Haystack
+## Project Haystack 4
 
 ### Overview
 
-**Project Haystack** is an open-source initiative (since 2014) for standardizing semantic tagging of IoT and building data. It solves the problem that BA data points often have cryptic names and machines cannot understand their meaning.
+**Project Haystack** is an open-source initiative (since 2014) for standardizing semantic tagging of IoT and building data. Version 4 introduces a formal spec system (`lib`, `spec`, Fantom-typed tags).
 
-**Origin:** BA operations, USA (industry consortium)
-**Focus:** Runtime data, interoperability
-**Data:** Semantic tags for data points
+- **Origin:** BA operations, USA (industry consortium)
+- **Focus:** Runtime data, interoperability between BA tools (SkySpark, FIN Framework, Niagara, etc.)
+- **Data:** Semantic tags, typed specs in PH4
 
-**Founding members:** Siemens, Intel, J2 Innovations, SkyFoundry, Lynxspring, Legrand
-
-### The Problem
-
-```
-BACnet data point:
-  Name: "AHU1.SF.SPD"
-  Value: 75.0
-
-→ What does that mean? A human knows, a machine does not.
-```
-
-### The Solution: Semantic Tagging
-
-```
-With Haystack tags:
-  Name: "AHU1.SF.SPD"
-  Value: 75.0
-  Tags: { ahu, supply, fan, speed, sensor, unit:"%" }
-          │     │      │    │      │
-          │     │      │    │      └── Type: Measurement
-          │     │      │    └── What: Speed
-          │     │      └── Component: Fan
-          │     └── Air side: Supply
-          └── Equipment: Air handling unit
-```
+**Founding members:** Siemens, Intel, J2 Innovations, SkyFoundry, Lynxspring, Legrand.
 
 ### Core Concepts
 
-#### 1. Tags (Vocabulary)
-Standardized terms such as `temp`, `humidity`, `ahu`, `vav`, `pump`, `sensor`, `cmd`, `sp` (setpoint).
+1. **Tags** — Standardized vocabulary (`temp`, `humidity`, `ahu`, `vav`, `pump`, `sensor`, `cmd`, `sp`, …).
+2. **Marker vs. Value tags** — Markers indicate presence (`{ hot, water, pump }`), value tags carry data (`{ unit: "°C", maxVal: 100 }`).
+3. **Conjuncts** — Compound tags (`chilled-water`, `hot-water-plant`).
+4. **Taxonomy / Specs** (PH4) — `equip` → `hvac` → `ahu`, `vav`, `fcu`, … with formal specs.
+5. **References** — `equipRef`, `siteRef`, `spaceRef` link entities.
 
-#### 2. Marker Tags vs. Value Tags
-```
-Marker:  { hot, water, pump }           ← Presence only
-Value:   { unit: "°C", maxVal: 100 }    ← With value
-```
+### PH4 vs. EnergyIQ CK
 
-#### 3. Conjuncts (Compound Tags)
-```
-chilled-water    ← chilled + water
-hot-water-plant  ← hot + water + plant
-```
+In v2 we explicitly chose **not** to model Haystack as a parallel CK. The reasoning (see `docs/haystack-integration-concept.md`):
 
-#### 4. Taxonomy (Inheritance)
-```
-equip
-├── hvac
-│   ├── ahu
-│   ├── vav
-│   └── fcu
-├── meter
-│   ├── elec-meter
-│   └── gas-meter
-└── pump
-```
+PH4's spec system is semantically isomorphic to OctoMesh CK:
 
-#### 5. References (Relationships)
-```
-VAV-01:
-  tags: { vav, hvac, equip }
-  equipRef: @ahu-01           ← Belongs to AHU-01
-  spaceRef: @room-101         ← Serves room 101
-```
+| OctoMesh CK | PH4 |
+|---|---|
+| CK Model (e.g. `EnergyIQ-2.0.0`) | `lib` |
+| CK Type | `spec` |
+| Attribute with `valueType` | typed tag slot (`Marker`, `Str`, `Number`, `Ref`, `Date`, …) |
+| Enum | constrained `Str` |
+| `derivedFromCkTypeId` | spec inheritance |
+| Association | `Ref`-slot with `of:` constraint |
+| RT entity | dict |
+| Collection of RT entities | grid |
 
-### Haystack 5 + Xeto (2024/25)
+Modeling Haystack inside CK would be a metamodel-inside-metamodel duplication. Instead, EnergyIQ uses a **projection layer**: a declarative mapping config (see `docs/haystack-integration-concept.md`) produces PH4-compliant grids on demand. The same mapping config can also generate a PH4 `lib` definition.
 
-The current version extends Haystack from "flat tagging" to a complete ontology:
+### Architectural Implication of v2
 
-| Version | Concept |
-|---------|---------|
-| Haystack 1-4 | Flat tags, loose conventions |
-| Haystack 5 | Formal ontology with type hierarchy |
-| Xeto | Schema language for validation |
-
-```
-Haystack 5 = Semantics ("What does it mean?")
-Xeto       = Structure ("What must it look like?")
-```
-
-### Haystack vs. OctoMesh CK
-
-| Aspect | Haystack | OctoMesh CK |
-|--------|----------|-------------|
-| Model | Tag-based (flat) | Object-oriented |
-| Typing | Implicit via tags | Explicit classes |
-| Inheritance | Taxonomy | True class hierarchy |
-| Relationships | Reference tags | Typed associations |
-| Validation | Xeto (new) | Schema-based |
-| Time series | External (SkySpark etc.) | Integrated |
-
-**OctoMesh CK is more expressive**, but Haystack has broad industry adoption.
-
-### Integration in EnergyIQ
-
-#### Option 1: Haystack Tags as Attribute (Recommended)
-
-```yaml
-Space:
-  name: "Meeting Room 1"
-  temperature: 22.3
-  haystackTags: ["space", "room", "meetingRoom", "hvacZone"]
-
-AirHandlingUnit:
-  name: "AHU-01"
-  supplyAirTemp: 18.5
-  haystackTags: ["ahu", "hvac", "equip"]
-  haystackRefs:
-    siteRef: "@site-001"
-    spaceRef: ["@space-001", "@space-002"]
-```
-
-#### Option 2: Automatic Tag Mapping
-
-```
-EnergyIQ Type    →  Haystack Tags
-─────────────────────────────────
-Space            →  space, hvacZone
-AirHandlingUnit  →  ahu, hvac, equip
-Boiler           →  boiler, hvac, equip, hot, water
-Temperature      →  temp, sensor, point
-```
-
-#### Option 3: Haystack Export
-
-EnergyIQ model → Haystack JSON/Zinc for external tools (SkySpark, FIN Framework).
-
-### Related Standards & Convergence
-
-```
-┌─────────────────────────────────────────────────────┐
-│              ASHRAE 223P (in development)            │
-│                                                     │
-│     Haystack + Brick Schema + BACnet = Unified      │
-└─────────────────────────────────────────────────────┘
-```
-
-| Standard | Focus | Status |
-|----------|-------|--------|
-| **Haystack** | Tagging for BA/IoT | Active, Version 5 |
-| **Brick Schema** | Ontology for buildings | Academic, UC Berkeley |
-| **ASHRAE 223P** | Unification | In development |
-| **SAREF4BLDG** | EU Smart Appliances | EU standard |
+The Haystack `Point` is a first-class entity with refs back to its space/equip. In v1, EnergyIQ kept measurements as inline Space attributes — that meant a Haystack export needed to "explode" each measurement attribute into a separate Point dict (structural impedance). In **v2**, measurements are already separate Sensor entities. The export becomes 1:1: one `TemperatureSensor` ≈ one PH `Point` (markers `point sensor temp air zone`, kind `Number`, unit `"°C"`). The projection layer is now simpler.
 
 ### Sources
 
 - [Project Haystack](https://project-haystack.org/)
 - [Haystack Documentation](https://project-haystack.org/doc)
-- [Haystack 5 Announcement](https://marketing.project-haystack.org/)
+- [Haystack 4 Specs](https://project-haystack.org/doc/docHaystack/Specs)
 - [Xeto Schema Language](https://project-haystack.org/doc/docHaystack/Xeto)
 
 ---
 
 ## Standards Comparison
 
-| Aspect | IFC | VDI 3814 | Haystack | EnergyIQ |
-|--------|-----|----------|----------|----------|
-| **Origin** | BIM/Architecture | Building services, Germany | BA/IoT, USA | OctoMesh |
-| **Focus** | Planning & Construction | Planning & Documentation | Operations & Runtime | Energy & Optimization |
-| **Data Model** | OO (EXPRESS) | Function blocks | Tags (flat→ontology) | OO (CK) |
-| **Structure** | Spatial | Functional | Semantic | Combined |
-| **Time Series** | No | Partially | External | Integrated |
-| **Relationships** | Explicit | Implicit | Reference tags | Associations |
-| **Format** | STEP/XML | Proprietary | JSON/Zinc | GraphQL/YAML |
+| Aspect | IFC 4.3 | VDI 3814 | Project Haystack 4 | EnergyIQ-2.0.0 |
+|---|---|---|---|---|
+| **Origin** | BIM / Architecture | BA planning, Germany | BA / IoT, USA | OctoMesh |
+| **Focus** | Planning, Construction, Operations | Planning & Documentation | Operations & Runtime | Energy modeling & optimization |
+| **Data Model** | OO (EXPRESS / IFC4.3 spec) | Function blocks | Tags + Specs | OO (CK) |
+| **Structure** | Spatial + Functional | Functional | Semantic | Combined (IFC + VDI + projection to PH) |
+| **Time Series** | No | Partial | External | Integrated via OctoMesh archives |
+| **Relationships** | Explicit (IfcRel*) | Implicit | Reference tags | Typed CK associations |
+| **Format** | STEP / XML / JSON | Proprietary docs + data point lists | JSON / Zinc / Trio | GraphQL / YAML |
+| **Sensors as entities** | Yes (IfcSensor) | Yes (data points are objects) | Yes (Points) | Yes (NEW v2) |
+| **Pset-style requirements** | Yes (Pset_*) | — | — | Yes (PsetSpace*Requirements records) |
 
 ---
 
-## Integration in EnergyIQ
+## Integration in EnergyIQ-2.0.0
 
-### Adopted from IFC
-- Spatial hierarchy (Site → Building → Storey → Space)
-- Building elements (Door, Window, etc.)
-- Unique GlobalIds
-- PropertySet concept → Records
+### Adopted from IFC 4.3
+
+- Spatial hierarchy (Site → Building → Storey → Space / ExternalSpace) via `Basic/Tree` + `Basic/TreeNode`
+- Building elements (Wall, Door, Window, ShadingDevice, Luminaire) as `BuildingElement` subtypes
+- Sensors / Actuators / Terminals as first-class entities (IfcSensor / IfcActuator / IfcSpaceHeater / IfcAirTerminal / …)
+- Property Set concept → CK records (`PsetSpaceThermalRequirements`, `PsetSpaceLightingRequirements`, `PsetSpaceOccupancyRequirements`)
+- `IfcExternalSpatialElement` → `ExternalSpace` type
+- `IfcDistributionSystem` → `DistributionSystem` type
+- `IfcUnitaryEquipment / HEATPUMP` → `HeatPump` type (reversible aggregates with operating-mode enum)
+- `IfcTank / THERMALTANK` → `ThermalEnergyStorage`
+- Unique `GlobalId` carried on all relevant types
 
 ### Adopted from VDI 3814
-- Classification into room/plant automation
-- Functional description (actual/setpoint/control output)
-- Identification schemas
-- Operating modes
 
-### Adopted from Haystack (Optional)
-- Semantic tags for interoperability
-- Reference concept for equipment relationships
-- Industry vocabulary for analytics tools
+- Hard separation of Anlagen-Automation (`TechnicalSystem` hierarchy) vs. Raum-Automation (`RoomTerminal` + `Sensor` + `Actuator` at the Space)
+- `OperatingMode` enum on Space (Comfort/Economy/Standby/Protection/Off/Auto)
+- `HeatPumpOperatingMode` and `TerminalOperatingMode` enums for plant and terminal modes
+- Functional terminology in attribute names (e.g. `ValveType: ChangeoverHeatingCooling`, `Damper.AirflowSetpoint`)
+- Schedule as separate entity (Management-Ebene)
+- TechnicalSystem.Identifier carrying VDI-3814-style tags ("HZG-01", "KWL-01")
 
-### EnergyIQ Extensions
-- TimeSeries as first-class citizen
-- AI optimization layer
-- Energy aggregation
-- OO modeling (attributes instead of data points)
-- Validation via CK schema
+### Adopted from ISO 4157
+- `Space.RoomNumber` (4157-2, daily use), `Space.RoomIdentifier` (4157-3, immutable lifecycle), `BuildingStorey.StoreyNumber` / `FloorDesignation` (4157-1)
+
+### Adopted from Project Haystack 4
+- Indirectly, via the projection layer documented in `haystack-integration-concept.md`. Concrete mapping config + renderer are planned (Phase 1+3 of that concept). EnergyIQ runtime data itself carries no Haystack tags in v2.
+
+### EnergyIQ Extensions (beyond standards)
+- TimeSeries archives per Sensor type (CrateDB)
+- `DistributionSystem.TotalEnergyConsumed/Delivered` aggregates for energy reporting
+- Sensor `Manufacturer`/`Model`/`SerialNumber`/`Accuracy`/`IsFaulty` metadata
+- AI optimization layer (external — application tier on top of CK)
+- Multi-tenant runtime support via OctoMesh platform

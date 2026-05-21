@@ -1,0 +1,32 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: Sensor
+  derivedFromCkTypeId: ${this}/BuildingElement
+  isAbstract: true
+  description: "Abstract base class for sensors (IFC: IfcSensor). Concrete subtypes carry a typed CurrentValue attribute."
+  attributes:
+  - id: ${this}/SensorManufacturer
+    name: Manufacturer
+    isOptional: true
+  - id: ${this}/SensorModel
+    name: Model
+    isOptional: true
+  - id: ${this}/SensorSerialNumber
+    name: SerialNumber
+    isOptional: true
+  - id: ${this}/SensorAccuracy
+    name: Accuracy
+    isOptional: true
+  - id: ${this}/LastValueUpdate
+    name: LastUpdate
+    isOptional: true
+  - id: ${this}/IsFaulty
+    name: IsFaulty
+    isOptional: true
+  associations:
+  # Located in a space (via inbound SpaceSensors)
+  - id: ${this}/SpaceSensors
+    targetCkTypeId: ${this}/Space
+  # Or attached to an equipment (via inbound EquipmentSensors)
+  - id: ${this}/EquipmentSensors
+    targetCkTypeId: ${this}/BuildingElement

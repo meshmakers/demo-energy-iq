@@ -1,0 +1,49 @@
+ckTypeId: EnergyIQ/ShadingDevice
+phSpec: ph::Equip
+markers:
+  - equip
+  - shade
+tags:
+  - { name: dis, sourceAttribute: System/Name }
+refs:
+  - phRef: spaceRef
+    sourceRole: EnergyIQ/SpaceElements
+    direction: parent
+    targetCkTypeId: EnergyIQ/Space
+attributes:
+  - ckAttribute: ShadingTypeValue
+    phTag: shadeType
+    kind: Str
+    enumMapping:
+      0: blind
+      1: shutter
+      2: awning
+      3: screen
+      4: curtain
+points:
+  - ckAttribute: Position
+    markers: [point, sensor, shade, position]
+    kind: Number
+    unit: "%"
+    refTo: { phRef: equipRef, target: self }
+    navName: pos
+  - ckAttribute: PositionSetpoint
+    markers: [point, sp, cmd, shade, position]
+    kind: Number
+    unit: "%"
+    refTo: { phRef: equipRef, target: self }
+    navName: posSp
+    writable: true
+  - ckAttribute: SlatAngle
+    markers: [point, sensor, shade, slat]
+    kind: Number
+    unit: "deg"
+    refTo: { phRef: equipRef, target: self }
+    navName: slat
+  - ckAttribute: SlatAngleSetpoint
+    markers: [point, sp, cmd, shade, slat]
+    kind: Number
+    unit: "deg"
+    refTo: { phRef: equipRef, target: self }
+    navName: slatSp
+    writable: true

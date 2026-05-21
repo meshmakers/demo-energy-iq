@@ -1,0 +1,12 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: Dimmer
+  derivedFromCkTypeId: ${this}/Actuator
+  description: "Lighting dimmer / electronic ballast (IFC: IfcActuator/ELECTRICACTUATOR). Standalone dimmer entity; for building-element luminaires use Luminaire.DimmingLevel directly."
+  attributes:
+  - id: ${this}/DimmingLevel
+    name: Level
+    isOptional: true
+  - id: ${this}/DimmingLevelSetpoint
+    name: LevelSetpoint
+    isOptional: true

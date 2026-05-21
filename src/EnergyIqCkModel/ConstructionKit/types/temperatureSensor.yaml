@@ -1,0 +1,9 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: TemperatureSensor
+  derivedFromCkTypeId: ${this}/Sensor
+  description: "Temperature sensor (IFC: IfcSensor/TEMPERATURESENSOR). Unit: °C."
+  attributes:
+  - id: ${this}/Temperature
+    name: CurrentValue
+    isOptional: true

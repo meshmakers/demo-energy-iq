@@ -1,0 +1,72 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+# Attributes used within Pset_* records (IFC 4.3 property sets for design/operational requirements)
+attributes:
+# Pset_SpaceThermalRequirements
+- id: SpaceTemperature
+  valueType: Double
+  description: "Design target indoor temperature (°C)"
+
+- id: SpaceTemperatureMin
+  valueType: Double
+  description: "Lower bound of acceptable indoor temperature (heating limit, °C)"
+
+- id: SpaceTemperatureMax
+  valueType: Double
+  description: "Upper bound of acceptable indoor temperature (cooling limit, °C)"
+
+- id: SpaceHumidity
+  valueType: Double
+  description: "Design target relative humidity (%)"
+
+- id: SpaceHumidityMin
+  valueType: Double
+  description: "Lower bound of acceptable relative humidity (%)"
+
+- id: SpaceHumidityMax
+  valueType: Double
+  description: "Upper bound of acceptable relative humidity (%)"
+
+- id: CO2SetpointMax
+  valueType: Double
+  description: "Maximum acceptable CO2 concentration (ppm)"
+
+# Pset_SpaceLightingRequirements
+- id: IlluminanceTarget
+  valueType: Double
+  description: "Design target illuminance level (lux)"
+
+- id: IlluminanceMin
+  valueType: Double
+  description: "Minimum acceptable illuminance level (lux)"
+
+- id: ArtificialLighting
+  valueType: Boolean
+  description: "Artificial lighting required/available in this space"
+
+- id: NaturalLighting
+  valueType: Boolean
+  description: "Natural lighting available in this space"
+
+# Pset_SpaceOccupancyRequirements
+- id: OccupancyTypeValue
+  valueType: String
+  description: "Occupancy type (free text, e.g. 'living', 'sleeping', 'office', 'transient')"
+
+- id: OccupancyNumberPeak
+  valueType: Int
+  description: "Peak occupancy number (persons)"
+
+- id: AreaPerOccupant
+  valueType: Double
+  description: "Area per occupant (m²/person)"
+
+- id: OccupancyTimePerDay
+  valueType: Double
+  description: "Typical occupancy hours per day"
+
+# Spatial: IFC-style PredefinedType (USERDEFINED slot for free-text discrimination)
+- id: PredefinedType
+  valueType: String
+  description: "IFC-style predefined type override (free-text, optional, complements SpaceType enum)"
+
+# IsExternal already defined in buildingElements.yaml and reused on ExternalSpace if desired

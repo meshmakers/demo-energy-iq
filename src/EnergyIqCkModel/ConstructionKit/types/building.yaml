@@ -24,14 +24,4 @@ types:
   - id: ${this}/GrossFloorArea
     name: GrossFloorArea
     isOptional: true
-  # Haystack compatibility
-  - id: ${this}/HaystackTags
-    name: HaystackTags
-    isOptional: true
-  - id: ${this}/HaystackRefs
-    name: HaystackRefs
-    isOptional: true
-  - id: ${this}/HaystackMeta
-    name: HaystackMeta
-    isOptional: true
   # Parent (Site), Children (BuildingStorey, TechnicalSystem) via inherited System/ParentChild

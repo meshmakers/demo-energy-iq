@@ -1,0 +1,41 @@
+ckTypeId: EnergyIQ/BuildingStorey
+phSpec: ph::Space
+markers:
+  - space
+  - floor
+tags:
+  - { name: dis, sourceAttribute: System/Name }
+refs:
+  - phRef: spaceRef
+    sourceRole: System/ParentChild
+    direction: parent
+    targetCkTypeId: EnergyIQ/Building
+  - phRef: siteRef
+    sourceRole: System/ParentChild
+    direction: ancestor
+    targetCkTypeId: EnergyIQ/Site
+attributes:
+  - ckAttribute: LongName
+    phTag: navName
+    kind: Str
+  - ckAttribute: StoreyNumber
+    phTag: floorNum
+    kind: Number
+  - ckAttribute: FloorDesignation
+    phTag: floorDis
+    kind: Str
+  - ckAttribute: Elevation
+    phTag: elevation
+    kind: Number
+    unit: "m"
+  - ckAttribute: AboveGround
+    phTag: aboveGround
+    kind: Bool
+  - ckAttribute: GrossFloorArea
+    phTag: area
+    kind: Number
+    unit: "m²"
+  - ckAttribute: NetFloorArea
+    phTag: netArea
+    kind: Number
+    unit: "m²"

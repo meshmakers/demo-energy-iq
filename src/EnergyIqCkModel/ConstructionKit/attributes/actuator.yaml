@@ -1,0 +1,54 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+attributes:
+# Shared actuator attributes
+- id: ActuatorManufacturer
+  valueType: String
+  description: "Manufacturer of the actuator device"
+
+- id: ActuatorModel
+  valueType: String
+  description: "Model designation of the actuator device"
+
+# Valve
+- id: ValveTypeValue
+  valueType: Enum
+  valueCkEnumId: ${this}/ValveType
+  description: "Type of valve (Heating, Cooling, Reversible, Changeover, Mixing, Bypass, Isolation)"
+
+- id: ValvePosition
+  valueType: Double
+  description: "Current valve position (0-100%, 0=closed, 100=fully open)"
+
+- id: ValvePositionSetpoint
+  valueType: Double
+  description: "Commanded valve position (0-100%)"
+
+# Damper
+- id: DamperPosition
+  valueType: Double
+  description: "Current damper position (0-100%, 0=closed, 100=fully open)"
+
+- id: DamperPositionSetpoint
+  valueType: Double
+  description: "Commanded damper position (0-100%)"
+
+- id: AirflowRate
+  valueType: Double
+  description: "Measured airflow (m³/h)"
+
+- id: AirflowSetpoint
+  valueType: Double
+  description: "Commanded airflow (m³/h)"
+
+# Motor
+- id: MotorSpeed
+  valueType: Double
+  description: "Motor speed (0-100% or rpm depending on context)"
+
+- id: MotorSpeedSetpoint
+  valueType: Double
+  description: "Commanded motor speed (0-100% or rpm)"
+
+- id: MotorState
+  valueType: Boolean
+  description: "Motor on/off state"

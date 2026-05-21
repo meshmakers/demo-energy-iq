@@ -1,0 +1,53 @@
+# EnergyIQ → Project Haystack 4 mapping library
+#
+# Declarative mapping that drives three derived artefacts:
+#   1) Export-Renderer:  RT entities → PH4 grids (Zinc / JSON / Trio)
+#   2) PH4-`lib` Generator: emits a formal Trio lib for SkySpark / FIN
+#   3) Import-Mapper (future): PH grids → EnergyIQ RT entities (PH-Adapter)
+#
+# Background: docs/haystack-integration-concept.md
+#
+# One mapping file per non-abstract EnergyIQ type lives next to this index.
+# Each file follows the schema documented in README.md.
+
+phLib:
+  name: energyIq
+  version: 2.0.0
+  haystackVersion: "4.0"
+  baseLibs:
+    - ph              # Site, Space, Equip, Point — PH core
+    - phIoT           # IoT/equip extensions (where applicable)
+
+# Default value tags applied to every emitted entity unless overridden in the type file.
+defaultTags:
+  - { name: tz, value: "Europe/Vienna" }   # tenant time zone — make per-site once supported
+
+# Default unit hints (PH4-conformant unit strings) used by attribute mappings.
+# Override per attribute when the type uses a different unit.
+unitConventions:
+  temperature: "°C"
+  humidity: "%RH"
+  co2: "ppm"
+  illuminance: "lx"
+  pressure: "Pa"
+  flow_air: "m³/h"
+  flow_water: "L/min"
+  energy: "kWh"
+  power: "kW"
+  power_va: "kVA"
+  voltage_dc: "V"
+  voltage_ac: "V"
+  frequency: "Hz"
+  area: "m²"
+  length: "m"
+  capacity: "kWh"
+  percent: "%"
+  angle: "deg"
+
+# Identity convention: how PH `id` is derived from EnergyIQ RT entities.
+# - Preferred: use the `GlobalId` attribute where present (stable, human-friendly).
+# - Fallback: use `rtId` (24-hex MongoDB ObjectId).
+identityStrategy:
+  preferred: GlobalId
+  fallback: rtId
+  refIdPrefix: "@energyiq:"   # PH ref-id prefix for all emitted entities

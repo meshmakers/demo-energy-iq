@@ -1,0 +1,16 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: AirTerminal
+  derivedFromCkTypeId: ${this}/RoomTerminal
+  description: "Air terminal - VAV/CAV box, diffuser, grille (IFC: IfcAirTerminal / IfcAirTerminalBox)."
+  attributes:
+  - id: ${this}/AirTerminalBoxType
+    name: BoxType
+    isOptional: true
+  - id: ${this}/AirflowRate
+    name: AirflowRate
+    isOptional: true
+  - id: ${this}/AirflowSetpoint
+    name: AirflowSetpoint
+    isOptional: true
+  # Damper actuator(s) modeled as separate Damper actuator via TerminalActuators

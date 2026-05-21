@@ -1,0 +1,9 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: HumiditySensor
+  derivedFromCkTypeId: ${this}/Sensor
+  description: "Relative humidity sensor (IFC: IfcSensor/HUMIDITYSENSOR). Unit: %RH."
+  attributes:
+  - id: ${this}/Humidity
+    name: CurrentValue
+    isOptional: true

@@ -1,0 +1,55 @@
+ckTypeId: EnergyIQ/Pump
+phSpec: ph::Equip
+markers:
+  - equip
+  - pump
+  - hvac
+  - hot
+  - water
+tags:
+  - { name: dis, sourceAttribute: System/Name }
+refs:
+  - phRef: siteRef
+    sourceRole: System/ParentChild
+    direction: ancestor
+    targetCkTypeId: EnergyIQ/Site
+attributes:
+  - ckAttribute: Identifier
+    phTag: navName
+    kind: Str
+points:
+  - ckAttribute: FlowRate
+    markers: [point, sensor, water, flow]
+    kind: Number
+    unit: "m³/h"
+    refTo: { phRef: equipRef, target: self }
+    navName: flow
+  - ckAttribute: Pressure
+    markers: [point, sensor, water, pressure]
+    kind: Number
+    unit: "bar"
+    refTo: { phRef: equipRef, target: self }
+    navName: pressure
+  - ckAttribute: SpeedSetpoint
+    markers: [point, sp, cmd, pump, speed]
+    kind: Number
+    unit: "%"
+    refTo: { phRef: equipRef, target: self }
+    navName: speedSp
+    writable: true
+  - ckAttribute: PowerConsumption
+    markers: [point, sensor, elec, power]
+    kind: Number
+    unit: "kW"
+    refTo: { phRef: equipRef, target: self }
+    navName: power
+  - ckAttribute: IsRunning
+    markers: [point, sensor, run]
+    kind: Bool
+    refTo: { phRef: equipRef, target: self }
+    navName: run
+  - ckAttribute: FaultState
+    markers: [point, sensor, fault]
+    kind: Bool
+    refTo: { phRef: equipRef, target: self }
+    navName: fault
