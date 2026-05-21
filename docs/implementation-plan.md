@@ -296,11 +296,26 @@ the v2 mapping config + a runtime model YAML, emits a PH4 JSON grid.
 
 ---
 
-## Phase 19: PH4 lib Generator (planned)
+## Phase 19: PH4 lib Generator ✓ (Xeto)
 
-Phase 4 of `haystack-integration-concept.md`.
+Phase 4 of `haystack-integration-concept.md`. Emits a Xeto-format lib definition
+from the mapping config — registerable as a starting point in SkySpark / FIN
+(exact registration syntax may need minor per-tool adjustments).
 
-- [ ] From mapping config, emit a Trio-format `energyIq.lib` registerable in SkySpark / FIN.
+- [x] `Generation/LibGenerator.cs` — reads the mapping library, emits a Xeto lib
+- [x] CLI `--mode export | lib` (export mode is the default; lib mode skips --rt)
+- [x] Pragma header with version, haystackVersion, depends (`ph`, `phIoT`), org metadata
+- [x] One Xeto spec per non-abstract EnergyIQ type, grouped by purpose (Spatial /
+      Plant equipment / Room terminals / Sensors / Actuators / Building elements /
+      Photovoltaic) with `// =====` section banners
+- [x] Markers emitted as `name: Marker` slots
+- [x] Refs emitted as `Ref<of:"TargetSpec">?` with target-spec name resolution
+- [x] Attribute slots: `name: Kind <unit:"...">?` (e.g. `area: Number <unit:"m²">?`)
+- [x] Tag-path dots flattened to underscore in slot names (Xeto identifiers don't
+      allow dots) — original PH tag name preserved in a trailing comment
+- [x] Synthetic Point sub-mappings listed as comments under the parent spec
+- [x] Sample run against the v2 mapping config: 36 specs, ~700-line output file
+      (`out/energyIq.xeto`)
 
 ---
 
