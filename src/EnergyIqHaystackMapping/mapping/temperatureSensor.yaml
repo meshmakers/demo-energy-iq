@@ -20,11 +20,15 @@ refs:
     sourceRole: EnergyIQ/EquipmentSensors
     direction: parent
 attributes:
-  - ckAttribute: CurrentValue
+  # Note: ckAttribute references the underlying global attribute id (`Temperature`),
+  # not the display name `CurrentValue` at the type. The RT YAML stores attributes
+  # by global id, so the mapping must match that. Same pattern below for all sensors,
+  # actuators and terminals.
+  - ckAttribute: Temperature
     phTag: curVal
     kind: Number
     unit: "°C"
-  - ckAttribute: LastUpdate
+  - ckAttribute: LastValueUpdate
     phTag: curStatus
     kind: Str
     # Renderer sets curStatus="ok" if recent, otherwise "stale" / "fault" — derived

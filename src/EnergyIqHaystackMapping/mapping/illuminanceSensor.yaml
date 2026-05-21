@@ -15,10 +15,10 @@ refs:
     direction: parent
     targetCkTypeId: EnergyIQ/Space
 attributes:
-  - ckAttribute: CurrentValue
+  - ckAttribute: Illuminance
     phTag: curVal
     kind: Number
     unit: "lx"
-  - ckAttribute: LastUpdate
+  - ckAttribute: LastValueUpdate
     phTag: curStatus
     kind: Str

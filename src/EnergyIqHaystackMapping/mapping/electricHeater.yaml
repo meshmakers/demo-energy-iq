@@ -12,7 +12,7 @@ refs:
     direction: parent
     targetCkTypeId: EnergyIQ/Space
 attributes:
-  - ckAttribute: NominalPower
+  - ckAttribute: TerminalNominalPower
     phTag: nomPower
     kind: Number
     unit: "kW"

@@ -19,10 +19,10 @@ refs:
     sourceRole: EnergyIQ/EquipmentSensors
     direction: parent
 attributes:
-  - ckAttribute: CurrentValue
+  - ckAttribute: Humidity
     phTag: curVal
     kind: Number
     unit: "%RH"
-  - ckAttribute: LastUpdate
+  - ckAttribute: LastValueUpdate
     phTag: curStatus
     kind: Str

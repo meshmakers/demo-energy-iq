@@ -15,7 +15,7 @@ refs:
     sourceRole: EnergyIQ/TerminalServedBy
     direction: parent
 attributes:
-  - ckAttribute: NominalPower
+  - ckAttribute: TerminalNominalPower
     phTag: nomPower
     kind: Number
     unit: "kW"
@@ -29,43 +29,43 @@ attributes:
       3: ventilating
       4: standby
 points:
-  - ckAttribute: HeatingValvePosition
+  - ckAttribute: FanCoilHeatingValvePosition
     markers: [point, sensor, valve, position, hot, water]
     kind: Number
     unit: "%"
     refTo: { phRef: equipRef, target: self }
     navName: heatValvePos
-  - ckAttribute: CoolingValvePosition
+  - ckAttribute: FanCoilCoolingValvePosition
     markers: [point, sensor, valve, position, chilled, water]
     kind: Number
     unit: "%"
     refTo: { phRef: equipRef, target: self }
     navName: coolValvePos
-  - ckAttribute: FanSpeed
+  - ckAttribute: FanCoilFanSpeed
     markers: [point, sensor, fan, speed]
     kind: Number
     unit: "%"
     refTo: { phRef: equipRef, target: self }
     navName: fanSpeed
-  - ckAttribute: FanSpeedSetpoint
+  - ckAttribute: FanCoilFanSpeedSetpoint
     markers: [point, sp, cmd, fan, speed]
     kind: Number
     unit: "%"
     refTo: { phRef: equipRef, target: self }
     navName: fanSpeedSp
     writable: true
-  - ckAttribute: FanStage
+  - ckAttribute: FanCoilFanStage
     markers: [point, sensor, fan, stage]
     kind: Number
     refTo: { phRef: equipRef, target: self }
     navName: fanStage
-  - ckAttribute: SupplyTemp
+  - ckAttribute: TerminalSupplyTemp
     markers: [point, sensor, water, leaving, temp]
     kind: Number
     unit: "°C"
     refTo: { phRef: equipRef, target: self }
     navName: supplyTemp
-  - ckAttribute: ReturnTemp
+  - ckAttribute: TerminalReturnTemp
     markers: [point, sensor, water, entering, temp]
     kind: Number
     unit: "°C"

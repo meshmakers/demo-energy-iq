@@ -254,13 +254,35 @@ Phase 1 of `haystack-integration-concept.md`. 35 type mappings + index + README.
 
 ---
 
-## Phase 18: Haystack Export Renderer (planned)
+## Phase 18: Haystack Export Renderer ✓ (JSON grid)
 
-Phase 3 of `haystack-integration-concept.md`.
+Phase 3 of `haystack-integration-concept.md`. Standalone CLI tool that consumes
+the v2 mapping config + a runtime model YAML, emits a PH4 JSON grid.
 
-- [ ] Renderer service that reads RT entities + mapping config
-- [ ] Emits PH4 grids (Zinc + JSON)
-- [ ] Hooks into Haystack REST API (`read`, `nav`, `hisRead`) — see `haystack-adapter-concept.md`
+- [x] `src/EnergyIqHaystackExport/` project (net10.0 console app)
+- [x] `Mapping/` — POCO records + YamlDotNet-based loader for `_index.yaml` and per-type mappings
+- [x] `Runtime/` — `RtModel`/`RtEntity`/`RtRecord` plus `RtModelLoader` reading the OctoMesh
+      runtime-model YAML schema (entities + attributes + associations + nested records,
+      including bracket-string arrays inside RecordArray)
+- [x] `Rendering/EntityRenderer` — applies a `TypeMapping` to an `RtEntity`:
+      - emits one main PH dict (id, dis, markers, default + per-type tags, refs)
+      - resolves `parent` and `ancestor` refs via `System/ParentChild` navigation
+      - emits one synthetic Point dict per `PointMapping` (used by actuators / equipment
+        with multiple measurement/setpoint values)
+      - converts attribute values to PH wrappers (`PhMarker`, `PhNumber{unit}`, `PhRef`)
+        and resolves enum mappings (CK enum key → PH string)
+      - reads nested record fields via dotted paths (`AddressValue.Street`,
+        `ThermalRequirementsRecord.SpaceTemperature`)
+- [x] `Rendering/JsonGridWriter` — PH4 JSON grid output (`_kind:grid`, meta with phLib +
+      version, cols + rows, value kinds: ref/marker/number)
+- [x] CLI: `--rt`, `--mapping`, `--output`
+- [x] Verified end-to-end: `rt-firmianstrasse.yaml` (140 entities) → 359 PH dicts
+      (1 site + 29 spaces + 63 equip + 266 points), valid PH4 JSON
+- [x] Mapping files corrected to reference underlying CK attribute IDs (not display names) —
+      RT YAML stores attributes by global id, so the mapping must match
+- [ ] Zinc / Trio output formats (only JSON for now — JSON is the most common PH4 wire format)
+- [ ] Hooks into the Haystack REST API service (`read`, `nav`, `hisRead`) — see
+      `haystack-adapter-concept.md`. The renderer's core can be embedded directly.
 
 ---
 

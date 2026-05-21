@@ -18,13 +18,13 @@ refs:
     direction: parent
     targetCkTypeId: EnergyIQ/Space
 points:
-  - ckAttribute: Position
+  - ckAttribute: DamperPosition
     markers: [point, sensor, damper, position]
     kind: Number
     unit: "%"
     refTo: { phRef: equipRef, target: self }
     navName: pos
-  - ckAttribute: PositionSetpoint
+  - ckAttribute: DamperPositionSetpoint
     markers: [point, sp, cmd, damper, position]
     kind: Number
     unit: "%"

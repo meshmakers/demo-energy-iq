@@ -29,13 +29,13 @@ attributes:
       5: bypass
       6: isolation
 points:
-  - ckAttribute: Position
+  - ckAttribute: ValvePosition
     markers: [point, sensor, valve, position]
     kind: Number
     unit: "%"
     refTo: { phRef: equipRef, target: self }
     navName: pos
-  - ckAttribute: PositionSetpoint
+  - ckAttribute: ValvePositionSetpoint
     markers: [point, sp, cmd, valve, position]
     kind: Number
     unit: "%"

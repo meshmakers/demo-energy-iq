@@ -19,10 +19,10 @@ refs:
     sourceRole: EnergyIQ/EquipmentSensors
     direction: parent
 attributes:
-  - ckAttribute: CurrentValue
+  - ckAttribute: CO2Level
     phTag: curVal
     kind: Number
     unit: "ppm"
-  - ckAttribute: LastUpdate
+  - ckAttribute: LastValueUpdate
     phTag: curStatus
     kind: Str

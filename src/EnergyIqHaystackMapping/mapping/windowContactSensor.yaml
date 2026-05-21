@@ -17,10 +17,10 @@ refs:
     direction: parent
     # equipRef typically points to the Window the sensor is attached to
 attributes:
-  - ckAttribute: CurrentValue
+  - ckAttribute: ContactState
     phTag: curVal
     kind: Bool
     # Convention: true = closed (normal), false = open (triggered)
-  - ckAttribute: LastUpdate
+  - ckAttribute: LastValueUpdate
     phTag: curStatus
     kind: Str

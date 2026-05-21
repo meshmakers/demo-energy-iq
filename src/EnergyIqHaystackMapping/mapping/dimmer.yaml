@@ -15,13 +15,13 @@ refs:
     direction: parent
     targetCkTypeId: EnergyIQ/Space
 points:
-  - ckAttribute: Level
+  - ckAttribute: DimmingLevel
     markers: [point, sensor, lighting, level]
     kind: Number
     unit: "%"
     refTo: { phRef: equipRef, target: self }
     navName: level
-  - ckAttribute: LevelSetpoint
+  - ckAttribute: DimmingLevelSetpoint
     markers: [point, sp, cmd, lighting, level]
     kind: Number
     unit: "%"

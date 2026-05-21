@@ -21,15 +21,15 @@ attributes:
   - ckAttribute: IsReversibleTerminal
     phTag: reversible
     kind: Bool
-  - ckAttribute: ActiveArea
+  - ckAttribute: RadiantSurfaceArea
     phTag: area
     kind: Number
     unit: "m²"
-  - ckAttribute: MaxSupplyTemp
+  - ckAttribute: RadiantSurfaceMaxSupplyTemp
     phTag: designTempMax
     kind: Number
     unit: "°C"
-  - ckAttribute: NominalPower
+  - ckAttribute: TerminalNominalPower
     phTag: nomPower
     kind: Number
     unit: "kW"
@@ -43,19 +43,19 @@ attributes:
       3: ventilating
       4: standby
 points:
-  - ckAttribute: SupplyTemp
+  - ckAttribute: TerminalSupplyTemp
     markers: [point, sensor, water, leaving, temp]
     kind: Number
     unit: "°C"
     refTo: { phRef: equipRef, target: self }
     navName: supplyTemp
-  - ckAttribute: ReturnTemp
+  - ckAttribute: TerminalReturnTemp
     markers: [point, sensor, water, entering, temp]
     kind: Number
     unit: "°C"
     refTo: { phRef: equipRef, target: self }
     navName: returnTemp
-  - ckAttribute: FlowRate
+  - ckAttribute: TerminalFlowRate
     markers: [point, sensor, water, flow]
     kind: Number
     unit: "L/min"

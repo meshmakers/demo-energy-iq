@@ -17,9 +17,9 @@ refs:
     sourceRole: EnergyIQ/EquipmentSensors
     direction: parent
 attributes:
-  - ckAttribute: CurrentValue
+  - ckAttribute: GenericStringValue
     phTag: curVal
     kind: Str
-  - ckAttribute: LastUpdate
+  - ckAttribute: LastValueUpdate
     phTag: curStatus
     kind: Str

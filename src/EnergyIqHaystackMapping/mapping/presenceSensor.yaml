@@ -13,9 +13,9 @@ refs:
     direction: parent
     targetCkTypeId: EnergyIQ/Space
 attributes:
-  - ckAttribute: CurrentValue
+  - ckAttribute: PresenceDetected
     phTag: curVal
     kind: Bool
-  - ckAttribute: LastUpdate
+  - ckAttribute: LastValueUpdate
     phTag: curStatus
     kind: Str

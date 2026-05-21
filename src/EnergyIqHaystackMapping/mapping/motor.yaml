@@ -17,18 +17,18 @@ refs:
     direction: parent
     targetCkTypeId: EnergyIQ/Space
 points:
-  - ckAttribute: State
+  - ckAttribute: MotorState
     markers: [point, sensor, motor, run]
     kind: Bool
     refTo: { phRef: equipRef, target: self }
     navName: run
-  - ckAttribute: Speed
+  - ckAttribute: MotorSpeed
     markers: [point, sensor, motor, speed]
     kind: Number
     unit: "%"
     refTo: { phRef: equipRef, target: self }
     navName: speed
-  - ckAttribute: SpeedSetpoint
+  - ckAttribute: MotorSpeedSetpoint
     markers: [point, sp, cmd, motor, speed]
     kind: Number
     unit: "%"

@@ -15,7 +15,7 @@ refs:
     sourceRole: EnergyIQ/TerminalServedBy
     direction: parent
 attributes:
-  - ckAttribute: BoxType
+  - ckAttribute: AirTerminalBoxType
     phTag: airTerminalType
     kind: Str
     # Free text: VAV, CAV, Diffuser, Grille
