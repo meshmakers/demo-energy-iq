@@ -371,6 +371,36 @@ PhotovoltaicSystem (TreeNode → Building)
 
 `PhotovoltaicSystem` aggregates: `TotalRatedPowerKWp`, `TotalCurrentPowerKW`, `TotalEnergyProducedKWh`, `GridFeedIn`, `SelfConsumption`.
 
+## Energy Metering (NEW in v2.1.0)
+
+Residential energy monitoring uses a `Meter`-rooted hierarchy that complements the renewable-energy aggregates above. `Meter` is concrete and serves directly for generic sub-meters (e.g. per-floor electricity sub-metering fed via Loxone); three specialised subtypes carry shape-specific attributes for grid coupling, EV charging, and individually metered appliances.
+
+```
+Meter (BuildingElement → NamedEntity)                ← concrete; use for per-floor sub-meters
+├── GridConnection      — Direction (Import/Export/Bidirectional), IsMainConnection,
+│                         optional FormalMeteringPoint → Basic.Energy/MeteringPoint
+├── ChargingStation     — ConnectorType, MaxChargingPower, CurrentSessionEnergy, SessionActive
+└── Appliance           — Category, RatedPower (kW), Manufacturer, ModelName
+```
+
+Common readings inherited from `Meter`:
+- `ImportedEnergy`, `ExportedEnergy` (kWh, cumulative)
+- `ActivePower`, `ApparentPower`, `ReactivePower` (kW/kVA/kVAR)
+- `Voltage`, `Ampere`, `Frequency`
+- `MeterIdentifier` (local ID — e.g. Loxone control name) and optional `MeteringPointReference` (formal Zählpunktnummer)
+
+**Catalog anchor:** `Basic.Energy-1.0.1` is imported as a dependency. `GridConnection` carries an optional `FormalMeteringPoint` association to `Basic.Energy/MeteringPoint` so a grid-coupled meter can be linked to the formal energy-industry entity (Austrian/German EDA Zählpunktnummer + State + CarrierType) without forcing that semantic on every sub-meter.
+
+**Spatial wiring:** Meters use `SpaceElements` (inherited from BuildingElement) to associate with the Space they physically sit in. The `GridConnection` typically has no Space association (it lives at the building boundary).
+
+**Enums introduced for metering:**
+- `MeterCarrierType` (Electricity, Gas, Heat, Water, DistrictHeating, DistrictCooling, Other)
+- `GridConnectionDirection` (Import, Export, Bidirectional)
+- `ChargingConnectorType` (Schuko, Type1, Type2, CCS, CHAdeMO, Tesla, Other)
+- `ApplianceCategory` (LaundryAndCleaning, KitchenMajor, …, Office, Other)
+
+The Firmianstraße demo seed (`data/bim/rt-firmianstrasse.yaml`) ships a representative metering layout in v2.1.0: 1× `GridConnection` (bidirektional, with example Zählpunktnummer), 4× per-storey `Meter` (HG-EG/1.OG/DG + NG-EG), 2× `ChargingStation` in the Garage (Type 2, 11 kW), and 2× `Appliance` in the Waschküche (Miele washer + heat-pump dryer).
+
 ## Haystack Compatibility
 
 **v2 removes the Haystack mixin attributes** (`HaystackTags`, `HaystackRefs`, `HaystackMeta`) that were previously on every domain type. Project Haystack 4 compatibility is now provided through a separate projection layer documented in `docs/haystack-integration-concept.md`. The rationale:

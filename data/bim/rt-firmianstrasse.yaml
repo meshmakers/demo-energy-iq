@@ -2674,3 +2674,197 @@ entities:
       - roleId: EnergyIQ/SystemMembers
         targetRtId: 6789a00000000000000080a1
         targetCkTypeId: EnergyIQ/PhotovoltaicSystem
+
+  # ============================================================
+  # ENERGY METERING (EnergyIQ-2.1.0)
+  # GridConnection + per-storey Meters + 2 ChargingStations (Garage)
+  # + 2 Appliances (Waschküche). Loxone-fed via DataPointMapping.
+  # ============================================================
+
+  # --- Hausanschluss / Grid Connection (Hauptzähler, bidirektional) ---
+  - rtId: 6789a00000000000003000m1
+    ckTypeId: EnergyIQ/GridConnection
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: grid-firmianstrasse
+      - id: System/Name
+        value: Hausanschluss
+      - id: System/Description
+        value: Hauptzählpunkt, bidirektional (Bezug + Einspeisung)
+      - id: EnergyIQ/MeterIdentifier
+        value: NETZ-FIRMI-31A
+      - id: EnergyIQ/MeterCarrierTypeValue
+        value: 0  # Electricity
+      - id: EnergyIQ/MeteringPointReference
+        value: AT0030000000000000000000012345678
+      - id: EnergyIQ/GridConnectionDirectionValue
+        value: 2  # Bidirectional
+      - id: EnergyIQ/IsMainConnection
+        value: true
+
+  # --- 4× Stockwerks-Stromzähler (Loxone-Untermeter) ---
+  - rtId: 6789a00000000000003001m2
+    ckTypeId: EnergyIQ/Meter
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: meter-hg-eg
+      - id: System/Name
+        value: Stromzähler HG-EG
+      - id: System/Description
+        value: Stockwerksverbrauch Hauptgebäude Erdgeschoss
+      - id: EnergyIQ/MeterIdentifier
+        value: LOXONE-METER-HG-EG
+      - id: EnergyIQ/MeterCarrierTypeValue
+        value: 0  # Electricity
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6789a00000000000000015d5  # space-hg-eg-technik
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000003002m3
+    ckTypeId: EnergyIQ/Meter
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: meter-hg-og
+      - id: System/Name
+        value: Stromzähler HG-1.OG
+      - id: System/Description
+        value: Stockwerksverbrauch Hauptgebäude Obergeschoss
+      - id: EnergyIQ/MeterIdentifier
+        value: LOXONE-METER-HG-OG
+      - id: EnergyIQ/MeterCarrierTypeValue
+        value: 0  # Electricity
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6789a00000000000000024db  # space-hg-og-bad
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000003003m4
+    ckTypeId: EnergyIQ/Meter
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: meter-hg-dg
+      - id: System/Name
+        value: Stromzähler HG-DG
+      - id: System/Description
+        value: Stockwerksverbrauch Hauptgebäude Dachgeschoss
+      - id: EnergyIQ/MeterIdentifier
+        value: LOXONE-METER-HG-DG
+      - id: EnergyIQ/MeterCarrierTypeValue
+        value: 0  # Electricity
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6789a00000000000000034e1  # space-hg-dg-bad
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000003004m5
+    ckTypeId: EnergyIQ/Meter
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: meter-ng-eg
+      - id: System/Name
+        value: Stromzähler NG-EG
+      - id: System/Description
+        value: Stockwerksverbrauch Nebengebäude Erdgeschoss
+      - id: EnergyIQ/MeterIdentifier
+        value: LOXONE-METER-NG-EG
+      - id: EnergyIQ/MeterCarrierTypeValue
+        value: 0  # Electricity
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6789a00000000000000042e4  # space-ng-werkstatt
+        targetCkTypeId: EnergyIQ/Space
+
+  # --- 2× Wallbox in der Garage (Nebengebäude) ---
+  - rtId: 6789a00000000000003010n1
+    ckTypeId: EnergyIQ/ChargingStation
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: wallbox-links
+      - id: System/Name
+        value: Wallbox-Links
+      - id: System/Description
+        value: EV-Ladestation links in der Garage
+      - id: EnergyIQ/MeterIdentifier
+        value: LOXONE-WALLBOX-1
+      - id: EnergyIQ/MeterCarrierTypeValue
+        value: 0  # Electricity
+      - id: EnergyIQ/ChargingConnectorTypeValue
+        value: 2  # Type2
+      - id: EnergyIQ/MaxChargingPower
+        value: 11.0
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6789a00000000000000041e3  # space-ng-garage
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000003011n2
+    ckTypeId: EnergyIQ/ChargingStation
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: wallbox-rechts
+      - id: System/Name
+        value: Wallbox-Rechts
+      - id: System/Description
+        value: EV-Ladestation rechts in der Garage
+      - id: EnergyIQ/MeterIdentifier
+        value: LOXONE-WALLBOX-2
+      - id: EnergyIQ/MeterCarrierTypeValue
+        value: 0  # Electricity
+      - id: EnergyIQ/ChargingConnectorTypeValue
+        value: 2  # Type2
+      - id: EnergyIQ/MaxChargingPower
+        value: 11.0
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6789a00000000000000041e3  # space-ng-garage
+        targetCkTypeId: EnergyIQ/Space
+
+  # --- 2× Appliance in der Waschküche ---
+  - rtId: 6789a00000000000003020p1
+    ckTypeId: EnergyIQ/Appliance
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: appliance-waschmaschine
+      - id: System/Name
+        value: Waschmaschine
+      - id: System/Description
+        value: Frontlader Waschmaschine
+      - id: EnergyIQ/MeterIdentifier
+        value: LOXONE-WASHER
+      - id: EnergyIQ/MeterCarrierTypeValue
+        value: 0  # Electricity
+      - id: EnergyIQ/ApplianceCategoryValue
+        value: 0  # LaundryAndCleaning
+      - id: EnergyIQ/ApplianceRatedPower
+        value: 2.3
+      - id: EnergyIQ/ApplianceManufacturer
+        value: Miele
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6789a00000000000000043e5  # space-ng-waschkueche
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000003021p2
+    ckTypeId: EnergyIQ/Appliance
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: appliance-trockner
+      - id: System/Name
+        value: Trockner
+      - id: System/Description
+        value: Wärmepumpen-Trockner
+      - id: EnergyIQ/MeterIdentifier
+        value: LOXONE-DRYER
+      - id: EnergyIQ/MeterCarrierTypeValue
+        value: 0  # Electricity
+      - id: EnergyIQ/ApplianceCategoryValue
+        value: 0  # LaundryAndCleaning
+      - id: EnergyIQ/ApplianceRatedPower
+        value: 1.8
+      - id: EnergyIQ/ApplianceManufacturer
+        value: Miele
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6789a00000000000000043e5  # space-ng-waschkueche
+        targetCkTypeId: EnergyIQ/Space
