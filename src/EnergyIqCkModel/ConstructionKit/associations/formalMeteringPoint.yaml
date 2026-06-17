@@ -1,0 +1,8 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+associationRoles:
+- id: FormalMeteringPoint
+  inboundName: LinkedMeters
+  outboundName: FormalAnchor
+  inboundMultiplicity: N
+  outboundMultiplicity: ZeroOrOne
+  description: "Optional link from an EnergyIQ Meter (typically GridConnection) to a formal Basic.Energy/MeteringPoint carrying the Zählpunktnummer (Austrian/German grid identifier) and EDA state."

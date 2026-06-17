@@ -1,0 +1,15 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: GridConnection
+  derivedFromCkTypeId: ${this}/Meter
+  description: "Grid coupling point — the formal point where the installation meets the public utility grid. Carries Direction (Import/Export/Bidirectional) plus optionally an association to a Basic.Energy/MeteringPoint for formal Zählpunkt linkage."
+  attributes:
+  - id: ${this}/GridConnectionDirectionValue
+    name: Direction
+  - id: ${this}/IsMainConnection
+    name: IsMainConnection
+    isOptional: true
+  associations:
+  # Optional link to a formal Basic.Energy metering point (Austrian/German Zählpunkt). When set, MeteringPointReference on the parent Meter typically mirrors MeteringPoint.MeteringPointNumber.
+  - id: ${this}/FormalMeteringPoint
+    targetCkTypeId: ${Basic.Energy}/MeteringPoint

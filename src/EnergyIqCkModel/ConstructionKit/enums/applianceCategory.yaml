@@ -1,0 +1,26 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+enums:
+- enumId: ApplianceCategory
+  values:
+  - key: 0
+    name: LaundryAndCleaning
+  - key: 1
+    name: KitchenMajor
+  - key: 2
+    name: KitchenSmall
+  - key: 3
+    name: Cooking
+  - key: 4
+    name: Refrigeration
+  - key: 5
+    name: HVAC
+  - key: 6
+    name: WaterHeating
+  - key: 7
+    name: Lighting
+  - key: 8
+    name: Entertainment
+  - key: 9
+    name: Office
+  - key: 10
+    name: Other

@@ -1,0 +1,18 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+enums:
+- enumId: ChargingConnectorType
+  values:
+  - key: 0
+    name: Schuko
+  - key: 1
+    name: Type1
+  - key: 2
+    name: Type2
+  - key: 3
+    name: CCS
+  - key: 4
+    name: CHAdeMO
+  - key: 5
+    name: Tesla
+  - key: 6
+    name: Other

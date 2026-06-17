@@ -1,0 +1,78 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+attributes:
+# Meter identification
+- id: MeterIdentifier
+  valueType: String
+  description: "Local meter identifier (e.g. Loxone control name, serial number, or sub-meter ID)"
+- id: MeteringPointReference
+  valueType: String
+  description: "Optional formal Zählpunktnummer (Austrian/German energy-industry identifier, 33 digits) for grid-coupled meters"
+- id: MeterCarrierTypeValue
+  valueType: Enum
+  valueCkEnumId: ${this}/MeterCarrierType
+  description: "Energy carrier measured by this meter (Electricity/Gas/Heat/Water/etc.)"
+
+# Common meter readings (TimeSeries-tracked)
+- id: ImportedEnergy
+  valueType: Double
+  description: "Cumulative imported/consumed energy (kWh)"
+- id: ExportedEnergy
+  valueType: Double
+  description: "Cumulative exported/produced energy (kWh) — typically zero except for bidirectional meters"
+- id: ActivePower
+  valueType: Double
+  description: "Instantaneous active power (kW). Positive = import/consumption, negative = export/production"
+- id: ApparentPower
+  valueType: Double
+  description: "Instantaneous apparent power (kVA)"
+- id: ReactivePower
+  valueType: Double
+  description: "Instantaneous reactive power (kVAR)"
+- id: Voltage
+  valueType: Double
+  description: "Nominal/measured voltage (V)"
+- id: Ampere
+  valueType: Double
+  description: "Instantaneous current (A)"
+- id: MeterFrequency
+  valueType: Double
+  description: "AC frequency (Hz)"
+
+# GridConnection-specific
+- id: GridConnectionDirectionValue
+  valueType: Enum
+  valueCkEnumId: ${this}/GridConnectionDirection
+  description: "Direction of energy flow at this grid coupling point"
+- id: IsMainConnection
+  valueType: Boolean
+  description: "True for the primary grid feed of the installation; false for sub-coupling points"
+
+# ChargingStation-specific
+- id: ChargingConnectorTypeValue
+  valueType: Enum
+  valueCkEnumId: ${this}/ChargingConnectorType
+  description: "Physical connector type of the EV charger"
+- id: MaxChargingPower
+  valueType: Double
+  description: "Maximum power the station can deliver to a vehicle (kW)"
+- id: CurrentSessionEnergy
+  valueType: Double
+  description: "Energy delivered in the current/last charging session (kWh)"
+- id: SessionActive
+  valueType: Boolean
+  description: "True if a vehicle is currently charging"
+
+# Appliance-specific
+- id: ApplianceCategoryValue
+  valueType: Enum
+  valueCkEnumId: ${this}/ApplianceCategory
+  description: "Functional category of the appliance"
+- id: ApplianceRatedPower
+  valueType: Double
+  description: "Nameplate rated power draw (kW). Named distinctly from the existing W-scaled Luminaire/RatedPower to keep units unambiguous."
+- id: ApplianceManufacturer
+  valueType: String
+  description: "Manufacturer name (e.g. Miele, Bosch)"
+- id: ApplianceModelName
+  valueType: String
+  description: "Model identifier (e.g. W1 ClassicEco)"

@@ -1,0 +1,18 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: Appliance
+  derivedFromCkTypeId: ${this}/Meter
+  description: "Individually metered household appliance (washing machine, dryer, dishwasher, ...). Inherits energy-flow attributes from Meter; adds category + nameplate info."
+  attributes:
+  - id: ${this}/ApplianceCategoryValue
+    name: Category
+    isOptional: true
+  - id: ${this}/ApplianceRatedPower
+    name: RatedPower
+    isOptional: true
+  - id: ${this}/ApplianceManufacturer
+    name: Manufacturer
+    isOptional: true
+  - id: ${this}/ApplianceModelName
+    name: ModelName
+    isOptional: true

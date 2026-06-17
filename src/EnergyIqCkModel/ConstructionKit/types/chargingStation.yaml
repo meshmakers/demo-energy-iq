@@ -1,0 +1,18 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: ChargingStation
+  derivedFromCkTypeId: ${this}/Meter
+  description: "EV charging station / wallbox. Inherits energy-flow attributes from Meter; adds connector type, session telemetry."
+  attributes:
+  - id: ${this}/ChargingConnectorTypeValue
+    name: ConnectorType
+    isOptional: true
+  - id: ${this}/MaxChargingPower
+    name: MaxChargingPower
+    isOptional: true
+  - id: ${this}/CurrentSessionEnergy
+    name: CurrentSessionEnergy
+    isOptional: true
+  - id: ${this}/SessionActive
+    name: SessionActive
+    isOptional: true

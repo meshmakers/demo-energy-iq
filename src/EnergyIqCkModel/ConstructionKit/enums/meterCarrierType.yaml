@@ -1,0 +1,18 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+enums:
+- enumId: MeterCarrierType
+  values:
+  - key: 0
+    name: Electricity
+  - key: 1
+    name: Gas
+  - key: 2
+    name: Heat
+  - key: 3
+    name: Water
+  - key: 4
+    name: DistrictHeating
+  - key: 5
+    name: DistrictCooling
+  - key: 6
+    name: Other

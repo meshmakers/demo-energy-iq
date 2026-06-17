@@ -1,0 +1,43 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: Meter
+  derivedFromCkTypeId: ${this}/BuildingElement
+  description: "Energy/utility meter (electricity, gas, heat, water). Concrete — use directly for generic sub-meters (e.g. per-floor electricity meters fed via Loxone), or extend via GridConnection / ChargingStation / Appliance for shape-specific semantics. For Loxone-fed meters, MeterIdentifier holds the Loxone control reference."
+  attributes:
+  - id: ${this}/MeterIdentifier
+    name: MeterIdentifier
+  - id: ${this}/MeterCarrierTypeValue
+    name: CarrierType
+    isOptional: true
+  - id: ${this}/MeteringPointReference
+    name: MeteringPointReference
+    isOptional: true
+  # Common readings (TimeSeries)
+  - id: ${this}/ImportedEnergy
+    name: ImportedEnergy
+    isOptional: true
+  - id: ${this}/ExportedEnergy
+    name: ExportedEnergy
+    isOptional: true
+  - id: ${this}/ActivePower
+    name: ActivePower
+    isOptional: true
+  - id: ${this}/ApparentPower
+    name: ApparentPower
+    isOptional: true
+  - id: ${this}/ReactivePower
+    name: ReactivePower
+    isOptional: true
+  - id: ${this}/Voltage
+    name: Voltage
+    isOptional: true
+  - id: ${this}/Ampere
+    name: Ampere
+    isOptional: true
+  - id: ${this}/MeterFrequency
+    name: Frequency
+    isOptional: true
+  associations:
+  # Located in a space (e.g. floor meter in a hallway, appliance meter in a room)
+  - id: ${this}/SpaceElements
+    targetCkTypeId: ${this}/Space
