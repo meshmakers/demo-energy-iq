@@ -2682,7 +2682,7 @@ entities:
   # ============================================================
 
   # --- Hausanschluss / Grid Connection (Hauptzähler, bidirektional) ---
-  - rtId: 6789a00000000000003000m1
+  - rtId: 6789a00000000000003000a1
     ckTypeId: EnergyIQ/GridConnection
     attributes:
       - id: EnergyIQ/GlobalId
@@ -2703,7 +2703,7 @@ entities:
         value: true
 
   # --- 4× Stockwerks-Stromzähler (Loxone-Untermeter) ---
-  - rtId: 6789a00000000000003001m2
+  - rtId: 6789a00000000000003001a2
     ckTypeId: EnergyIQ/Meter
     attributes:
       - id: EnergyIQ/GlobalId
@@ -2721,7 +2721,7 @@ entities:
         targetRtId: 6789a00000000000000015d5  # space-hg-eg-technik
         targetCkTypeId: EnergyIQ/Space
 
-  - rtId: 6789a00000000000003002m3
+  - rtId: 6789a00000000000003002a3
     ckTypeId: EnergyIQ/Meter
     attributes:
       - id: EnergyIQ/GlobalId
@@ -2739,7 +2739,7 @@ entities:
         targetRtId: 6789a00000000000000024db  # space-hg-og-bad
         targetCkTypeId: EnergyIQ/Space
 
-  - rtId: 6789a00000000000003003m4
+  - rtId: 6789a00000000000003003a4
     ckTypeId: EnergyIQ/Meter
     attributes:
       - id: EnergyIQ/GlobalId
@@ -2757,7 +2757,7 @@ entities:
         targetRtId: 6789a00000000000000034e1  # space-hg-dg-bad
         targetCkTypeId: EnergyIQ/Space
 
-  - rtId: 6789a00000000000003004m5
+  - rtId: 6789a00000000000003004a5
     ckTypeId: EnergyIQ/Meter
     attributes:
       - id: EnergyIQ/GlobalId
@@ -2776,7 +2776,7 @@ entities:
         targetCkTypeId: EnergyIQ/Space
 
   # --- 2× Wallbox in der Garage (Nebengebäude) ---
-  - rtId: 6789a00000000000003010n1
+  - rtId: 6789a00000000000003010b1
     ckTypeId: EnergyIQ/ChargingStation
     attributes:
       - id: EnergyIQ/GlobalId
@@ -2798,7 +2798,7 @@ entities:
         targetRtId: 6789a00000000000000041e3  # space-ng-garage
         targetCkTypeId: EnergyIQ/Space
 
-  - rtId: 6789a00000000000003011n2
+  - rtId: 6789a00000000000003011b2
     ckTypeId: EnergyIQ/ChargingStation
     attributes:
       - id: EnergyIQ/GlobalId
@@ -2821,7 +2821,7 @@ entities:
         targetCkTypeId: EnergyIQ/Space
 
   # --- 2× Appliance in der Waschküche ---
-  - rtId: 6789a00000000000003020p1
+  - rtId: 6789a00000000000003020c1
     ckTypeId: EnergyIQ/Appliance
     attributes:
       - id: EnergyIQ/GlobalId
@@ -2845,7 +2845,7 @@ entities:
         targetRtId: 6789a00000000000000043e5  # space-ng-waschkueche
         targetCkTypeId: EnergyIQ/Space
 
-  - rtId: 6789a00000000000003021p2
+  - rtId: 6789a00000000000003021c2
     ckTypeId: EnergyIQ/Appliance
     attributes:
       - id: EnergyIQ/GlobalId
