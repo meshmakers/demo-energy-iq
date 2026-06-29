@@ -8,7 +8,7 @@ EnergyIQ is an OctoMesh Construction Kit (CK) model for intelligent building ene
 
 **Key Principle:** IFC-faithful entity modeling. Sensors, actuators, and terminal units are **separate entities** (not attributes on Space). Design requirements (Pset_*) are captured as records, distinct from runtime values held by Sensor entities.
 
-**Version:** `EnergyIQ-2.0.0` (breaking change vs 1.x — Haystack mixins removed, Space restructured per IFC/VDI).
+**Version:** `EnergyIQ-2.2.0` (2.0.0 was the breaking change vs 1.x — Haystack mixins removed, Space restructured per IFC/VDI; 2.1.0 added energy-metering types; 2.2.0 introduced `PassiveBuildingElement` so `SpaceElements` no longer overlaps the device associations).
 
 ## Build Commands
 
@@ -32,7 +32,7 @@ The build automatically processes YAML files in `src/EnergyIqCkModel/Constructio
 ```
 src/EnergyIqCkModel/
 └── ConstructionKit/          # CK model definitions
-    ├── ckModel.yaml          # Model metadata (modelId: EnergyIQ-2.0.0)
+    ├── ckModel.yaml          # Model metadata (modelId: EnergyIQ-2.2.0)
     ├── types/                # Entity type definitions (~35 types)
     ├── attributes/           # Attribute definitions
     ├── enums/                # Enumeration definitions (~10 enums)
@@ -42,7 +42,7 @@ data/bim/                     # RT (Runtime) model examples
 └── rt-firmianstrasse.yaml    # Demo property in Salzburg (~140 entities)
 ```
 
-### Type Hierarchy (EnergyIQ-2.0.0)
+### Type Hierarchy (EnergyIQ-2.2.0)
 
 ```
 NamedEntity (Basic)
@@ -62,7 +62,9 @@ NamedEntity (Basic)
 │       └── ThermalEnergyStorage            # NEW - buffer tank
 └── NamedEntity (Basic)
     ├── BuildingElement (abstract)
-    │   ├── Wall, Door, Window, ShadingDevice, Luminaire
+    │   ├── PassiveBuildingElement (abstract)  # fabric/fixtures (target of SpaceElements)
+    │   │   ├── Wall, Door, Window, ShadingDevice, Luminaire
+    │   ├── Meter                           # + Appliance / ChargingStation / GridConnection
     │   ├── RoomTerminal (abstract)         # NEW - VDI 3814 Raumterminal
     │   │   ├── HydronicTerminal (abstract)
     │   │   │   ├── Radiator
@@ -94,7 +96,7 @@ NamedEntity (Basic)
 | Association | Source | Target | Multiplicity |
 |---|---|---|---|
 | `ParentChild` (inherited Basic) | TreeNode parent | TreeNode child | 1:N |
-| `SpaceElements` | BuildingElement | Space | N:ZeroOrOne |
+| `SpaceElements` | PassiveBuildingElement + Meter | Space | N:ZeroOrOne |
 | `SpaceSensors` | Sensor | Space | N:ZeroOrOne |
 | `SpaceActuators` | Actuator | Space | N:ZeroOrOne |
 | `SpaceTerminals` | RoomTerminal | Space | N:ZeroOrOne |

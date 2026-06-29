@@ -1,6 +1,6 @@
 # EnergyIQ Construction Kit - Developer Guide
 
-**Version:** EnergyIQ-2.0.0
+**Version:** EnergyIQ-2.2.0
 **Standards:** ISO 16739-1:2024 (IFC 4.3), ISO 4157, VDI 3814
 
 ## Quick Start
@@ -128,8 +128,10 @@ NamedEntity (Basic)                       # Provides: Name, Description
 │
 └── NamedEntity (Basic)
     ├── BuildingElement (abstract)
-    │   ├── Wall, Door, Window
-    │   ├── ShadingDevice, Luminaire
+    │   ├── PassiveBuildingElement (abstract)   # fabric/fixtures, target of SpaceElements
+    │   │   ├── Wall, Door, Window
+    │   │   ├── ShadingDevice, Luminaire
+    │   ├── Meter                         # + Appliance / ChargingStation / GridConnection
     │   ├── RoomTerminal (abstract)       # NEW v2 - VDI 3814 Raumterminal
     │   │   ├── HydronicTerminal (abstract)
     │   │   │   ├── Radiator
@@ -243,7 +245,7 @@ OccupancyRequirements:
 SpaceSensors:    [TemperatureSensor, HumiditySensor, CO2Sensor, ...]
 SpaceActuators:  [Valve, Damper, ...]               # room-level (rare)
 SpaceTerminals:  [RadiantSurface, AirTerminal, ...] # heating/cooling/ventilation
-SpaceElements:   [Wall, Window, Door, ShadingDevice, Luminaire]
+SpaceElements:   [PassiveBuildingElement (Wall, Window, Door, ShadingDevice, Luminaire), Meter (+ Appliance/ChargingStation/GridConnection)]
 SpaceSchedules:  [Schedule (M:N — shared across rooms)]
 SystemSpaces:    [TechnicalSystem]                   # high-level plant assignment
 ```
@@ -391,7 +393,7 @@ Common readings inherited from `Meter`:
 
 **Catalog anchor:** `Basic.Energy-1.0.1` is imported as a dependency. `GridConnection` carries an optional `FormalMeteringPoint` association to `Basic.Energy/MeteringPoint` so a grid-coupled meter can be linked to the formal energy-industry entity (Austrian/German EDA Zählpunktnummer + State + CarrierType) without forcing that semantic on every sub-meter.
 
-**Spatial wiring:** Meters use `SpaceElements` (inherited from BuildingElement) to associate with the Space they physically sit in. The `GridConnection` typically has no Space association (it lives at the building boundary).
+**Spatial wiring:** Meters use `SpaceElements` (declared on `Meter`, inherited by Appliance/ChargingStation/GridConnection) to associate with the Space they physically sit in; `Space` declares `SpaceElements` against both `PassiveBuildingElement` and `Meter`. The `GridConnection` typically has no Space association (it lives at the building boundary).
 
 **Enums introduced for metering:**
 - `MeterCarrierType` (Electricity, Gas, Heat, Water, DistrictHeating, DistrictCooling, Other)

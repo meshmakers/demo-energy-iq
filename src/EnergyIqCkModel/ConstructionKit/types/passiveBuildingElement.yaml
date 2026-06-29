@@ -1,0 +1,10 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+types:
+- typeId: PassiveBuildingElement
+  derivedFromCkTypeId: ${this}/BuildingElement
+  isAbstract: true
+  description: "Abstract base for passive building/fabric elements that are located in a space but not actively controlled as a device (Wall, Door, Window, Luminaire, ShadingDevice). Separating these from Sensor/Actuator/RoomTerminal lets the Space.SpaceElements association target only fabric elements, removing the overlap with SpaceSensors/SpaceActuators/SpaceTerminals."
+  associations:
+  # Located in a space (inbound: Space.ContainedElements). Inherited by all concrete passive elements.
+  - id: ${this}/SpaceElements
+    targetCkTypeId: ${this}/Space

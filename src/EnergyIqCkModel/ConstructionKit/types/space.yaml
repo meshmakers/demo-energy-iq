@@ -50,9 +50,14 @@ types:
     isOptional: true
   associations:
   # Parent (BuildingStorey) via inherited System/ParentChild
-  # Building elements contained in this space (Wall, Door, Window, Luminaire, ShadingDevice)
+  # Passive/fabric elements contained in this space (Wall, Door, Window, Luminaire, ShadingDevice).
+  # Targets PassiveBuildingElement (not the abstract BuildingElement) so it no longer overlaps
+  # SpaceSensors/SpaceActuators/SpaceTerminals.
   - id: ${this}/SpaceElements
-    targetCkTypeId: ${this}/BuildingElement
+    targetCkTypeId: ${this}/PassiveBuildingElement
+  # Meters located in this space (Meter and its subtypes Appliance/ChargingStation/GridConnection)
+  - id: ${this}/SpaceElements
+    targetCkTypeId: ${this}/Meter
   # Sensors located in this space (TemperatureSensor, HumiditySensor, CO2Sensor, ...)
   - id: ${this}/SpaceSensors
     targetCkTypeId: ${this}/Sensor
