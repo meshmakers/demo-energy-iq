@@ -1103,9 +1103,12 @@ entities:
 
             # ── Direct (non-container) energy mappings: Loxone control Name → EnergyIQ entity Name ──
             # NOTE: the control/entity Name pairs below assume the Firmianstraße Miniserver + the
-            # rt-firmianstrasse EnergyIQ Names. Adjust if the real Names differ. Loxone Meter states:
-            # actual (W/kW power), total (kWh import), totalNeg (kWh export, bidirectional only).
-            # EnergyManager2 states: Gpwr (grid), Ppwr (PV), Spwr (storage power), Ssoc (storage SOC).
+            # rt-firmianstrasse EnergyIQ Names. Adjust if the real Names differ. Units are verified
+            # against the Miniserver structure (LoxAPP3 actualFormat="%.3fkW", totalFormat="%.1fkWh"):
+            # Loxone Meter states actual (kW power), total (kWh import), totalNeg (kWh export,
+            # bidirectional only). EnergyManager2 states Gpwr (grid kW), Ppwr (PV kW), Spwr (storage
+            # power kW, signed: >0 charging / <0 discharging), Ssoc (storage SOC %). All already in
+            # kW/kWh and the EnergyIQ model expects kW/kWh, so no scaling expression is needed.
             directControlMappings:
               # ── Whole-house Grid / PV / Battery from the single EnergyManager2 ──
               - id: em-grid
@@ -1122,14 +1125,44 @@ entities:
                 targetName: "PV-Anlage Firmianstraße"
                 states:
                   - { stateName: Ppwr, targetAttribute: TotalCurrentPower }
+              # Battery: derive all four runtime attributes from the single signed EnergyManager2
+              # storage power (Spwr). Loxone Firmianstraße convention: Spwr > 0 = charging,
+              # Spwr < 0 = discharging, Spwr == 0 = idle. ChargingPower/DischargingPower are the two
+              # positive-valued power attributes; IsCharging/IsDischarging are the boolean flags
+              # (ApplyDataPointMappings casts the formula result to the target attribute's CK type, so
+              # a comparison expression like "value > 0" lands as a real bool).
+              # Each Spwr target MUST use a distinct `id`: the generated DataPointMapping name is
+              # "{id}|{controlRtId}|{stateName}" and does NOT include the target attribute, so multiple
+              # Spwr mappings under one id would collide on that name.
               - id: em-battery
                 controlType: EnergyManager2
                 controlName: Energiemanager
                 targetCkTypeId: EnergyIQ/BatteryStorage
                 targetName: Batteriespeicher
                 states:
-                  - { stateName: Spwr, targetAttribute: ChargingPower }
+                  - { stateName: Spwr, targetAttribute: ChargingPower, expression: "value > 0 ? value : 0" }
                   - { stateName: Ssoc, targetAttribute: StateOfCharge }
+              - id: em-battery-discharge
+                controlType: EnergyManager2
+                controlName: Energiemanager
+                targetCkTypeId: EnergyIQ/BatteryStorage
+                targetName: Batteriespeicher
+                states:
+                  - { stateName: Spwr, targetAttribute: DischargingPower, expression: "value < 0 ? 0 - value : 0" }
+              - id: em-battery-ischarging
+                controlType: EnergyManager2
+                controlName: Energiemanager
+                targetCkTypeId: EnergyIQ/BatteryStorage
+                targetName: Batteriespeicher
+                states:
+                  - { stateName: Spwr, targetAttribute: IsCharging, expression: "value > 0" }
+              - id: em-battery-isdischarging
+                controlType: EnergyManager2
+                controlName: Energiemanager
+                targetCkTypeId: EnergyIQ/BatteryStorage
+                targetName: Batteriespeicher
+                states:
+                  - { stateName: Spwr, targetAttribute: IsDischarging, expression: "value < 0" }
               # ── Per-floor consumption sub-meters (Loxone "Verbrauch X" → EnergyIQ Stromzähler) ──
               - id: meter-eg
                 controlType: Meter
