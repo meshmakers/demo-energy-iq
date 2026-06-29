@@ -168,6 +168,45 @@ The `data/bim/rt-firmianstrasse.yaml` file demonstrates the full v2 model for a 
 
 Total: ~140 RT entities.
 
+## Tenant provisioning scripts (`scripts/`, PowerShell)
+
+Local-dev scripts that provision the `energyiq` tenant end to end via `octo-cli`.
+All paths resolve relative to `$PSScriptRoot`, so they run from any working
+directory.
+
+```powershell
+# Full end-to-end: (re)create the energyiq tenant + import everything
+cd scripts && pwsh om_initialize_tenant.ps1
+```
+
+`om_initialize_tenant.ps1` (modeled on `voest-app/scripts/om_initialize_tenant.ps1`):
+
+1. Switch to the **octosystem** context (`local_octosystem`) and `LogIn -i` —
+   child tenants are created/deleted through octosystem.
+2. `Delete` (ignored if absent) then `Create` the `energyiq` tenant as a **child
+   of octosystem** (provisions the current user as admin).
+3. `AddContext` + `UseContext` for the tenant context (`local_energyiq`).
+4. `LogIn -i` against the new tenant — the fresh token carries it in its
+   `allowed_tenants` claim.
+5. `om_importck.ps1` — imports `Basic-2.0.2` / `Basic.Energy-1.1.2` from the
+   `LocalFileSystemCatalog` and `EnergyIQ` (`ck-energyiq-2.yaml`) from the local
+   build output (`-configuration`, default `DebugL`).
+6. `om_importrt.ps1` — `EnableCommunication` (auto-applies the System.Communication
+   blueprint → seeds the default Cloud pool + Mesh adapter) + `EnableStreamData`,
+   then imports & **activates** the three per-sensor archives
+   (`6a0e…0001/0002/0003`), the simulation pipelines, the `_trees` query and the
+   `rt-firmianstrasse.yaml` BIM sample.
+7. `om_importrt_sample_general.ps1` — the **Loxone smart-home sample** (migrated
+   from `octo-adapter-loxone` so the whole demo is in one repo). Imports the
+   Loxone CK model from the **sibling `octo-adapter-loxone` build output**
+   (the adapter + CK model stay there) plus the Loxone adapter, connection/
+   service-account/AI configuration and pipelines from this repo's `data/`. The
+   pipelines write sensor stream data into the energyiq archives from step 6.
+
+The Loxone sample data lives in `data/_general/rt-{adapters,loxone-configuration,ai-configuration}-loxone*.yaml`
+and `data/_pipelines/rt-pipelines-loxone.yaml`. Only the Loxone **edge adapter**
+(the .NET worker and `AdapterEdgeLoxone.CkModel`) remains in `octo-adapter-loxone`.
+
 ## Documentation
 
 Detailed specifications are in `docs/`:

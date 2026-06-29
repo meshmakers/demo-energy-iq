@@ -1,0 +1,11 @@
+$schema: https://schemas.meshmakers.cloud/runtime-model.schema.json
+dependencies:
+  - System.Communication-[3.6,)
+entities:
+  # The mesh adapter is auto-provisioned by the System.Communication blueprint
+  # (rtId 670000000000000000000002); only the on-premise edge adapter is defined here.
+  - rtId: 67f0a01ec4ff02221e0b5001
+    ckTypeId: System.Communication/Adapter
+    attributes:
+      - id: System/Name
+        value: Loxone Edge Adapter

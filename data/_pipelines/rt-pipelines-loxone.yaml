@@ -1,0 +1,1278 @@
+$schema: https://schemas.meshmakers.cloud/runtime-model.schema.json
+dependencies:
+- System.Communication-[3.12,)
+- Loxone-[2.0,)
+entities:
+
+  # ==========================================================================
+  # DataFlow: Loxone Browse & Discover
+  #
+  # Single pipeline flow: manually triggered, browses the Miniserver structure
+  # ==========================================================================
+  - rtId: 67f0b00ec4ff02221e0b6001
+    ckTypeId: System.Communication/DataFlow
+    attributes:
+    - id: System/Name
+      value: Loxone Browse Structure
+    - id: System/Description
+      value: Discovers and browses the Loxone Miniserver structure (rooms, categories, controls)
+
+  - rtId: 67f0b00ec4ff02221e0b6002
+    ckTypeId: System.Communication/Pipeline
+    associations:
+    - roleId: System/ParentChild
+      targetRtId: 67f0b00ec4ff02221e0b6001
+      targetCkTypeId: System.Communication/DataFlow
+    - roleId: System.Communication/Executes
+      targetRtId: 67f0a01ec4ff02221e0b5001
+      targetCkTypeId: System.Communication/Adapter
+    - roleId: System.Communication/Uses
+      targetRtId: 67f0c00ec4ff02221e0b7001
+      targetCkTypeId: System.Communication/LoxoneConfiguration
+    attributes:
+    - id: System/Name
+      value: Browse Miniserver
+    - id: System/Enabled
+      value: true
+    - id: System.Communication/PipelineDefinition
+      value: |-
+        triggers:
+          - type: FromExecutePipelineCommand@1
+        transformations:
+          - type: GetPipelineConfigByWellKnownName@1
+            description: Load Loxone connection configuration
+            wellKnownName: LoxoneMiniserverConfig
+            targetPath: $.config
+          - type: LoxoneBrowse@1
+            description: Browse Miniserver structure
+            hostPath: $.config.host
+            portPath: $.config.port
+            usernamePath: $.config.username
+            passwordPath: $.config.password
+            useSslPath: $.config.isSslEnabled
+            targetPath: $.structure
+          - type: SetPipelineExecutionResult@1
+            description: Store browse result for visualization
+            path: $.structure
+
+  # ==========================================================================
+  # DataFlow: Loxone Sync Structure
+  #
+  # 2-pipeline flow across edge and mesh adapter:
+  #   1. Edge Adapter: Fetch Miniserver structure, send to mesh
+  #   2. Mesh Adapter: Receive structure, create/update RT entities
+  # ==========================================================================
+  - rtId: 67f0b00ec4ff02221e0b6003
+    ckTypeId: System.Communication/DataFlow
+    attributes:
+    - id: System/Name
+      value: Loxone Sync Structure
+    - id: System/Description
+      value: Fetches Loxone Miniserver structure and synchronizes it as OctoMesh runtime entities
+
+  # Pipeline 1: Fetch structure on Edge Adapter, send to Mesh
+  - rtId: 67f0b00ec4ff02221e0b6004
+    ckTypeId: System.Communication/Pipeline
+    associations:
+    - roleId: System/ParentChild
+      targetRtId: 67f0b00ec4ff02221e0b6003
+      targetCkTypeId: System.Communication/DataFlow
+    - roleId: System.Communication/Executes
+      targetRtId: 67f0a01ec4ff02221e0b5001
+      targetCkTypeId: System.Communication/Adapter
+    - roleId: System.Communication/Uses
+      targetRtId: 67f0c00ec4ff02221e0b7001
+      targetCkTypeId: System.Communication/LoxoneConfiguration
+    attributes:
+    - id: System/Name
+      value: Fetch Structure
+    - id: System/Description
+      value: Fetches Miniserver structure and sends sync data to mesh adapter
+    - id: System/Enabled
+      value: true
+    - id: System.Communication/PipelineDefinition
+      value: |-
+        triggers:
+          - type: FromExecutePipelineCommand@1
+        transformations:
+          - type: GetPipelineConfigByWellKnownName@1
+            description: Load Loxone connection configuration
+            wellKnownName: LoxoneMiniserverConfig
+            targetPath: $.config
+          - type: LoxoneBrowse@1
+            description: Fetch Miniserver structure
+            hostPath: $.config.host
+            portPath: $.config.port
+            usernamePath: $.config.username
+            passwordPath: $.config.password
+            useSslPath: $.config.isSslEnabled
+            targetPath: $.structure
+          - type: ToPipelineDataEvent@1
+            description: Send structure to mesh adapter for storage
+            path: $.structure
+            targetPath: $.structure
+            targetPipelineRtId: 67f0b00ec4ff02221e0b6005
+
+  # Pipeline 2: Receive on Mesh Adapter, create/update RT entities
+  - rtId: 67f0b00ec4ff02221e0b6005
+    ckTypeId: System.Communication/Pipeline
+    associations:
+    - roleId: System/ParentChild
+      targetRtId: 67f0b00ec4ff02221e0b6003
+      targetCkTypeId: System.Communication/DataFlow
+    - roleId: System.Communication/Executes
+      targetRtId: "670000000000000000000002"
+      targetCkTypeId: System.Communication/Adapter
+    attributes:
+    - id: System/Name
+      value: Store Structure
+    - id: System/Description
+      value: Receives Loxone structure and creates/updates OctoMesh runtime entities
+    - id: System/Enabled
+      value: true
+    - id: System.Communication/PipelineDefinition
+      value: |-
+        triggers:
+          - type: FromPipelineDataEvent@1
+        transformations:
+          # ── Miniserver (Tree root) ──
+          # Find existing Miniserver by SerialNumber (or prepare insert)
+          - type: GetOrCreateRtEntitiesByType@1
+            description: Get or create Miniserver by SerialNumber
+            ckTypeId: Loxone/Miniserver
+            rtIdTargetPath: $._msRtId
+            ckTypeIdTargetPath: $._msCkTypeId
+            modOperationPath: $._msModOp
+            fieldFilters:
+              - attributePath: SerialNumber
+                operator: Equals
+                comparisonValuePath: $.structure.miniserver.serialNr
+          - type: CreateUpdateInfo@1
+            description: Create or update Miniserver entity
+            targetPath: $._miniserverUpdate
+            updateKindPath: $._msModOp
+            ckTypeIdPath: $._msCkTypeId
+            rtIdPath: $._msRtId
+            attributeUpdates:
+              - attributeName: Name
+                attributeValueType: String
+                valuePath: $.structure.miniserver.msName
+              - attributeName: SerialNumber
+                attributeValueType: String
+                valuePath: $.structure.miniserver.serialNr
+              - attributeName: FirmwareVersion
+                attributeValueType: String
+                valuePath: $.structure.miniserver.swVersion
+              - attributeName: ProjectName
+                attributeValueType: String
+                valuePath: $.structure.miniserver.projectName
+              - attributeName: MacAddress
+                attributeValueType: String
+                valuePath: $.structure.miniserver.macAddress
+
+          # ── Rooms → Categories → Controls ──
+          - type: ForEach@1
+            description: Create rooms with categories and controls
+            iterationPath: $.structure.rooms
+            targetPath: $.roomResults
+            mergePath: $.updates
+            transformations:
+              # Find existing Room by LoxoneUuid (or prepare insert)
+              - type: GetOrCreateRtEntitiesByType@1
+                description: Get or create Room by LoxoneUuid
+                ckTypeId: Loxone/Room
+                rtIdTargetPath: $.updates._roomRtId
+                ckTypeIdTargetPath: $.updates._roomCkTypeId
+                modOperationPath: $.updates._roomModOp
+                fieldFilters:
+                  - attributePath: LoxoneUuid
+                    operator: Equals
+                    comparisonValuePath: $.key.uuid
+              # Create or update Room entity
+              - type: CreateUpdateInfo@1
+                targetPath: $.updates._roomUpdate
+                updateKindPath: $.updates._roomModOp
+                ckTypeIdPath: $.updates._roomCkTypeId
+                rtIdPath: $.updates._roomRtId
+                attributeUpdates:
+                  - attributeName: Name
+                    attributeValueType: String
+                    valuePath: $.key.name
+                  - attributeName: LoxoneUuid
+                    attributeValueType: String
+                    valuePath: $.key.uuid
+                  - attributeName: RoomType
+                    attributeValueType: Int
+                    valuePath: $.key.type
+                  - attributeName: Image
+                    attributeValueType: String
+                    valuePath: $.key.image
+              # Room → Miniserver (only when Room was newly inserted)
+              - type: If@1
+                description: Create association only for new Rooms
+                path: $.updates._roomModOp
+                operator: Equals
+                value: 0
+                valueType: Int
+                transformations:
+                  - type: CreateAssociationUpdate@1
+                    targetPath: $.updates._roomAssocUpdateItems
+                    targetValueKind: Array
+                    targetValueWriteMode: Append
+                    updateKind: CREATE
+                    originRtIdPath: $.updates._roomUpdate.RtId
+                    originCkTypeIdPath: $.updates._roomUpdate.CkTypeId
+                    targetRtIdPath: $.full._miniserverUpdate.RtId
+                    targetCkTypeIdPath: $.full._miniserverUpdate.CkTypeId
+                    associationRoleId: System/ParentChild
+              # Categories in this Room
+              - type: ForEach@1
+                description: Create categories in room
+                path: $.updates
+                fullDocumentPath: $.full
+                iterationPath: $.key.categories
+                keyPath: $.category
+                targetPath: $.updates._categoryResults
+                mergePath: $.updates
+                transformations:
+                  # Find existing Category by LoxoneUuid (or prepare insert)
+                  - type: GetOrCreateRtEntitiesByType@1
+                    description: Get or create Category by LoxoneUuid
+                    ckTypeId: Loxone/Category
+                    rtIdTargetPath: $.updates._catRtId
+                    ckTypeIdTargetPath: $.updates._catCkTypeId
+                    modOperationPath: $.updates._catModOp
+                    fieldFilters:
+                      - attributePath: LoxoneUuid
+                        operator: Equals
+                        comparisonValuePath: $.category.uuid
+                  - type: CreateUpdateInfo@1
+                    targetPath: $.updates._catUpdate
+                    updateKindPath: $.updates._catModOp
+                    ckTypeIdPath: $.updates._catCkTypeId
+                    rtIdPath: $.updates._catRtId
+                    attributeUpdates:
+                      - attributeName: Name
+                        attributeValueType: String
+                        valuePath: $.category.name
+                      - attributeName: LoxoneUuid
+                        attributeValueType: String
+                        valuePath: $.category.uuid
+                      - attributeName: CategoryType
+                        attributeValueType: String
+                        valuePath: $.category.type
+                      - attributeName: Color
+                        attributeValueType: String
+                        valuePath: $.category.color
+                      - attributeName: Image
+                        attributeValueType: String
+                        valuePath: $.category.image
+                  # Category → Room (only when Category was newly inserted)
+                  - type: If@1
+                    description: Create association only for new Categories
+                    path: $.updates._catModOp
+                    operator: Equals
+                    value: 0
+                    valueType: Int
+                    transformations:
+                      - type: CreateAssociationUpdate@1
+                        targetPath: $.updates._catAssocUpdateItems
+                        targetValueKind: Array
+                        targetValueWriteMode: Append
+                        updateKind: CREATE
+                        originRtIdPath: $.updates._catUpdate.RtId
+                        originCkTypeIdPath: $.updates._catUpdate.CkTypeId
+                        targetRtIdPath: $.full._roomUpdate.RtId
+                        targetCkTypeIdPath: $.full._roomUpdate.CkTypeId
+                        associationRoleId: System/ParentChild
+                  # Controls in this Category
+                  - type: ForEach@1
+                    description: Create controls in category
+                    path: $.updates
+                    fullDocumentPath: $.full
+                    iterationPath: $.category.controls
+                    keyPath: $.control
+                    targetPath: $.updates._controlResults
+                    mergePath: $.updates
+                    transformations:
+                      # Find existing Control by LoxoneUuid (or prepare insert)
+                      - type: GetOrCreateRtEntitiesByType@1
+                        description: Get or create Control by LoxoneUuid
+                        ckTypeId: Loxone/Control
+                        rtIdTargetPath: $.updates._ctrlRtId
+                        ckTypeIdTargetPath: $.updates._ctrlCkTypeId
+                        modOperationPath: $.updates._ctrlModOp
+                        fieldFilters:
+                          - attributePath: LoxoneUuid
+                            operator: Equals
+                            comparisonValuePath: $.control.uuidAction
+                      # Convert Loxone states map to RecordArray for the States attribute
+                      - type: MapToRecordArray@1
+                        description: Convert states map to DataPoint records
+                        path: $.control.states
+                        ckRecordId: System.Communication/DataPoint
+                        keyAttributeName: Name
+                        valueAttributeName: ExternalId
+                        targetPath: $.updates._stateRecords
+                        targetValueKind: Simple
+                        targetValueWriteMode: Overwrite
+                      - type: CreateUpdateInfo@1
+                        targetPath: $.updates._ctrlUpdate
+                        updateKindPath: $.updates._ctrlModOp
+                        ckTypeIdPath: $.updates._ctrlCkTypeId
+                        rtIdPath: $.updates._ctrlRtId
+                        attributeUpdates:
+                          - attributeName: Name
+                            attributeValueType: String
+                            valuePath: $.control.name
+                          - attributeName: LoxoneUuid
+                            attributeValueType: String
+                            valuePath: $.control.uuidAction
+                          - attributeName: ControlType
+                            attributeValueType: String
+                            valuePath: $.control.type
+                          - attributeName: IsEnabled
+                            attributeValueType: Boolean
+                            value: true
+                          - attributeName: States
+                            attributeValueType: RecordArray
+                            valuePath: $.updates._stateRecords
+                      # Control → Category (only when Control was newly inserted)
+                      - type: If@1
+                        description: Create association only for new Controls
+                        path: $.updates._ctrlModOp
+                        operator: Equals
+                        value: 0
+                        valueType: Int
+                        transformations:
+                          - type: CreateAssociationUpdate@1
+                            targetPath: $.updates._ctrlAssocUpdateItems
+                            targetValueKind: Array
+                            targetValueWriteMode: Append
+                            updateKind: CREATE
+                            originRtIdPath: $.updates._ctrlUpdate.RtId
+                            originCkTypeIdPath: $.updates._ctrlUpdate.CkTypeId
+                            targetRtIdPath: $.full._catUpdate.RtId
+                            targetCkTypeIdPath: $.full._catUpdate.CkTypeId
+                            associationRoleId: System/ParentChild
+
+          # ── Flatten entities ──
+          - type: Flatten@1
+            path: $.roomResults[*]._roomUpdate
+            targetPath: $._updateItems
+            targetValueKind: Simple
+            targetValueWriteMode: Overwrite
+          - type: Flatten@1
+            path: $.roomResults[*]._categoryResults[*]._catUpdate
+            targetPath: $._updateItems
+            targetValueWriteMode: Append
+          - type: Flatten@1
+            path: $.roomResults[*]._categoryResults[*]._controlResults[*]._ctrlUpdate
+            targetPath: $._updateItems
+            targetValueWriteMode: Append
+          # Add miniserver
+          - type: Flatten@1
+            path: $._miniserverUpdate
+            targetPath: $._updateItems
+            targetValueWriteMode: Prepend
+          # ── Flatten associations ──
+          # Each nesting level uses a DISTINCT accumulator key. The nested ForEach children
+          # inherit the parent's $.updates (parent-fallback) and mergePath collects the merged
+          # view, so a shared key would replicate e.g. room→miniserver into every category/control
+          # result and the flattens below would multiply it -> ParentChild max-multiplicity errors.
+          - type: Flatten@1
+            path: $.roomResults[*]._roomAssocUpdateItems[*]
+            targetPath: $._assocUpdateItems
+            targetValueKind: Simple
+            targetValueWriteMode: Overwrite
+          - type: Flatten@1
+            path: $.roomResults[*]._categoryResults[*]._catAssocUpdateItems[*]
+            targetPath: $._assocUpdateItems
+            targetValueWriteMode: Append
+          - type: Flatten@1
+            path: $.roomResults[*]._categoryResults[*]._controlResults[*]._ctrlAssocUpdateItems[*]
+            targetPath: $._assocUpdateItems
+            targetValueWriteMode: Append
+          # ── Apply ──
+          - type: ApplyChanges@2
+            entityUpdatesPath: $._updateItems
+            associationUpdatesPath: $._assocUpdateItems
+
+  # ==========================================================================
+  # DataFlow: Loxone Live States
+  #
+  # 3-pipeline flow across edge and mesh adapter:
+  #   0. Mesh Adapter: Configure State Sync - reads DataPointMappings, updates
+  #      LoxoneConfiguration with UUIDs, redeploys edge pipeline
+  #   1. Edge Adapter: Receive state changes via WebSocket, send to mesh
+  #   2. Mesh Adapter: Receive states, apply data point mappings
+  # ==========================================================================
+  - rtId: 67f0b00ec4ff02221e0b6006
+    ckTypeId: System.Communication/DataFlow
+    attributes:
+    - id: System/Name
+      value: Loxone Live States
+    - id: System/Description
+      value: Receives real-time state changes from Loxone via WebSocket and applies DataPointMappings to update target entities
+
+  # Pipeline 0: Configure State Sync (Mesh Adapter)
+  # Reads DataPointMappings, extracts LoxoneUuids from source Controls,
+  # updates the LoxoneConfiguration with the UUID list, and redeploys the edge pipeline.
+  - rtId: 67f0b00ec4ff02221e0b6009
+    ckTypeId: System.Communication/Pipeline
+    associations:
+    - roleId: System/ParentChild
+      targetRtId: 67f0b00ec4ff02221e0b6006
+      targetCkTypeId: System.Communication/DataFlow
+    - roleId: System.Communication/Executes
+      targetRtId: "670000000000000000000002"
+      targetCkTypeId: System.Communication/Adapter
+    attributes:
+    - id: System/Name
+      value: Configure State Sync
+    - id: System/Description
+      value: Reads DataPointMappings to determine which controls to watch, updates LoxoneConfiguration with MappingTargets, and redeploys the edge pipeline
+    - id: System/Enabled
+      value: true
+    - id: System.Communication/PipelineDefinition
+      value: |-
+        triggers:
+          - type: FromExecutePipelineCommand@1
+        transformations:
+          # Build poll targets from DataPointMappings. Each target is either a plain
+          # control UUID (default poll) or "controlUuid|stateName|stateUuid" for
+          # polling specific states (e.g. tempActual) from controls with multiple states.
+          - type: BuildMappingTargets@1
+            description: Resolve mapping sources to external identifiers
+            sourceCkTypeId: Loxone/Control
+            sourceIdentifierAttribute: LoxoneUuid
+            statesAttribute: States
+            stateKeyAttribute: Name
+            stateValueAttribute: ExternalId
+            defaultAttributePath: currentValue
+            targetPath: $.mappingTargets
+            targetValueKind: Simple
+            targetValueWriteMode: Overwrite
+          # Load the current LoxoneConfiguration
+          - type: GetRtEntitiesByType@1
+            description: Load LoxoneConfiguration
+            ckTypeId: System.Communication/LoxoneConfiguration
+            targetPath: $.configs
+            fieldFilters:
+              - attributePath: Host
+                operator: NotEquals
+                comparisonValue: null
+          # Update the configuration with the resolved mapping targets
+          - type: If@1
+            description: Only update if configuration exists
+            path: $.configs.Items[0].RtId
+            operator: NotEquals
+            value: null
+            valueType: String
+            transformations:
+              - type: CreateUpdateInfo@1
+                description: Update MappingTargets on LoxoneConfiguration
+                targetPath: $._configUpdate
+                targetValueKind: Array
+                updateKind: UPDATE
+                ckTypeIdPath: $.configs.Items[0].CkTypeId.SemanticVersionedFullName
+                rtIdPath: $.configs.Items[0].RtId
+                attributeUpdates:
+                  - attributeName: MappingTargets
+                    attributeValueType: RecordArray
+                    valuePath: $.mappingTargets
+              - type: ApplyChanges@2
+                entityUpdatesPath: $._configUpdate
+              # Redeploy the edge state sync pipeline with updated configuration
+              - type: DeployPipeline@1
+                description: Redeploy edge state sync pipeline
+                pipelineRtId: 67f0b00ec4ff02221e0b6007
+                serviceAccountConfigName: ServiceAccountConfig
+          - type: SetPipelineExecutionResult@1
+            description: Store configuration result
+            path: $.configs.Items[0].RtId
+
+  # Pipeline 1: Receive state changes on Edge Adapter (WebSocket)
+  - rtId: 67f0b00ec4ff02221e0b6007
+    ckTypeId: System.Communication/Pipeline
+    associations:
+    - roleId: System/ParentChild
+      targetRtId: 67f0b00ec4ff02221e0b6006
+      targetCkTypeId: System.Communication/DataFlow
+    - roleId: System.Communication/Executes
+      targetRtId: 67f0a01ec4ff02221e0b5001
+      targetCkTypeId: System.Communication/Adapter
+    - roleId: System.Communication/Uses
+      targetRtId: 67f0c00ec4ff02221e0b7001
+      targetCkTypeId: System.Communication/LoxoneConfiguration
+    attributes:
+    - id: System/Name
+      value: Receive State Changes
+    - id: System/Description
+      value: Receives real-time state changes from Loxone Miniserver via WebSocket and sends them to mesh adapter
+    - id: System/Enabled
+      value: true
+    - id: System.Communication/PipelineDefinition
+      value: |-
+        triggers:
+          - type: FromLoxoneStateChange@1
+            configurationName: LoxoneMiniserverConfig
+        transformations:
+          # States array is provided by the trigger (only changed values)
+          - type: ToPipelineDataEvent@1
+            description: Send changed states to mesh adapter
+            path: $.states
+            targetPath: $.states
+            targetPipelineRtId: 67f0b00ec4ff02221e0b6008
+
+  # Pipeline 2: Receive states on Mesh Adapter, update entities
+  - rtId: 67f0b00ec4ff02221e0b6008
+    ckTypeId: System.Communication/Pipeline
+    associations:
+    - roleId: System/ParentChild
+      targetRtId: 67f0b00ec4ff02221e0b6006
+      targetCkTypeId: System.Communication/DataFlow
+    - roleId: System.Communication/Executes
+      targetRtId: "670000000000000000000002"
+      targetCkTypeId: System.Communication/Adapter
+    attributes:
+    - id: System/Name
+      value: Store Control States
+    - id: System/Description
+      value: Receives polled state data and updates OctoMesh runtime entities
+    - id: System/Enabled
+      value: true
+    - id: System.Communication/PipelineDefinition
+      value: |-
+        triggers:
+          - type: FromPipelineDataEvent@1
+        transformations:
+          # For each state update, find matching control and apply data point mappings
+          - type: ForEach@1
+            description: Process state updates and apply data point mappings
+            iterationPath: $.states
+            targetPath: $.updateResults
+            mergePath: $.updates
+            transformations:
+              # Find ALL Loxone Controls matching this state's UUID (handles duplicates)
+              - type: GetRtEntitiesByType@1
+                description: Find all controls by Loxone UUID
+                ckTypeId: Loxone/Control
+                targetPath: $.updates._controls
+                fieldFilters:
+                  - attributePath: LoxoneUuid
+                    operator: Equals
+                    comparisonValuePath: $.key.controlUuid
+              # For each matching control, update its state and apply its mappings
+              - type: ForEach@1
+                description: Process each matching control
+                path: $
+                fullDocumentPath: $.full
+                iterationPath: $.updates._controls.Items
+                targetPath: $.updates._controlResults
+                mergePath: $.updates
+                transformations:
+                  # Update the matching DataPoint record in the States RecordArray
+                  - type: UpdateRecordArrayItem@1
+                    description: Update CurrentValue and LastUpdate in States record
+                    path: $.key.Attributes.States
+                    matchAttributeName: ExternalId
+                    matchValuePath: $.full.key.pollUuid
+                    targetPath: $.updates._updatedStates
+                    attributeUpdates:
+                      - attributeName: CurrentValue
+                        valuePath: $.full.key.value
+                      - attributeName: LastUpdate
+                        value: =now()
+                  - type: CreateUpdateInfo@1
+                    description: Update Control's States and LastStateUpdate
+                    targetPath: $.updates._controlUpdate
+                    updateKind: UPDATE
+                    ckTypeIdPath: $.key.CkTypeId.SemanticVersionedFullName
+                    rtIdPath: $.key.RtId
+                    attributeUpdates:
+                      - attributeName: States
+                        attributeValueType: RecordArray
+                        valuePath: $.updates._updatedStates
+                      - attributeName: LastStateUpdate
+                        attributeValueType: DateTime
+                        value: =now()
+                  # Evaluate DataPointMappings for this specific control and state.
+                  # sourceStateNamePath filters mappings: only those matching the state name apply.
+                  - type: ApplyDataPointMappings@1
+                    description: Apply data point mappings to target entities
+                    sourceRtIdPath: $.key.RtId
+                    sourceCkTypeIdPath: $.key.CkTypeId.SemanticVersionedFullName
+                    sourceValuePath: $.full.key.value
+                    sourceStateNamePath: $.full.key.stateName
+                    targetPath: $.updates._mappingUpdates
+                    targetValueKind: Array
+                    targetValueWriteMode: Overwrite
+          # Flatten control updates from all matches across all states
+          - type: Flatten@1
+            path: $.updateResults[*]._controlResults[*]._controlUpdate
+            targetPath: $._updateItems
+            targetValueKind: Simple
+            targetValueWriteMode: Overwrite
+          # Flatten mapping updates (double wildcard - mappingUpdates is array-of-arrays)
+          - type: Flatten@1
+            path: $.updateResults[*]._controlResults[*]._mappingUpdates[*][*]
+            targetPath: $._updateItems
+            targetValueWriteMode: Append
+          - type: If@1
+            description: Only apply if there are updates
+            path: $._updateItems[0].RtId
+            operator: NotEquals
+            value: null
+            valueType: String
+            transformations:
+              # Update entities in MongoDB
+              - type: ApplyChanges@2
+                entityUpdatesPath: $._updateItems
+              # EnergyIQ-2.0.0: measurements live on dedicated Sensor entities, so the
+              # previous single SpaceArchive has been split into 3 per-sensor archives
+              # (TemperatureSensorArchive / HumiditySensorArchive / CO2SensorArchive).
+              # Each Backfill+Save block iterates over $._updateItems but the archive
+              # node itself filters to entities matching its TargetCkTypeId — items of
+              # other types are skipped. So the same path is fed to each archive in turn.
+              #
+              # ── Temperature ──
+              - type: BackfillFromRtEntity@1
+                description: Backfill TemperatureSensor archive
+                path: $._updateItems
+                archiveRtId: 6a0e000000000000000a0001
+              - type: SaveStreamDataInArchive@1
+                description: Save Temperature time-series
+                path: $._updateItems
+                archiveRtId: 6a0e000000000000000a0001
+              # ── Humidity ──
+              - type: BackfillFromRtEntity@1
+                description: Backfill HumiditySensor archive
+                path: $._updateItems
+                archiveRtId: 6a0e000000000000000a0002
+              - type: SaveStreamDataInArchive@1
+                description: Save Humidity time-series
+                path: $._updateItems
+                archiveRtId: 6a0e000000000000000a0002
+              # ── CO2 ──
+              - type: BackfillFromRtEntity@1
+                description: Backfill CO2Sensor archive
+                path: $._updateItems
+                archiveRtId: 6a0e000000000000000a0003
+              - type: SaveStreamDataInArchive@1
+                description: Save CO2 time-series
+                path: $._updateItems
+                archiveRtId: 6a0e000000000000000a0003
+
+  # ==========================================================================
+  # DataFlow: Loxone Auto-Map Controls
+  #
+  # Single mesh pipeline: uses AnthropicAiQuery to match Loxone Controls
+  # to EnergyIQ Spaces (or other target entities) and creates
+  # DataPointMapping entities automatically.
+  #
+  # Prerequisites:
+  #   - Loxone structure has been synced (DataFlow 2)
+  #   - EnergyIQ building model exists (imported or created manually)
+  #   - AnthropicAiConfiguration entity with API key exists
+  #
+  # Run this pipeline once after sync, or whenever mappings need updating.
+  # It is idempotent: existing DataPointMappings are skipped.
+  # After this pipeline, run "Configure Polling" to activate the new mappings.
+  # ==========================================================================
+  - rtId: 67f0b00ec4ff02221e0b600a
+    ckTypeId: System.Communication/DataFlow
+    attributes:
+    - id: System/Name
+      value: Loxone Auto-Map Controls
+    - id: System/Description
+      value: Uses AI to match Loxone Controls to EnergyIQ entities and creates DataPointMapping entities automatically
+
+  # ⚠ DISABLED for EnergyIQ-2.0.0 migration.
+  # The prompt and JSON output schema assume mapping targets are Space attributes
+  # (Temperature, CO2Level, Humidity, ...). In v2 those moved onto dedicated
+  # Sensor entities (TemperatureSensor / HumiditySensor / CO2Sensor / etc.) that
+  # are associated to the Space via SpaceSensors. To re-enable, the prompt + JSON
+  # contract need to be rewritten so the AI returns a sensor rtId (not a space
+  # rtId) per mapping, after navigating Space → SpaceSensors. Until then, create
+  # DataPointMappings manually or use the Studio UI.
+  - rtId: 67f0b00ec4ff02221e0b600b
+    ckTypeId: System.Communication/Pipeline
+    associations:
+    - roleId: System/ParentChild
+      targetRtId: 67f0b00ec4ff02221e0b600a
+      targetCkTypeId: System.Communication/DataFlow
+    - roleId: System.Communication/Executes
+      targetRtId: "670000000000000000000002"
+      targetCkTypeId: System.Communication/Adapter
+    - roleId: System.Communication/Uses
+      targetRtId: 67f0c00ec4ff02221e0b7003
+      targetCkTypeId: System.Communication/AiConfiguration
+    attributes:
+    - id: System/Name
+      value: AI Auto-Map (disabled - v2 migration pending)
+    - id: System/Description
+      value: "[v2 migration pending] Collects Loxone Controls and EnergyIQ Spaces, uses Claude to match them, and creates DataPointMapping entities. Disabled because the prompt assumes Space attribute targets, not Sensor entity targets."
+    - id: System/Enabled
+      value: false
+    - id: System.Communication/PipelineDefinition
+      value: |-
+        triggers:
+          - type: FromExecutePipelineCommand@1
+        transformations:
+          # ── Step 1: AI queries data via MCP and produces mapping suggestions ──
+          # Claude uses MCP tools to query only the fields it needs (Name, ControlType,
+          # States, RtId, associations) instead of loading full entities into the context.
+
+          - type: AnthropicAiQuery@1
+            description: Match Loxone Controls to EnergyIQ entities via MCP
+            apiKeyConfigurationName: AnthropicAiConfig
+            maxToolRounds: 10
+            mcpToolNames:
+              - query_entities_simple
+              - navigate_associations
+              - get_association_tree
+            responseFormat: json
+            temperature: 0.0
+            maxTokens: 16000
+            systemPrompt: >-
+              You are a building automation mapping assistant for OctoMesh.
+              You match Loxone Miniserver controls to EnergyIQ building model entities
+              by querying the OctoMesh data via the provided MCP tools.
+
+              STEP 1 - QUERY ALL DATA IN 2 CALLS:
+              a) Query ALL EnergyIQ/Space entities:
+                 query_entities_simple(ckTypeId="EnergyIQ/Space", attributePaths=["Name","RoomNumber"])
+
+              b) Get the COMPLETE Loxone Room hierarchy in ONE call:
+                 get_association_tree(rootCkTypeId="Loxone/Room", ckRoleId="System/ParentChild", direction="Inbound", maxDepth=2, attributePaths=["Name","ControlType"])
+                 This returns ALL rooms with their categories and controls in a tree structure.
+                 Each control has a ControlType attribute (IRoomControllerV2, Dimmer, Jalousie, etc.)
+
+              STEP 2 - MATCH ROOMS TO SPACES:
+              From the tree, each Room node has a Name. Match Room.Name to EnergyIQ Space.Name (exact or fuzzy).
+              Each Room's children are Categories, and each Category's children are Controls with their ControlType and RtId.
+
+              STEP 3 - CREATE MAPPINGS FOR EVERY ROOM:
+              For EACH IRoomControllerV2 control that has a matching EnergyIQ Space, create FOUR mappings:
+              1. tempActual → Temperature (always)
+              2. tempTarget → TemperatureSetpointHeating (always)
+              3. co2 → CO2Level (always — all IRoomControllerV2 have this)
+              4. humidityActual → Humidity (always, expression: "value / 100")
+
+              Also map these additional control types where applicable:
+              - InfoOnlyAnalog with name containing "feuchte"/"humid" → Humidity
+              - PresenceDetector → PresenceDetected
+              - Dimmer in Lighting category → LightingLevel (expression: "value / 100")
+              - Jalousie → ShadingPosition (expression: "value / 100")
+              - Meter with name containing "verbrauch" → EnergyConsumptionTotal
+
+              SourceAttributePath: Use the state name for multi-state controls (tempActual, tempTarget, co2, humidityActual),
+              or "CurrentValue" for single-state controls (InfoOnlyAnalog, Switch, Dimmer).
+
+              CRITICAL — RtId RULES (failure to follow these will cause pipeline crashes):
+              - controlRtId and spaceRtId MUST be copied EXACTLY from the tool results.
+              - Each rtId is a 24-character hexadecimal string (e.g. "67f0c00ec4ff02221e0b7001").
+              - Do NOT invent, generate, or shorten RtIds.
+              - Do NOT use numeric-only or non-hex strings — they will be rejected.
+              - If you cannot find a matching RtId for a control or space, OMIT that mapping entry entirely.
+
+              Do NOT skip controls that already have DataPointMappings — the pipeline is idempotent and will handle duplicates automatically via GetOrCreateRtEntitiesByType.
+              Do NOT query for existing DataPointMappings — it wastes tool rounds.
+
+              Return ONLY a JSON array with ALL mappings for ALL rooms. No explanation text. Be thorough - map every room!
+            question: >-
+              Query the Loxone Controls and EnergyIQ Spaces via MCP tools,
+              then match them and create DataPointMapping entries.
+            jsonFormatSample: >-
+              [
+                {
+                  "name": "Temp Wohnbereich → Space.Temperature",
+                  "controlRtId": "67...",
+                  "controlCkTypeId": "Loxone/Control",
+                  "spaceRtId": "67...",
+                  "spaceCkTypeId": "EnergyIQ/Space",
+                  "sourceAttributePath": "CurrentValue",
+                  "targetAttributePath": "Temperature",
+                  "mappingExpression": "",
+                  "confidence": "high",
+                  "reason": "Room 'Wohnbereich' exact match, InfoOnlyAnalog tempActual → Temperature"
+                }
+              ]
+            targetPath: $.mappingSuggestions
+            includeRawResponse: true
+            rawResponseOutputPath: $.rawAiResponse
+            continueOnError: false
+
+          # ── Step 3: Create DataPointMapping entities from AI suggestions ──
+
+          # ── Step 3: Create entities + associations ──
+          # GetOrCreateRtEntitiesByType pre-allocates RtIds so associations can reference them
+          - type: ForEach@1
+            description: Create DataPointMapping entities and associations
+            iterationPath: $.mappingSuggestions
+            targetPath: $.mappingResults
+            mergePath: $.updates
+            transformations:
+              # Validate controlRtId is a 24-char hex string (real ObjectId), not an
+              # AI-hallucinated value. Skip entries with invalid RtId format.
+              - type: If@1
+                description: Skip entries without valid 24-char hex controlRtId
+                path: $.key.controlRtId
+                operator: RegexMatch
+                value: "^[0-9a-fA-F]{24}$"
+                valueType: String
+                transformations:
+                  # Pre-allocate RtId via GetOrCreate (matches by Name to be idempotent)
+                  - type: GetOrCreateRtEntitiesByType@1
+                    description: Get or create DataPointMapping by Name
+                    ckTypeId: System.Communication/DataPointMapping
+                    rtIdTargetPath: $.updates._mappingRtId
+                    ckTypeIdTargetPath: $.updates._mappingCkTypeId
+                    modOperationPath: $.updates._mappingModOp
+                    fieldFilters:
+                      - attributePath: Name
+                        operator: Equals
+                        comparisonValuePath: $.key.name
+                  - type: CreateUpdateInfo@1
+                    description: Create or update DataPointMapping entity
+                    targetPath: $.updates._mappingUpdate
+                    updateKindPath: $.updates._mappingModOp
+                    ckTypeIdPath: $.updates._mappingCkTypeId
+                    rtIdPath: $.updates._mappingRtId
+                    attributeUpdates:
+                      - attributeName: Name
+                        attributeValueType: String
+                        valuePath: $.key.name
+                      - attributeName: Enabled
+                        attributeValueType: Boolean
+                        value: true
+                      - attributeName: SourceAttributePath
+                        attributeValueType: String
+                        valuePath: $.key.sourceAttributePath
+                      - attributeName: TargetAttributePath
+                        attributeValueType: String
+                        valuePath: $.key.targetAttributePath
+                      - attributeName: MappingExpression
+                        attributeValueType: String
+                        valuePath: $.key.mappingExpression
+                  # MapsFrom: DataPointMapping → source Loxone Control (only for new entities)
+                  - type: If@1
+                    description: Create associations only for new entities
+                    path: $.updates._mappingModOp
+                    operator: Equals
+                    value: 0
+                    valueType: Int
+                    transformations:
+                      - type: CreateAssociationUpdate@1
+                        targetPath: $.updates._assocUpdateItems
+                        targetValueKind: Array
+                        targetValueWriteMode: Append
+                        updateKind: CREATE
+                        originRtIdPath: $.updates._mappingUpdate.RtId
+                        originCkTypeIdPath: $.updates._mappingUpdate.CkTypeId
+                        targetRtIdPath: $.key.controlRtId
+                        targetCkTypeId: Loxone/Control
+                        associationRoleId: System.Communication/MapsFrom
+                      # MapsTo: DataPointMapping → target EnergyIQ entity
+                      - type: CreateAssociationUpdate@1
+                        targetPath: $.updates._assocUpdateItems
+                        targetValueKind: Array
+                        targetValueWriteMode: Append
+                        updateKind: CREATE
+                        originRtIdPath: $.updates._mappingUpdate.RtId
+                        originCkTypeIdPath: $.updates._mappingUpdate.CkTypeId
+                        targetRtIdPath: $.key.spaceRtId
+                        targetCkTypeIdPath: $.key.spaceCkTypeId
+                        associationRoleId: System.Communication/MapsTo
+
+          # ── Step 4: Persist all entities and associations ──
+          - type: Flatten@1
+            path: $.mappingResults[*]._mappingUpdate
+            targetPath: $._updateItems
+            targetValueKind: Simple
+            targetValueWriteMode: Overwrite
+          - type: Flatten@1
+            path: $.mappingResults[*]._assocUpdateItems[*]
+            targetPath: $._assocUpdateItems
+            targetValueKind: Simple
+            targetValueWriteMode: Overwrite
+          - type: If@1
+            description: Only apply if there are mappings to create
+            path: $._updateItems[0].RtId
+            operator: NotEquals
+            value: null
+            valueType: String
+            transformations:
+              - type: ApplyChanges@2
+                entityUpdatesPath: $._updateItems
+                associationUpdatesPath: $._assocUpdateItems
+          # Store result summary for visualization
+          - type: SetPipelineExecutionResult@1
+            description: Store mapping result
+            path: $.rawAiResponse
+
+  # ==========================================================================
+  # Pipeline: Rules-based Auto-Map (deterministic alternative to the AI pipeline)
+  #
+  # Uses GenerateDataPointMappings@1 — a Mesh node that:
+  #   1. Loads Loxone/Room + EnergyIQ/Space entities directly from the repository.
+  #   2. Matches rooms to spaces by an ordered list of strategies (Exact → Normalized → Regex → Manual).
+  #   3. Walks each matched Room → Category → Control via System/ParentChild.
+  #   4. Evaluates the controlMappingRules below against every (control, state) pair.
+  #
+  # The output is the same suggestion array shape as AnthropicAiQuery@1, so the
+  # existing GetOrCreate/CreateUpdateInfo/CreateAssociationUpdate ForEach is reused
+  # verbatim. The mapping Name is deterministic ({ruleId}|{controlRtId}|{stateName})
+  # which keeps re-runs idempotent — the same control/state always reuses the same
+  # DataPointMapping entity.
+  #
+  # Compared to the AI pipeline (67f0b00ec4ff02221e0b600b):
+  #   + No LLM ⇒ no token limits, no incomplete coverage, no RtId hallucination.
+  #   + Same rules across every room ⇒ no uneven detail levels.
+  #   + Reviewable / versionable: rules live in this YAML, diffs show up in PR.
+  #   − Pure name-based matching: anything fuzzier than NormalizedName needs an
+  #     explicit Manual override (kept under containerMatchingStrategies).
+  # ==========================================================================
+  # Re-enabled for EnergyIQ-2.0.0 with v2-aware mapping rules.
+  # GenerateDataPointMappings@1 was extended with `childTargetCkTypeId` and
+  # `childTargetAssociationRoleId` on the Map block — rules can now navigate from
+  # the matched container target (Space) to a child entity (e.g. TemperatureSensor
+  # via SpaceSensors) before emitting the suggestion. Rules without those fields
+  # target the container directly (v1-compatible).
+  - rtId: 67f0b00ec4ff02221e0b600c
+    ckTypeId: System.Communication/Pipeline
+    associations:
+    - roleId: System/ParentChild
+      targetRtId: 67f0b00ec4ff02221e0b600a
+      targetCkTypeId: System.Communication/DataFlow
+    - roleId: System.Communication/Executes
+      targetRtId: "670000000000000000000002"
+      targetCkTypeId: System.Communication/Adapter
+    attributes:
+    - id: System/Name
+      value: Rules-based Auto-Map
+    - id: System/Description
+      value: Deterministically generates DataPointMappings from declarative rules. v2-aware — rules with `childTargetCkTypeId` map to Sensor/Actuator entities inside the matched Space.
+    - id: System/Enabled
+      value: true
+    - id: System.Communication/PipelineDefinition
+      value: |-
+        triggers:
+          - type: FromExecutePipelineCommand@1
+        transformations:
+          # ── Step 1: Rules-driven mapping suggestion generation ──
+          - type: GenerateDataPointMappings@1
+            description: Generate DataPointMapping suggestions from rules
+            sourceContainerCkTypeId: Loxone/Room
+            sourceControlCkTypeId: Loxone/Control
+            sourceCategoryCkTypeId: Loxone/Category
+            targetCkTypeId: EnergyIQ/Space
+            hierarchyAssociationRoleId: System/ParentChild
+            statesAttribute: States
+            stateNameAttribute: Name
+            defaultSourceAttributePath: CurrentValue
+            targetPath: $.mappingSuggestions
+            statisticsTargetPath: $.mappingStatistics
+            containerMatchingStrategies:
+              # 1) Exact case-sensitive name match: "Wohnzimmer" == "Wohnzimmer"
+              - kind: ExactName
+                sourceAttribute: Name
+                targetAttribute: Name
+              # 2) Normalized name: lowercased, trimmed, diacritics + whitespace + punctuation stripped.
+              #    Catches "Küche EG" ↔ "kueche eg", "Büro 1.OG" ↔ "buero1og", etc.
+              - kind: NormalizedName
+                sourceAttribute: Name
+                targetAttribute: Name
+              # 3) Regex fallback: if room names embed a room number like "OG.01 Büro Direktor",
+              #    extract the "OG.01" prefix and match against Space.RoomNumber.
+              - kind: Regex
+                sourceAttribute: Name
+                targetAttribute: RoomNumber
+                pattern: "^([A-Za-z]{1,3}\\.\\d+)"
+                captureGroup: 1
+              # 4) Manual overrides — fill in by hand for anything none of the above can resolve.
+              #    Example shape (currently empty):
+              # - kind: Manual
+              #   sourceAttribute: Name
+              #   overrides:
+              #     - source: "Foyer Süd"
+              #       targetRtId: "67f0b00ec4ff02221e0b6011"
+            controlMappingRules:
+              # ── IRoomControllerV2 — multi-state Loxone room controller ──
+              # Each state targets the matching sensor entity inside the Space.
+              # If no such sensor exists in the room, the rule is silently skipped.
+              - id: roomController-tempActual
+                when: { controlType: IRoomControllerV2, stateName: tempActual }
+                map:
+                  targetAttribute: Temperature
+                  childTargetCkTypeId: EnergyIQ/TemperatureSensor
+                  childTargetAssociationRoleId: EnergyIQ/SpaceSensors
+              - id: roomController-co2
+                when: { controlType: IRoomControllerV2, stateName: co2 }
+                map:
+                  targetAttribute: CO2Level
+                  childTargetCkTypeId: EnergyIQ/CO2Sensor
+                  childTargetAssociationRoleId: EnergyIQ/SpaceSensors
+              - id: roomController-humidity
+                when: { controlType: IRoomControllerV2, stateName: humidityActual }
+                map:
+                  targetAttribute: Humidity
+                  expression: "value / 100"
+                  childTargetCkTypeId: EnergyIQ/HumiditySensor
+                  childTargetAssociationRoleId: EnergyIQ/SpaceSensors
+              # tempTarget — heating setpoint. In v2 this is the Pset_ThermalRequirements
+              # record on the Space (design target), not a sensor measurement. Keep this
+              # rule pointed at the Space; the DataPointMapping will update the record
+              # field. The CK attribute path uses the Pset record name + slot.
+              - id: roomController-tempTarget
+                when: { controlType: IRoomControllerV2, stateName: tempTarget }
+                map:  { targetAttribute: ThermalRequirementsRecord.SpaceTemperature }
+
+              # ── Standalone InfoOnlyAnalog sensors by naming ──
+              # Match Loxone sensor name → corresponding v2 Sensor entity in the Space.
+              - id: infoonly-temperature-by-name
+                when:
+                  controlType: InfoOnlyAnalog
+                  controlNameRegex: "(?i)(temperatur|temp(?!late))"
+                map:
+                  targetAttribute: Temperature
+                  childTargetCkTypeId: EnergyIQ/TemperatureSensor
+                  childTargetAssociationRoleId: EnergyIQ/SpaceSensors
+              - id: infoonly-humidity-by-name
+                when:
+                  controlType: InfoOnlyAnalog
+                  controlNameRegex: "(?i)(feuchte|humid)"
+                map:
+                  targetAttribute: Humidity
+                  childTargetCkTypeId: EnergyIQ/HumiditySensor
+                  childTargetAssociationRoleId: EnergyIQ/SpaceSensors
+              - id: infoonly-co2-by-name
+                when:
+                  controlType: InfoOnlyAnalog
+                  controlNameRegex: "(?i)co2"
+                map:
+                  targetAttribute: CO2Level
+                  childTargetCkTypeId: EnergyIQ/CO2Sensor
+                  childTargetAssociationRoleId: EnergyIQ/SpaceSensors
+              - id: infoonly-illuminance-by-name
+                when:
+                  controlType: InfoOnlyAnalog
+                  controlNameRegex: "(?i)(helligkeit|lux|illumin)"
+                map:
+                  targetAttribute: Illuminance
+                  childTargetCkTypeId: EnergyIQ/IlluminanceSensor
+                  childTargetAssociationRoleId: EnergyIQ/SpaceSensors
+
+              # ── Presence ──
+              - id: presence-detector
+                when: { controlType: PresenceDetector }
+                map:
+                  targetAttribute: PresenceDetected
+                  childTargetCkTypeId: EnergyIQ/PresenceSensor
+                  childTargetAssociationRoleId: EnergyIQ/SpaceSensors
+
+              # ── Lighting (Luminaire keeps internal DimmingLevel — no child navigation) ──
+              # A Dimmer in a "lights" category drives a Luminaire's DimmingLevel directly;
+              # the dimmer-as-separate-actuator pattern (Dimmer entity via SpaceActuators)
+              # is not yet exercised by the demo data, so keep the rule space-targeted.
+              - id: dimmer-lighting
+                when:
+                  controlType: Dimmer
+                  categoryType: lights
+                map:
+                  targetAttribute: DimmingLevel
+                  expression: "value / 100"
+                  childTargetCkTypeId: EnergyIQ/Luminaire
+                  childTargetAssociationRoleId: EnergyIQ/SpaceElements
+
+              # ── Shading ──
+              # Loxone Jalousie controls a ShadingDevice's Position (kept as internal state).
+              - id: jalousie-shading
+                when: { controlType: Jalousie }
+                map:
+                  targetAttribute: Position
+                  expression: "value / 100"
+                  childTargetCkTypeId: EnergyIQ/ShadingDevice
+                  childTargetAssociationRoleId: EnergyIQ/SpaceElements
+
+              # ── Energy meters ──
+              # In v2 energy isn't tracked on Space directly anymore; an EnergyMeter
+              # sensor subtype is on the future roadmap. Until then, no v2 mapping.
+              # The rule is kept in place for documentation but won't match a Sensor type.
+              # When the EnergyMeter sensor exists, add:
+              #   childTargetCkTypeId: EnergyIQ/EnergyMeter
+              #   childTargetAssociationRoleId: EnergyIQ/SpaceSensors
+
+          # ── Step 2: Persist suggestions as DataPointMapping entities + associations ──
+          # Identical logic to the AI pipeline below — by design, so behaviour stays in sync.
+          - type: ForEach@1
+            description: Create DataPointMapping entities and associations
+            iterationPath: $.mappingSuggestions
+            targetPath: $.mappingResults
+            mergePath: $.updates
+            transformations:
+              # Pre-allocate RtId via GetOrCreate (matches by deterministic Name → idempotent)
+              - type: GetOrCreateRtEntitiesByType@1
+                description: Get or create DataPointMapping by Name
+                ckTypeId: System.Communication/DataPointMapping
+                rtIdTargetPath: $.updates._mappingRtId
+                ckTypeIdTargetPath: $.updates._mappingCkTypeId
+                modOperationPath: $.updates._mappingModOp
+                fieldFilters:
+                  - attributePath: Name
+                    operator: Equals
+                    comparisonValuePath: $.key.name
+              - type: CreateUpdateInfo@1
+                description: Create or update DataPointMapping entity
+                targetPath: $.updates._mappingUpdate
+                updateKindPath: $.updates._mappingModOp
+                ckTypeIdPath: $.updates._mappingCkTypeId
+                rtIdPath: $.updates._mappingRtId
+                attributeUpdates:
+                  - attributeName: Name
+                    attributeValueType: String
+                    valuePath: $.key.name
+                  - attributeName: Enabled
+                    attributeValueType: Boolean
+                    value: true
+                  - attributeName: SourceAttributePath
+                    attributeValueType: String
+                    valuePath: $.key.sourceAttributePath
+                  - attributeName: TargetAttributePath
+                    attributeValueType: String
+                    valuePath: $.key.targetAttributePath
+                  - attributeName: MappingExpression
+                    attributeValueType: String
+                    valuePath: $.key.mappingExpression
+              # MapsFrom / MapsTo only on insert, to keep re-runs idempotent.
+              - type: If@1
+                description: Create associations only for new entities
+                path: $.updates._mappingModOp
+                operator: Equals
+                value: 0
+                valueType: Int
+                transformations:
+                  - type: CreateAssociationUpdate@1
+                    targetPath: $.updates._assocUpdateItems
+                    targetValueKind: Array
+                    targetValueWriteMode: Append
+                    updateKind: CREATE
+                    originRtIdPath: $.updates._mappingUpdate.RtId
+                    originCkTypeIdPath: $.updates._mappingUpdate.CkTypeId
+                    targetRtIdPath: $.key.controlRtId
+                    targetCkTypeId: Loxone/Control
+                    associationRoleId: System.Communication/MapsFrom
+                  - type: CreateAssociationUpdate@1
+                    targetPath: $.updates._assocUpdateItems
+                    targetValueKind: Array
+                    targetValueWriteMode: Append
+                    updateKind: CREATE
+                    originRtIdPath: $.updates._mappingUpdate.RtId
+                    originCkTypeIdPath: $.updates._mappingUpdate.CkTypeId
+                    targetRtIdPath: $.key.spaceRtId
+                    targetCkTypeIdPath: $.key.spaceCkTypeId
+                    associationRoleId: System.Communication/MapsTo
+
+          # ── Step 3: Persist ──
+          - type: Flatten@1
+            path: $.mappingResults[*]._mappingUpdate
+            targetPath: $._updateItems
+            targetValueKind: Simple
+            targetValueWriteMode: Overwrite
+          - type: Flatten@1
+            path: $.mappingResults[*]._assocUpdateItems[*]
+            targetPath: $._assocUpdateItems
+            targetValueKind: Simple
+            targetValueWriteMode: Overwrite
+          - type: If@1
+            description: Only apply if there are mappings to create
+            path: $._updateItems[0].RtId
+            operator: NotEquals
+            value: null
+            valueType: String
+            transformations:
+              - type: ApplyChanges@2
+                entityUpdatesPath: $._updateItems
+                associationUpdatesPath: $._assocUpdateItems
+          - type: SetPipelineExecutionResult@1
+            description: Store mapping statistics (matched/unmatched rooms, rule hits)
+            path: $.mappingStatistics
+
+  # ==========================================================================
+  # Data Flow: Validate Coverage
+  # Walks the EnergyIQ tree (Site → Building → BuildingStorey → Space) and
+  # reports for every Space whether the required DataPointMappings exist
+  # (Temperature, CO2Level, Humidity) and which recommended attributes are
+  # missing. Output is consumed by the Studio's Mapping Coverage Tree via
+  # PipelineExecution.OutputData — the Studio's "Load Report" button reads it
+  # to colour-code the tree.
+  # ==========================================================================
+  - rtId: 67f0b00ec4ff02221e0b600d
+    ckTypeId: System.Communication/DataFlow
+    attributes:
+    - id: System/Name
+      value: Validate Coverage
+    - id: System/Description
+      value: Evaluates DataPointMapping coverage for the EnergyIQ Site tree
+
+  # Re-enabled for EnergyIQ-2.0.0 with `requiredAssociations` rule shape.
+  # ValidateDataPointCoverage@1 was extended to additionally check for required
+  # child entities via association roles — used here to assert that every Space
+  # has a TemperatureSensor / CO2Sensor / HumiditySensor via SpaceSensors.
+  - rtId: 67f0b00ec4ff02221e0b600e
+    ckTypeId: System.Communication/Pipeline
+    associations:
+    - roleId: System/ParentChild
+      targetRtId: 67f0b00ec4ff02221e0b600d
+      targetCkTypeId: System.Communication/DataFlow
+    - roleId: System.Communication/Executes
+      targetRtId: "670000000000000000000002"
+      targetCkTypeId: System.Communication/Adapter
+    attributes:
+    - id: System/Name
+      value: Validate DataPoint Coverage
+    - id: System/Description
+      value: Reports per-Space coverage status (ok/warning/error) for the EnergyIQ tree. v2-aware — checks for associated Sensor entities, not Space attributes.
+    - id: System/Enabled
+      value: true
+    - id: System.Communication/PipelineDefinition
+      value: |-
+        triggers:
+          - type: FromExecutePipelineCommand@1
+        transformations:
+          # Walk the EnergyIQ Site → Building → Storey → Space hierarchy
+          # via System/ParentChild and evaluate coverage per node. Per-Space
+          # coverage is now about associated Sensor entities (v2 — measurements
+          # are first-class entities); attribute-based coverage still works for
+          # plant equipment that carries its own attributes directly.
+          - type: ValidateDataPointCoverage@1
+            description: Validate EnergyIQ coverage
+            rootRtId: 6789a00000000000000000a1
+            rootCkTypeId: EnergyIQ/Site
+            childRoleId: System/ParentChild
+            childCkTypeId: Basic/TreeNode
+            mappingRoleId: System.Communication/MapsTo
+            mappingCkTypeId: System.Communication/DataPointMapping
+            maxDepth: 16
+            includeDisabledMappings: false
+            targetPath: $.report
+            rules:
+              # Indoor Space: needs Temperature + Humidity + CO2 sensors at minimum;
+              # presence/illuminance are recommended.
+              - ckTypeId: EnergyIQ/Space
+                requiredAssociations:
+                  - associationRoleId: EnergyIQ/SpaceSensors
+                    targetCkTypeId: EnergyIQ/TemperatureSensor
+                  - associationRoleId: EnergyIQ/SpaceSensors
+                    targetCkTypeId: EnergyIQ/HumiditySensor
+                  - associationRoleId: EnergyIQ/SpaceSensors
+                    targetCkTypeId: EnergyIQ/CO2Sensor
+              # ExternalSpace: no thermal/lighting requirements, no sensors required.
+              - ckTypeId: EnergyIQ/ExternalSpace
+
+          # Persist the report on the PipelineExecution entity so the
+          # Studio can fetch it via the latest-execution query.
+          - type: SetPipelineExecutionResult@1
+            description: Store coverage report for the Studio
+            path: $.report

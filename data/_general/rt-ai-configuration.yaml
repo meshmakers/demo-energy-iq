@@ -1,0 +1,18 @@
+$schema: https://schemas.meshmakers.cloud/runtime-model.schema.json
+dependencies:
+- System.Communication-[3.13,)
+entities:
+  - rtId: 67f0c00ec4ff02221e0b7003
+    ckTypeId: System.Communication/AiConfiguration
+    rtWellKnownName: AnthropicAiConfig
+    attributes:
+      - id: System.Communication/ApiKey
+        value: "<anthropic-api-key-here>"
+      - id: System.Communication/AiModel
+        value: "claude-sonnet-4-20250514"
+      - id: System.Communication/MaxTokens
+        value: 8000
+      - id: System.Communication/Temperature
+        value: 0.0
+      - id: System.Communication/McpServerUrl
+        value: "https://localhost:5017"

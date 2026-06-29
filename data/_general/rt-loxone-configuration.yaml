@@ -1,0 +1,31 @@
+$schema: https://schemas.meshmakers.cloud/runtime-model.schema.json
+dependencies:
+- System.Communication-[3.12,)
+entities:
+  - rtId: 67f0c00ec4ff02221e0b7001
+    ckTypeId: System.Communication/LoxoneConfiguration
+    rtWellKnownName: LoxoneMiniserverConfig
+    attributes:
+      - id: System.Communication/Host
+        value: "192.168.14.5"
+      - id: System.Communication/Port
+        value: 80
+      - id: System.Communication/Username
+        value: "<user here>"
+      - id: System.Communication/Password
+        value: "<password here>"
+      - id: System.Communication/IsSslEnabled
+        value: false
+
+  - rtId: 67f0c00ec4ff02221e0b7002
+    ckTypeId: System.Communication/ServiceAccountConfiguration
+    rtWellKnownName: ServiceAccountConfig
+    attributes:
+      - id: System.Communication/IssuerUri
+        value: "<identity service url here>"
+      - id: System.Communication/ClientId
+        value: "<service account client id here>"
+      - id: System.Communication/ClientSecret
+        value: "<service account client secret here>"
+      - id: System/TenantId
+        value: "<tenant id here>"
