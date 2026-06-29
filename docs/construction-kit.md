@@ -580,6 +580,7 @@ IFC: `IfcElectricFlowStorageDevice`.
 |---|---|---|---|---|
 | ParentChild (Basic) | — | — | 1:N | Spatial / tree hierarchy |
 | SpaceElements | ContainedElements | ContainedInSpace | 1:N | BuildingElement in Space |
+| StoreyElements | ContainedStoreyElements | ContainedInStorey | 1:N | Whole-floor sub-meter in BuildingStorey (2.3.0) |
 | SpaceSensors | ContainedSensors | SensorInSpace | 1:N | Sensor in Space |
 | SpaceActuators | ContainedActuators | ActuatorInSpace | 1:N | Actuator in Space |
 | SpaceTerminals | ContainedTerminals | ContainedInSpace | 1:N | RoomTerminal in Space |

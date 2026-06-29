@@ -8,7 +8,7 @@ EnergyIQ is an OctoMesh Construction Kit (CK) model for intelligent building ene
 
 **Key Principle:** IFC-faithful entity modeling. Sensors, actuators, and terminal units are **separate entities** (not attributes on Space). Design requirements (Pset_*) are captured as records, distinct from runtime values held by Sensor entities.
 
-**Version:** `EnergyIQ-2.2.0` (2.0.0 was the breaking change vs 1.x — Haystack mixins removed, Space restructured per IFC/VDI; 2.1.0 added energy-metering types; 2.2.0 introduced `PassiveBuildingElement` so `SpaceElements` no longer overlaps the device associations).
+**Version:** `EnergyIQ-2.3.0` (2.0.0 was the breaking change vs 1.x — Haystack mixins removed, Space restructured per IFC/VDI; 2.1.0 added energy-metering types; 2.2.0 introduced `PassiveBuildingElement` so `SpaceElements` no longer overlaps the device associations; 2.3.0 added `StoreyElements` so whole-floor sub-meters anchor to their `BuildingStorey` instead of a single representative Space).
 
 ## Build Commands
 
@@ -97,6 +97,7 @@ NamedEntity (Basic)
 |---|---|---|---|
 | `ParentChild` (inherited Basic) | TreeNode parent | TreeNode child | 1:N |
 | `SpaceElements` | PassiveBuildingElement + Meter | Space | N:ZeroOrOne |
+| `StoreyElements` | Meter (whole-floor sub-meter) | BuildingStorey | N:ZeroOrOne |
 | `SpaceSensors` | Sensor | Space | N:ZeroOrOne |
 | `SpaceActuators` | Actuator | Space | N:ZeroOrOne |
 | `SpaceTerminals` | RoomTerminal | Space | N:ZeroOrOne |

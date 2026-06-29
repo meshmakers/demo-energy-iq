@@ -1,0 +1,8 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+associationRoles:
+- id: StoreyElements
+  inboundName: ContainedStoreyElements
+  outboundName: ContainedInStorey
+  inboundMultiplicity: N
+  outboundMultiplicity: ZeroOrOne
+  description: "Floor-level spatial containment: a BuildingElement (e.g. a per-storey sub-meter that measures a whole floor) contained directly in a BuildingStorey rather than in a single Space. Storey-level counterpart of SpaceElements (IFC IfcRelContainedInSpatialStructure at the IfcBuildingStorey level). Use for equipment that serves an entire floor instead of one room."
