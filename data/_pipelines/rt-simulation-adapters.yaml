@@ -15,29 +15,9 @@ entities:
   # ============================================================
   # SIMULATION INFRASTRUCTURE
   # ============================================================
-
-  # Pool - Container for adapters
-  - rtId: 6789a00000000000000090a1
-    ckTypeId: System.Communication/Pool
-    attributes:
-      - id: System/Name
-        value: EnergyIQ Simulation Pool
-    associations: []
-
-  # Adapter - Simulation adapter (Edge pool: no Helm chart needed)
-  - rtId: 6789a00000000000000090a2
-    ckTypeId: System.Communication/Adapter
-    attributes:
-      - id: System/Name
-        value: EnergyIQ Simulator
-      - id: System/Description
-        value: Simulation adapter for EnergyIQ demo data
-      - id: System.Communication/AdapterConfiguration
-        value: ""
-    associations:
-      - roleId: System.Communication/Manages
-        targetRtId: 6789a00000000000000090a1
-        targetCkTypeId: System.Communication/Pool
+  # The Pool and Mesh Adapter are auto-provisioned by the System.Communication
+  # blueprint (adapter rtId 670000000000000000000002). All pipelines below
+  # execute on that adapter; no custom Pool / Simulator Adapter entities needed.
 
   # DataFlow - Container for pipelines
   - rtId: 6789a00000000000000090a3
@@ -65,222 +45,228 @@ entities:
               interval: 00:00:10
           transformations:
             - type: Simulation@1
+              # locale is required (selects the Faker locale for text generators; harmless for Math.*)
+              locale: en
+              # Math.Triangle produces a smooth wave in [-amplitude, +amplitude]; its "frequency"
+              # is the PERIOD in whole seconds (int). amplitude is fixed at 1 and the LinearScaler
+              # blocks below map [-1, 1] onto each target range. (Math.Sinus is unusable for slow
+              # cycles here because its frequency is read as an int Hz value -> min 1 Hz.)
               simulations:
-                - targetPath: tempBase
-                  simulatorKey: Math.Sinus
-                  configuration: "{periodMinutes:1440, phaseOffsetMinutes:360}"
-                - targetPath: humidityBase
-                  simulatorKey: Math.Sinus
-                  configuration: "{periodMinutes:1440, phaseOffsetMinutes:480}"
-                - targetPath: co2Base
+                - targetPath: $.tempBase
                   simulatorKey: Math.Triangle
-                  configuration: "{periodMinutes:240}"
-                - targetPath: luxBase
-                  simulatorKey: Math.Sinus
-                  configuration: "{periodMinutes:1440, phaseOffsetMinutes:180}"
-                - targetPath: pvBase
-                  simulatorKey: Math.Sinus
-                  configuration: "{periodMinutes:1440, phaseOffsetMinutes:180}"
-                - targetPath: socBase
+                  configuration: '{"amplitude": 1, "frequency": 1200}'
+                - targetPath: $.humidityBase
                   simulatorKey: Math.Triangle
-                  configuration: "{periodMinutes:720}"
-                - targetPath: valveBase
-                  simulatorKey: Math.Sinus
-                  configuration: "{periodMinutes:1440, phaseOffsetMinutes:540}"
-                - targetPath: fanBase
-                  simulatorKey: Math.Sinus
-                  configuration: "{periodMinutes:480, phaseOffsetMinutes:60}"
+                  configuration: '{"amplitude": 1, "frequency": 1500}'
+                - targetPath: $.co2Base
+                  simulatorKey: Math.Triangle
+                  configuration: '{"amplitude": 1, "frequency": 400}'
+                - targetPath: $.luxBase
+                  simulatorKey: Math.Triangle
+                  configuration: '{"amplitude": 1, "frequency": 1200}'
+                - targetPath: $.pvBase
+                  simulatorKey: Math.Triangle
+                  configuration: '{"amplitude": 1, "frequency": 1200}'
+                - targetPath: $.socBase
+                  simulatorKey: Math.Triangle
+                  configuration: '{"amplitude": 1, "frequency": 900}'
+                - targetPath: $.valveBase
+                  simulatorKey: Math.Triangle
+                  configuration: '{"amplitude": 1, "frequency": 1000}'
+                - targetPath: $.fanBase
+                  simulatorKey: Math.Triangle
+                  configuration: '{"amplitude": 1, "frequency": 600}'
             - type: SelectByPath@1
               selectPath:
                 - path: "$.tempBase"
-                  targetPath: temperature
+                  targetPath: $.temperature
                   transformations:
                     - type: LinearScaler@1
-                      scaleInputMin: 0
+                      scaleInputMin: -1
                       scaleInputMax: 1
                       scaleOutputMin: 18
                       scaleOutputMax: 24
                 - path: "$.humidityBase"
-                  targetPath: humidity
+                  targetPath: $.humidity
                   transformations:
                     - type: LinearScaler@1
-                      scaleInputMin: 0
+                      scaleInputMin: -1
                       scaleInputMax: 1
                       scaleOutputMin: 35
                       scaleOutputMax: 65
                 - path: "$.co2Base"
-                  targetPath: co2Level
+                  targetPath: $.co2Level
                   transformations:
                     - type: LinearScaler@1
-                      scaleInputMin: 0
+                      scaleInputMin: -1
                       scaleInputMax: 1
                       scaleOutputMin: 500
                       scaleOutputMax: 900
                 - path: "$.luxBase"
-                  targetPath: illuminance
+                  targetPath: $.illuminance
                   transformations:
                     - type: LinearScaler@1
-                      scaleInputMin: 0
+                      scaleInputMin: -1
                       scaleInputMax: 1
                       scaleOutputMin: 100
                       scaleOutputMax: 700
                 - path: "$.valveBase"
-                  targetPath: valvePosition
+                  targetPath: $.valvePosition
                   transformations:
                     - type: LinearScaler@1
-                      scaleInputMin: 0
+                      scaleInputMin: -1
                       scaleInputMax: 1
                       scaleOutputMin: 20
                       scaleOutputMax: 70
                 - path: "$.valveBase"
-                  targetPath: damperPosition
+                  targetPath: $.damperPosition
                   transformations:
                     - type: LinearScaler@1
-                      scaleInputMin: 0
+                      scaleInputMin: -1
                       scaleInputMax: 1
                       scaleOutputMin: 30
                       scaleOutputMax: 70
                 - path: "$.pvBase"
-                  targetPath: pvStringPower1
+                  targetPath: $.pvStringPower1
                   transformations:
                     - type: LinearScaler@1
-                      scaleInputMin: 0
+                      scaleInputMin: -1
                       scaleInputMax: 1
                       scaleOutputMin: 0
                       scaleOutputMax: 4.8
                 - path: "$.pvBase"
-                  targetPath: pvStringPower2
+                  targetPath: $.pvStringPower2
                   transformations:
                     - type: LinearScaler@1
-                      scaleInputMin: 0
+                      scaleInputMin: -1
                       scaleInputMax: 1
                       scaleOutputMin: 0
                       scaleOutputMax: 6.0
                 - path: "$.pvBase"
-                  targetPath: pvStringPower3
+                  targetPath: $.pvStringPower3
                   transformations:
                     - type: LinearScaler@1
-                      scaleInputMin: 0
+                      scaleInputMin: -1
                       scaleInputMax: 1
                       scaleOutputMin: 0
                       scaleOutputMax: 4.0
                 - path: "$.pvBase"
-                  targetPath: pvStringPower4
+                  targetPath: $.pvStringPower4
                   transformations:
                     - type: LinearScaler@1
-                      scaleInputMin: 0
+                      scaleInputMin: -1
                       scaleInputMax: 1
                       scaleOutputMin: 0
                       scaleOutputMax: 3.6
                 - path: "$.pvBase"
-                  targetPath: totalPvPower
+                  targetPath: $.totalPvPower
                   transformations:
                     - type: LinearScaler@1
-                      scaleInputMin: 0
+                      scaleInputMin: -1
                       scaleInputMax: 1
                       scaleOutputMin: 0
                       scaleOutputMax: 18.4
                 - path: "$.pvBase"
-                  targetPath: inverterDcPower1
+                  targetPath: $.inverterDcPower1
                   transformations:
                     - type: LinearScaler@1
-                      scaleInputMin: 0
+                      scaleInputMin: -1
                       scaleInputMax: 1
                       scaleOutputMin: 0
                       scaleOutputMax: 10.8
                 - path: "$.pvBase"
-                  targetPath: inverterAcPower1
+                  targetPath: $.inverterAcPower1
                   transformations:
                     - type: LinearScaler@1
-                      scaleInputMin: 0
+                      scaleInputMin: -1
                       scaleInputMax: 1
                       scaleOutputMin: 0
                       scaleOutputMax: 10.4
                 - path: "$.pvBase"
-                  targetPath: inverterDcPower2
+                  targetPath: $.inverterDcPower2
                   transformations:
                     - type: LinearScaler@1
-                      scaleInputMin: 0
+                      scaleInputMin: -1
                       scaleInputMax: 1
                       scaleOutputMin: 0
                       scaleOutputMax: 7.6
                 - path: "$.pvBase"
-                  targetPath: inverterAcPower2
+                  targetPath: $.inverterAcPower2
                   transformations:
                     - type: LinearScaler@1
-                      scaleInputMin: 0
+                      scaleInputMin: -1
                       scaleInputMax: 1
                       scaleOutputMin: 0
                       scaleOutputMax: 7.3
                 - path: "$.pvBase"
-                  targetPath: gridFeedIn
+                  targetPath: $.gridFeedIn
                   transformations:
                     - type: LinearScaler@1
-                      scaleInputMin: 0
+                      scaleInputMin: -1
                       scaleInputMax: 1
                       scaleOutputMin: 0
                       scaleOutputMax: 12
                 - path: "$.pvBase"
-                  targetPath: selfConsumption
+                  targetPath: $.selfConsumption
                   transformations:
                     - type: LinearScaler@1
-                      scaleInputMin: 0
+                      scaleInputMin: -1
                       scaleInputMax: 1
                       scaleOutputMin: 2
                       scaleOutputMax: 6
                 - path: "$.socBase"
-                  targetPath: stateOfCharge
+                  targetPath: $.stateOfCharge
                   transformations:
                     - type: LinearScaler@1
-                      scaleInputMin: 0
+                      scaleInputMin: -1
                       scaleInputMax: 1
                       scaleOutputMin: 30
                       scaleOutputMax: 90
                 - path: "$.socBase"
-                  targetPath: chargingPower
+                  targetPath: $.chargingPower
                   transformations:
                     - type: LinearScaler@1
-                      scaleInputMin: 0
+                      scaleInputMin: -1
                       scaleInputMax: 1
                       scaleOutputMin: 0
                       scaleOutputMax: 5
                 - path: "$.tempBase"
-                  targetPath: hpSupplyTemp
+                  targetPath: $.hpSupplyTemp
                   transformations:
                     - type: LinearScaler@1
-                      scaleInputMin: 0
+                      scaleInputMin: -1
                       scaleInputMax: 1
                       scaleOutputMin: 28
                       scaleOutputMax: 40
                 - path: "$.tempBase"
-                  targetPath: hpReturnTemp
+                  targetPath: $.hpReturnTemp
                   transformations:
                     - type: LinearScaler@1
-                      scaleInputMin: 0
+                      scaleInputMin: -1
                       scaleInputMax: 1
                       scaleOutputMin: 22
                       scaleOutputMax: 32
                 - path: "$.valveBase"
-                  targetPath: hpModulation
+                  targetPath: $.hpModulation
                   transformations:
                     - type: LinearScaler@1
-                      scaleInputMin: 0
+                      scaleInputMin: -1
                       scaleInputMax: 1
                       scaleOutputMin: 30
                       scaleOutputMax: 80
                 - path: "$.fanBase"
-                  targetPath: ahuFanSpeed
+                  targetPath: $.ahuFanSpeed
                   transformations:
                     - type: LinearScaler@1
-                      scaleInputMin: 0
+                      scaleInputMin: -1
                       scaleInputMax: 1
                       scaleOutputMin: 40
                       scaleOutputMax: 80
                 - path: "$.tempBase"
-                  targetPath: ahuSupplyAirTemp
+                  targetPath: $.ahuSupplyAirTemp
                   transformations:
                     - type: LinearScaler@1
-                      scaleInputMin: 0
+                      scaleInputMin: -1
                       scaleInputMax: 1
                       scaleOutputMin: 18
                       scaleOutputMax: 22
@@ -302,7 +288,7 @@ entities:
         targetRtId: 6789a00000000000000090a3
         targetCkTypeId: System.Communication/DataFlow
       - roleId: System.Communication/Executes
-        targetRtId: 6789a00000000000000090a2
+        targetRtId: "670000000000000000000002"
         targetCkTypeId: System.Communication/Adapter
 
   # ============================================================
@@ -845,11 +831,11 @@ entities:
                   valuePath: $.ahuFanSpeed
 
             - type: ApplyChanges@1
-              path: _updateItems
+              path: $._updateItems
     associations:
       - roleId: System/ParentChild
         targetRtId: 6789a00000000000000090a3
         targetCkTypeId: System.Communication/DataFlow
       - roleId: System.Communication/Executes
-        targetRtId: 67f0a01ec4ff02221e0b5002
+        targetRtId: "670000000000000000000002"
         targetCkTypeId: System.Communication/Adapter

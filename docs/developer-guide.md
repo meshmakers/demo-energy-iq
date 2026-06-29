@@ -542,11 +542,11 @@ The simulation pipeline writes onto Sensor / Valve / Damper entities directly (n
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│ EdgePipeline (Simulation Adapter)                           │
+│ Pipeline 1: Data Generation (auto-provisioned Mesh Adapter) │
 │                                                             │
 │  FromPolling (10s) → Simulation@1 → SelectByPath → Project  │
 │                          ↓                                  │
-│              Math.Sinus, Math.Triangle generators           │
+│        Math.Triangle generators (period in seconds)         │
 │                          ↓                                  │
 │                 ToPipelineDataEvent                         │
 └─────────────────────────────────────────────────────────────┘
@@ -554,7 +554,7 @@ The simulation pipeline writes onto Sensor / Valve / Damper entities directly (n
                     Event Hub
                           ↓
 ┌─────────────────────────────────────────────────────────────┐
-│ MeshPipeline (Update Entities)                              │
+│ Pipeline 2: Update Entities (auto-provisioned Mesh Adapter) │
 │                                                             │
 │  FromPipelineDataEvent → CreateUpdateInfo@1 → ApplyChanges  │
 │                               ↓                             │
@@ -566,16 +566,18 @@ The simulation pipeline writes onto Sensor / Valve / Damper entities directly (n
 
 ### Simulation Profiles
 
-| Variable | Simulator | Range | Description |
-|----------|-----------|-------|-------------|
-| temperature | Math.Sinus | 18-24°C | Daily cycle |
-| humidity | Math.Sinus | 35-65% | Phase-shifted from temp |
-| co2Level | Math.Triangle | 500-900 ppm | Occupancy pattern |
-| illuminance | Math.Sinus | 100-700 lux | Daylight curve |
-| valvePosition | Math.Sinus | 20-70% | Heating valve demand |
-| damperPosition | Math.Sinus | 30-70% | Ventilation demand |
-| pvStringPower | Math.Sinus | 0-6 kW | Solar curve |
-| stateOfCharge | Math.Triangle | 30-90% | Battery cycle |
+All base signals use `Math.Triangle` (amplitude 1, period in seconds), scaled with `LinearScaler@1` from `[-1, 1]` onto the range below.
+
+| Variable | Simulator | Period | Range | Description |
+|----------|-----------|--------|-------|-------------|
+| temperature | Math.Triangle | 1200 s | 18-24°C | Room temperature cycle |
+| humidity | Math.Triangle | 1500 s | 35-65% | Humidity cycle |
+| co2Level | Math.Triangle | 400 s | 500-900 ppm | Occupancy pattern |
+| illuminance | Math.Triangle | 1200 s | 100-700 lux | Daylight curve |
+| valvePosition | Math.Triangle | 1000 s | 20-70% | Heating valve demand |
+| damperPosition | Math.Triangle | 1000 s | 30-70% | Ventilation demand |
+| pvStringPower | Math.Triangle | 1200 s | 0-6 kW | Solar curve |
+| stateOfCharge | Math.Triangle | 900 s | 30-90% | Battery cycle |
 
 ### Targeted Entities (per-room)
 
@@ -592,20 +594,25 @@ Plus plant-level: `HeatPump.SupplyTemp/ReturnTemp/ModulationLevel`, `AirHandling
 
 ### Adding new simulated entities
 
-1. Add simulation in EdgePipeline (Simulation@1):
+1. Add simulation in Pipeline 1 (`Simulation@1`; note the node-level `locale`, and that
+   `configuration` must be valid JSON with quoted keys — `frequency` is the period in seconds):
    ```yaml
-   - targetPath: newValueBase
-     simulatorKey: Math.Sinus
-     configuration: "{periodMinutes:720}"
+   - type: Simulation@1
+     locale: en
+     simulations:
+       - targetPath: $.newValueBase
+         simulatorKey: Math.Triangle
+         configuration: '{"amplitude": 1, "frequency": 720}'
    ```
+   (Note: every `targetPath` must be a canonical path starting with `$.`.)
 
-2. Add scaler (LinearScaler@1):
+2. Add scaler (LinearScaler@1) — the Triangle output is `[-1, 1]`:
    ```yaml
    - path: "$.newValueBase"
-     targetPath: newValue
+     targetPath: $.newValue
      transformations:
        - type: LinearScaler@1
-         scaleInputMin: 0
+         scaleInputMin: -1
          scaleInputMax: 1
          scaleOutputMin: 10
          scaleOutputMax: 50
