@@ -424,27 +424,19 @@ entities:
               operation: Subtract
               valuePath: $.totalPvPower
               itemTargetPath: $.gridActivePower
-            - type: Project@1
-              fields:
-                - path: "$.tempBase"
-                - path: "$.humidityBase"
-                - path: "$.co2Base"
-                - path: "$.luxBase"
-                - path: "$.pvBase"
-                - path: "$.socBase"
-                - path: "$.valveBase"
-                - path: "$.fanBase"
-                - path: "$.meterHgEgBase"
-                - path: "$.meterHgOgBase"
-                - path: "$.meterHgDgBase"
-                - path: "$.meterNgEgBase"
-                - path: "$.wallboxLinksBase"
-                - path: "$.wallboxRechtsBase"
-                - path: "$.applianceWaschmaschineBase"
-                - path: "$.applianceTrocknerBase"
-                - path: "$.totalLoad"
+            # NOTE: no Project@1 here. A Project node immediately before ToPipelineDataEvent
+            # leaves the root context such that ToPipelineDataEvent reads an empty "$" and ships
+            # an empty payload — so pipeline 2 received nothing and wrote nothing (sensors stuck on
+            # seed values). The intermediate *Base signals just ride along in the event; pipeline 2
+            # only reads the scaled values it needs and ignores the rest.
             - type: ToPipelineDataEvent@1
               description: Send to entity updater
+              # targetPath MUST be non-root: ToPipelineDataEvent does JsonNodePath.Set(target,
+              # targetPath, o), and Set(_, "$", _) is a no-op (0 path segments) -> an empty {}
+              # would be published and pipeline 2 would find no data (ApplyChanges: "No update
+              # infos found"). Wrap the whole context under $.data; pipeline 2 reads $.data.*.
+              path: $
+              targetPath: $.data
               targetPipelineRtId: 6789a00000000000000090c1
     associations:
       - roleId: System/ParentChild
@@ -481,9 +473,9 @@ entities:
               rtId: "6789a00000000000010011a1"
               ckTypeId: EnergyIQ/TemperatureSensor
               attributeUpdates:
-                - attributeName: Temperature
+                - attributeName: CurrentValue
                   attributeValueType: Double
-                  valuePath: $.temperature
+                  valuePath: $.data.temperature
             - type: CreateUpdateInfo@1
               description: Update Wohnbereich Humidity sensor
               targetPath: $._updateItems
@@ -493,9 +485,9 @@ entities:
               rtId: "6789a00000000000010011a2"
               ckTypeId: EnergyIQ/HumiditySensor
               attributeUpdates:
-                - attributeName: Humidity
+                - attributeName: CurrentValue
                   attributeValueType: Double
-                  valuePath: $.humidity
+                  valuePath: $.data.humidity
             - type: CreateUpdateInfo@1
               description: Update Wohnbereich CO2 sensor
               targetPath: $._updateItems
@@ -505,9 +497,9 @@ entities:
               rtId: "6789a00000000000010011a3"
               ckTypeId: EnergyIQ/CO2Sensor
               attributeUpdates:
-                - attributeName: CO2Level
+                - attributeName: CurrentValue
                   attributeValueType: Double
-                  valuePath: $.co2Level
+                  valuePath: $.data.co2Level
             - type: CreateUpdateInfo@1
               description: Update Wohnbereich Illuminance sensor
               targetPath: $._updateItems
@@ -517,9 +509,9 @@ entities:
               rtId: "6789a00000000000010011a4"
               ckTypeId: EnergyIQ/IlluminanceSensor
               attributeUpdates:
-                - attributeName: Illuminance
+                - attributeName: CurrentValue
                   attributeValueType: Double
-                  valuePath: $.illuminance
+                  valuePath: $.data.illuminance
             - type: CreateUpdateInfo@1
               description: Update Wohnbereich FBH valve
               targetPath: $._updateItems
@@ -529,9 +521,9 @@ entities:
               rtId: "6789a00000000000020011b2"
               ckTypeId: EnergyIQ/Valve
               attributeUpdates:
-                - attributeName: ValvePosition
+                - attributeName: Position
                   attributeValueType: Double
-                  valuePath: $.valvePosition
+                  valuePath: $.data.valvePosition
             - type: CreateUpdateInfo@1
               description: Update Wohnbereich AirTerminal damper
               targetPath: $._updateItems
@@ -541,9 +533,9 @@ entities:
               rtId: "6789a00000000000020011c2"
               ckTypeId: EnergyIQ/Damper
               attributeUpdates:
-                - attributeName: DamperPosition
+                - attributeName: Position
                   attributeValueType: Double
-                  valuePath: $.damperPosition
+                  valuePath: $.data.damperPosition
 
             # ===== Buero EG (Space 12d2) =====
             - type: CreateUpdateInfo@1
@@ -555,9 +547,9 @@ entities:
               rtId: "6789a00000000000010012a1"
               ckTypeId: EnergyIQ/TemperatureSensor
               attributeUpdates:
-                - attributeName: Temperature
+                - attributeName: CurrentValue
                   attributeValueType: Double
-                  valuePath: $.temperature
+                  valuePath: $.data.temperature
             - type: CreateUpdateInfo@1
               description: Update Buero EG Humidity sensor
               targetPath: $._updateItems
@@ -567,9 +559,9 @@ entities:
               rtId: "6789a00000000000010012a2"
               ckTypeId: EnergyIQ/HumiditySensor
               attributeUpdates:
-                - attributeName: Humidity
+                - attributeName: CurrentValue
                   attributeValueType: Double
-                  valuePath: $.humidity
+                  valuePath: $.data.humidity
             - type: CreateUpdateInfo@1
               description: Update Buero EG CO2 sensor
               targetPath: $._updateItems
@@ -579,9 +571,9 @@ entities:
               rtId: "6789a00000000000010012a3"
               ckTypeId: EnergyIQ/CO2Sensor
               attributeUpdates:
-                - attributeName: CO2Level
+                - attributeName: CurrentValue
                   attributeValueType: Double
-                  valuePath: $.co2Level
+                  valuePath: $.data.co2Level
             - type: CreateUpdateInfo@1
               description: Update Buero EG FBH valve
               targetPath: $._updateItems
@@ -591,9 +583,9 @@ entities:
               rtId: "6789a00000000000020012b2"
               ckTypeId: EnergyIQ/Valve
               attributeUpdates:
-                - attributeName: ValvePosition
+                - attributeName: Position
                   attributeValueType: Double
-                  valuePath: $.valvePosition
+                  valuePath: $.data.valvePosition
             - type: CreateUpdateInfo@1
               description: Update Buero EG AirTerminal damper
               targetPath: $._updateItems
@@ -603,9 +595,9 @@ entities:
               rtId: "6789a00000000000020012c2"
               ckTypeId: EnergyIQ/Damper
               attributeUpdates:
-                - attributeName: DamperPosition
+                - attributeName: Position
                   attributeValueType: Double
-                  valuePath: $.damperPosition
+                  valuePath: $.data.damperPosition
 
             # ===== Schlafzimmer OG (Space 21d8) =====
             - type: CreateUpdateInfo@1
@@ -617,9 +609,9 @@ entities:
               rtId: "6789a00000000000010021a1"
               ckTypeId: EnergyIQ/TemperatureSensor
               attributeUpdates:
-                - attributeName: Temperature
+                - attributeName: CurrentValue
                   attributeValueType: Double
-                  valuePath: $.temperature
+                  valuePath: $.data.temperature
             - type: CreateUpdateInfo@1
               description: Update Schlafzimmer Humidity sensor
               targetPath: $._updateItems
@@ -629,9 +621,9 @@ entities:
               rtId: "6789a00000000000010021a2"
               ckTypeId: EnergyIQ/HumiditySensor
               attributeUpdates:
-                - attributeName: Humidity
+                - attributeName: CurrentValue
                   attributeValueType: Double
-                  valuePath: $.humidity
+                  valuePath: $.data.humidity
             - type: CreateUpdateInfo@1
               description: Update Schlafzimmer CO2 sensor
               targetPath: $._updateItems
@@ -641,9 +633,9 @@ entities:
               rtId: "6789a00000000000010021a3"
               ckTypeId: EnergyIQ/CO2Sensor
               attributeUpdates:
-                - attributeName: CO2Level
+                - attributeName: CurrentValue
                   attributeValueType: Double
-                  valuePath: $.co2Level
+                  valuePath: $.data.co2Level
             - type: CreateUpdateInfo@1
               description: Update Schlafzimmer FBH valve
               targetPath: $._updateItems
@@ -653,9 +645,9 @@ entities:
               rtId: "6789a00000000000020021b2"
               ckTypeId: EnergyIQ/Valve
               attributeUpdates:
-                - attributeName: ValvePosition
+                - attributeName: Position
                   attributeValueType: Double
-                  valuePath: $.valvePosition
+                  valuePath: $.data.valvePosition
             - type: CreateUpdateInfo@1
               description: Update Schlafzimmer AirTerminal damper
               targetPath: $._updateItems
@@ -665,9 +657,9 @@ entities:
               rtId: "6789a00000000000020021c2"
               ckTypeId: EnergyIQ/Damper
               attributeUpdates:
-                - attributeName: DamperPosition
+                - attributeName: Position
                   attributeValueType: Double
-                  valuePath: $.damperPosition
+                  valuePath: $.data.damperPosition
 
             # ===== Kinderzimmer OG (Space 23da) =====
             - type: CreateUpdateInfo@1
@@ -679,9 +671,9 @@ entities:
               rtId: "6789a00000000000010023a1"
               ckTypeId: EnergyIQ/TemperatureSensor
               attributeUpdates:
-                - attributeName: Temperature
+                - attributeName: CurrentValue
                   attributeValueType: Double
-                  valuePath: $.temperature
+                  valuePath: $.data.temperature
             - type: CreateUpdateInfo@1
               description: Update Kinderzimmer Humidity sensor
               targetPath: $._updateItems
@@ -691,9 +683,9 @@ entities:
               rtId: "6789a00000000000010023a2"
               ckTypeId: EnergyIQ/HumiditySensor
               attributeUpdates:
-                - attributeName: Humidity
+                - attributeName: CurrentValue
                   attributeValueType: Double
-                  valuePath: $.humidity
+                  valuePath: $.data.humidity
             - type: CreateUpdateInfo@1
               description: Update Kinderzimmer CO2 sensor
               targetPath: $._updateItems
@@ -703,9 +695,9 @@ entities:
               rtId: "6789a00000000000010023a3"
               ckTypeId: EnergyIQ/CO2Sensor
               attributeUpdates:
-                - attributeName: CO2Level
+                - attributeName: CurrentValue
                   attributeValueType: Double
-                  valuePath: $.co2Level
+                  valuePath: $.data.co2Level
             - type: CreateUpdateInfo@1
               description: Update Kinderzimmer FBH valve
               targetPath: $._updateItems
@@ -715,9 +707,9 @@ entities:
               rtId: "6789a00000000000020023b2"
               ckTypeId: EnergyIQ/Valve
               attributeUpdates:
-                - attributeName: ValvePosition
+                - attributeName: Position
                   attributeValueType: Double
-                  valuePath: $.valvePosition
+                  valuePath: $.data.valvePosition
             - type: CreateUpdateInfo@1
               description: Update Kinderzimmer AirTerminal damper
               targetPath: $._updateItems
@@ -727,9 +719,9 @@ entities:
               rtId: "6789a00000000000020023c2"
               ckTypeId: EnergyIQ/Damper
               attributeUpdates:
-                - attributeName: DamperPosition
+                - attributeName: Position
                   attributeValueType: Double
-                  valuePath: $.damperPosition
+                  valuePath: $.data.damperPosition
 
             # ===== Aufenthaltsraum DG (Space 31de) =====
             - type: CreateUpdateInfo@1
@@ -741,9 +733,9 @@ entities:
               rtId: "6789a00000000000010031a1"
               ckTypeId: EnergyIQ/TemperatureSensor
               attributeUpdates:
-                - attributeName: Temperature
+                - attributeName: CurrentValue
                   attributeValueType: Double
-                  valuePath: $.temperature
+                  valuePath: $.data.temperature
             - type: CreateUpdateInfo@1
               description: Update Aufenthalt Humidity sensor
               targetPath: $._updateItems
@@ -753,9 +745,9 @@ entities:
               rtId: "6789a00000000000010031a2"
               ckTypeId: EnergyIQ/HumiditySensor
               attributeUpdates:
-                - attributeName: Humidity
+                - attributeName: CurrentValue
                   attributeValueType: Double
-                  valuePath: $.humidity
+                  valuePath: $.data.humidity
             - type: CreateUpdateInfo@1
               description: Update Aufenthalt CO2 sensor
               targetPath: $._updateItems
@@ -765,9 +757,9 @@ entities:
               rtId: "6789a00000000000010031a3"
               ckTypeId: EnergyIQ/CO2Sensor
               attributeUpdates:
-                - attributeName: CO2Level
+                - attributeName: CurrentValue
                   attributeValueType: Double
-                  valuePath: $.co2Level
+                  valuePath: $.data.co2Level
             - type: CreateUpdateInfo@1
               description: Update Aufenthalt FBH valve
               targetPath: $._updateItems
@@ -777,9 +769,9 @@ entities:
               rtId: "6789a00000000000020031b2"
               ckTypeId: EnergyIQ/Valve
               attributeUpdates:
-                - attributeName: ValvePosition
+                - attributeName: Position
                   attributeValueType: Double
-                  valuePath: $.valvePosition
+                  valuePath: $.data.valvePosition
 
             # ===== Buero DG 1 (Space 32df) =====
             - type: CreateUpdateInfo@1
@@ -791,9 +783,9 @@ entities:
               rtId: "6789a00000000000010032a1"
               ckTypeId: EnergyIQ/TemperatureSensor
               attributeUpdates:
-                - attributeName: Temperature
+                - attributeName: CurrentValue
                   attributeValueType: Double
-                  valuePath: $.temperature
+                  valuePath: $.data.temperature
             - type: CreateUpdateInfo@1
               description: Update Buero DG1 Humidity sensor
               targetPath: $._updateItems
@@ -803,9 +795,9 @@ entities:
               rtId: "6789a00000000000010032a2"
               ckTypeId: EnergyIQ/HumiditySensor
               attributeUpdates:
-                - attributeName: Humidity
+                - attributeName: CurrentValue
                   attributeValueType: Double
-                  valuePath: $.humidity
+                  valuePath: $.data.humidity
             - type: CreateUpdateInfo@1
               description: Update Buero DG1 CO2 sensor
               targetPath: $._updateItems
@@ -815,9 +807,9 @@ entities:
               rtId: "6789a00000000000010032a3"
               ckTypeId: EnergyIQ/CO2Sensor
               attributeUpdates:
-                - attributeName: CO2Level
+                - attributeName: CurrentValue
                   attributeValueType: Double
-                  valuePath: $.co2Level
+                  valuePath: $.data.co2Level
             - type: CreateUpdateInfo@1
               description: Update Buero DG1 Illuminance sensor
               targetPath: $._updateItems
@@ -827,9 +819,9 @@ entities:
               rtId: "6789a00000000000010032a4"
               ckTypeId: EnergyIQ/IlluminanceSensor
               attributeUpdates:
-                - attributeName: Illuminance
+                - attributeName: CurrentValue
                   attributeValueType: Double
-                  valuePath: $.illuminance
+                  valuePath: $.data.illuminance
             - type: CreateUpdateInfo@1
               description: Update Buero DG1 FBH valve
               targetPath: $._updateItems
@@ -839,9 +831,9 @@ entities:
               rtId: "6789a00000000000020032b2"
               ckTypeId: EnergyIQ/Valve
               attributeUpdates:
-                - attributeName: ValvePosition
+                - attributeName: Position
                   attributeValueType: Double
-                  valuePath: $.valvePosition
+                  valuePath: $.data.valvePosition
 
             # ===== PV / Inverter / Battery (unchanged in v2) =====
             - type: CreateUpdateInfo@1
@@ -855,13 +847,13 @@ entities:
               attributeUpdates:
                 - attributeName: TotalCurrentPower
                   attributeValueType: Double
-                  valuePath: $.totalPvPower
+                  valuePath: $.data.totalPvPower
                 - attributeName: GridFeedIn
                   attributeValueType: Double
-                  valuePath: $.gridFeedIn
+                  valuePath: $.data.gridFeedIn
                 - attributeName: SelfConsumption
                   attributeValueType: Double
-                  valuePath: $.selfConsumption
+                  valuePath: $.data.selfConsumption
             - type: CreateUpdateInfo@1
               description: Update PV String 1
               targetPath: $._updateItems
@@ -873,7 +865,7 @@ entities:
               attributeUpdates:
                 - attributeName: CurrentPower
                   attributeValueType: Double
-                  valuePath: $.pvStringPower1
+                  valuePath: $.data.pvStringPower1
             - type: CreateUpdateInfo@1
               description: Update PV String 2
               targetPath: $._updateItems
@@ -885,7 +877,7 @@ entities:
               attributeUpdates:
                 - attributeName: CurrentPower
                   attributeValueType: Double
-                  valuePath: $.pvStringPower2
+                  valuePath: $.data.pvStringPower2
             - type: CreateUpdateInfo@1
               description: Update PV String 3
               targetPath: $._updateItems
@@ -897,7 +889,7 @@ entities:
               attributeUpdates:
                 - attributeName: CurrentPower
                   attributeValueType: Double
-                  valuePath: $.pvStringPower3
+                  valuePath: $.data.pvStringPower3
             - type: CreateUpdateInfo@1
               description: Update PV String 4
               targetPath: $._updateItems
@@ -909,7 +901,7 @@ entities:
               attributeUpdates:
                 - attributeName: CurrentPower
                   attributeValueType: Double
-                  valuePath: $.pvStringPower4
+                  valuePath: $.data.pvStringPower4
             - type: CreateUpdateInfo@1
               description: Update Inverter 1
               targetPath: $._updateItems
@@ -921,10 +913,10 @@ entities:
               attributeUpdates:
                 - attributeName: DcPower
                   attributeValueType: Double
-                  valuePath: $.inverterDcPower1
+                  valuePath: $.data.inverterDcPower1
                 - attributeName: AcPower
                   attributeValueType: Double
-                  valuePath: $.inverterAcPower1
+                  valuePath: $.data.inverterAcPower1
             - type: CreateUpdateInfo@1
               description: Update Inverter 2
               targetPath: $._updateItems
@@ -936,10 +928,10 @@ entities:
               attributeUpdates:
                 - attributeName: DcPower
                   attributeValueType: Double
-                  valuePath: $.inverterDcPower2
+                  valuePath: $.data.inverterDcPower2
                 - attributeName: AcPower
                   attributeValueType: Double
-                  valuePath: $.inverterAcPower2
+                  valuePath: $.data.inverterAcPower2
             - type: CreateUpdateInfo@1
               description: Update Battery Storage
               targetPath: $._updateItems
@@ -951,10 +943,10 @@ entities:
               attributeUpdates:
                 - attributeName: StateOfCharge
                   attributeValueType: Double
-                  valuePath: $.stateOfCharge
+                  valuePath: $.data.stateOfCharge
                 - attributeName: ChargingPower
                   attributeValueType: Double
-                  valuePath: $.chargingPower
+                  valuePath: $.data.chargingPower
 
             # ===== HeatPump (formerly Boiler in v1) =====
             - type: CreateUpdateInfo@1
@@ -968,13 +960,13 @@ entities:
               attributeUpdates:
                 - attributeName: SupplyTemp
                   attributeValueType: Double
-                  valuePath: $.hpSupplyTemp
+                  valuePath: $.data.hpSupplyTemp
                 - attributeName: ReturnTemp
                   attributeValueType: Double
-                  valuePath: $.hpReturnTemp
+                  valuePath: $.data.hpReturnTemp
                 - attributeName: ModulationLevel
                   attributeValueType: Double
-                  valuePath: $.hpModulation
+                  valuePath: $.data.hpModulation
 
             # ===== AHU =====
             - type: CreateUpdateInfo@1
@@ -988,10 +980,10 @@ entities:
               attributeUpdates:
                 - attributeName: SupplyAirTemp
                   attributeValueType: Double
-                  valuePath: $.ahuSupplyAirTemp
+                  valuePath: $.data.ahuSupplyAirTemp
                 - attributeName: FanSpeedSupply
                   attributeValueType: Double
-                  valuePath: $.ahuFanSpeed
+                  valuePath: $.data.ahuFanSpeed
 
             # ===== ENERGY METERING — closed balance (consumption + grid) =====
             - type: CreateUpdateInfo@1
@@ -1005,7 +997,7 @@ entities:
               attributeUpdates:
                 - attributeName: ActivePower
                   attributeValueType: Double
-                  valuePath: $.gridActivePower
+                  valuePath: $.data.gridActivePower
             - type: CreateUpdateInfo@1
               description: Update Meter Hauptgebäude EG
               targetPath: $._updateItems
@@ -1017,7 +1009,7 @@ entities:
               attributeUpdates:
                 - attributeName: ActivePower
                   attributeValueType: Double
-                  valuePath: $.meterHgEgPower
+                  valuePath: $.data.meterHgEgPower
             - type: CreateUpdateInfo@1
               description: Update Meter Hauptgebäude OG
               targetPath: $._updateItems
@@ -1029,7 +1021,7 @@ entities:
               attributeUpdates:
                 - attributeName: ActivePower
                   attributeValueType: Double
-                  valuePath: $.meterHgOgPower
+                  valuePath: $.data.meterHgOgPower
             - type: CreateUpdateInfo@1
               description: Update Meter Hauptgebäude DG
               targetPath: $._updateItems
@@ -1041,7 +1033,7 @@ entities:
               attributeUpdates:
                 - attributeName: ActivePower
                   attributeValueType: Double
-                  valuePath: $.meterHgDgPower
+                  valuePath: $.data.meterHgDgPower
             - type: CreateUpdateInfo@1
               description: Update Meter Nebengebäude EG
               targetPath: $._updateItems
@@ -1053,7 +1045,7 @@ entities:
               attributeUpdates:
                 - attributeName: ActivePower
                   attributeValueType: Double
-                  valuePath: $.meterNgEgPower
+                  valuePath: $.data.meterNgEgPower
             - type: CreateUpdateInfo@1
               description: Update Wallbox links
               targetPath: $._updateItems
@@ -1065,7 +1057,7 @@ entities:
               attributeUpdates:
                 - attributeName: ActivePower
                   attributeValueType: Double
-                  valuePath: $.wallboxLinksPower
+                  valuePath: $.data.wallboxLinksPower
             - type: CreateUpdateInfo@1
               description: Update Wallbox rechts
               targetPath: $._updateItems
@@ -1077,7 +1069,7 @@ entities:
               attributeUpdates:
                 - attributeName: ActivePower
                   attributeValueType: Double
-                  valuePath: $.wallboxRechtsPower
+                  valuePath: $.data.wallboxRechtsPower
             - type: CreateUpdateInfo@1
               description: Update Appliance Waschmaschine
               targetPath: $._updateItems
@@ -1089,7 +1081,7 @@ entities:
               attributeUpdates:
                 - attributeName: ActivePower
                   attributeValueType: Double
-                  valuePath: $.applianceWaschmaschinePower
+                  valuePath: $.data.applianceWaschmaschinePower
             - type: CreateUpdateInfo@1
               description: Update Appliance Trockner
               targetPath: $._updateItems
@@ -1101,7 +1093,7 @@ entities:
               attributeUpdates:
                 - attributeName: ActivePower
                   attributeValueType: Double
-                  valuePath: $.applianceTrocknerPower
+                  valuePath: $.data.applianceTrocknerPower
 
             - type: ApplyChanges@1
               path: $._updateItems
