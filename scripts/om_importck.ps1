@@ -16,5 +16,5 @@ param (
 $ckModel = Join-Path $PSScriptRoot "../src/EnergyIqCkModel/bin/$configuration/net10.0/octo-ck-libraries/EnergyIqCkModel/out/ck-energyiq-2.yaml"
 
 octo-cli -c ImportFromCatalog -cn LocalFileSystemCatalog -m Basic-2.0.2 -w
-octo-cli -c ImportFromCatalog -cn LocalFileSystemCatalog -m Basic.Energy-1.1.2 -w
+octo-cli -c ImportFromCatalog -cn LocalFileSystemCatalog -m Basic.Energy-1.1.3 -w
 octo-cli -c ImportCk -f $ckModel -w
