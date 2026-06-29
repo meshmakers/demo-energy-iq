@@ -76,6 +76,31 @@ entities:
                 - targetPath: $.fanBase
                   simulatorKey: Math.Triangle
                   configuration: '{"amplitude": 1, "frequency": 600}'
+                # ── Energy consumers (each scaled to an ActivePower range below) ──
+                - targetPath: $.meterHgEgBase
+                  simulatorKey: Math.Triangle
+                  configuration: '{"amplitude": 1, "frequency": 800}'
+                - targetPath: $.meterHgOgBase
+                  simulatorKey: Math.Triangle
+                  configuration: '{"amplitude": 1, "frequency": 1100}'
+                - targetPath: $.meterHgDgBase
+                  simulatorKey: Math.Triangle
+                  configuration: '{"amplitude": 1, "frequency": 1300}'
+                - targetPath: $.meterNgEgBase
+                  simulatorKey: Math.Triangle
+                  configuration: '{"amplitude": 1, "frequency": 700}'
+                - targetPath: $.wallboxLinksBase
+                  simulatorKey: Math.Triangle
+                  configuration: '{"amplitude": 1, "frequency": 1500}'
+                - targetPath: $.wallboxRechtsBase
+                  simulatorKey: Math.Triangle
+                  configuration: '{"amplitude": 1, "frequency": 1700}'
+                - targetPath: $.applianceWaschmaschineBase
+                  simulatorKey: Math.Triangle
+                  configuration: '{"amplitude": 1, "frequency": 600}'
+                - targetPath: $.applianceTrocknerBase
+                  simulatorKey: Math.Triangle
+                  configuration: '{"amplitude": 1, "frequency": 900}'
             - type: SelectByPath@1
               selectPath:
                 - path: "$.tempBase"
@@ -270,6 +295,135 @@ entities:
                       scaleInputMax: 1
                       scaleOutputMin: 18
                       scaleOutputMax: 22
+                # ── Energy consumers → ActivePower (kW) ──
+                - path: "$.meterHgEgBase"
+                  targetPath: $.meterHgEgPower
+                  transformations:
+                    - type: LinearScaler@1
+                      scaleInputMin: -1
+                      scaleInputMax: 1
+                      scaleOutputMin: 0.3
+                      scaleOutputMax: 2.5
+                - path: "$.meterHgOgBase"
+                  targetPath: $.meterHgOgPower
+                  transformations:
+                    - type: LinearScaler@1
+                      scaleInputMin: -1
+                      scaleInputMax: 1
+                      scaleOutputMin: 0.2
+                      scaleOutputMax: 1.8
+                - path: "$.meterHgDgBase"
+                  targetPath: $.meterHgDgPower
+                  transformations:
+                    - type: LinearScaler@1
+                      scaleInputMin: -1
+                      scaleInputMax: 1
+                      scaleOutputMin: 0.1
+                      scaleOutputMax: 1.2
+                - path: "$.meterNgEgBase"
+                  targetPath: $.meterNgEgPower
+                  transformations:
+                    - type: LinearScaler@1
+                      scaleInputMin: -1
+                      scaleInputMax: 1
+                      scaleOutputMin: 0.1
+                      scaleOutputMax: 1.5
+                - path: "$.wallboxLinksBase"
+                  targetPath: $.wallboxLinksPower
+                  transformations:
+                    - type: LinearScaler@1
+                      scaleInputMin: -1
+                      scaleInputMax: 1
+                      scaleOutputMin: 0
+                      scaleOutputMax: 11
+                - path: "$.wallboxRechtsBase"
+                  targetPath: $.wallboxRechtsPower
+                  transformations:
+                    - type: LinearScaler@1
+                      scaleInputMin: -1
+                      scaleInputMax: 1
+                      scaleOutputMin: 0
+                      scaleOutputMax: 7.4
+                - path: "$.applianceWaschmaschineBase"
+                  targetPath: $.applianceWaschmaschinePower
+                  transformations:
+                    - type: LinearScaler@1
+                      scaleInputMin: -1
+                      scaleInputMax: 1
+                      scaleOutputMin: 0
+                      scaleOutputMax: 2.2
+                - path: "$.applianceTrocknerBase"
+                  targetPath: $.applianceTrocknerPower
+                  transformations:
+                    - type: LinearScaler@1
+                      scaleInputMin: -1
+                      scaleInputMax: 1
+                      scaleOutputMin: 0
+                      scaleOutputMax: 2.5
+            # ── Closed energy balance ──
+            # totalLoad = Σ consumer ActivePower (+ battery charging, which draws from PV/grid)
+            # gridActivePower = totalLoad − totalPvPower   (signed: + = import from grid, − = export)
+            # By construction: PV + gridImport = load + batteryCharge + gridExport.
+            - type: Math@1
+              path: $
+              itemPath: $.meterHgEgPower
+              operation: Add
+              value: 0
+              itemTargetPath: $.totalLoad
+            - type: Math@1
+              path: $
+              itemPath: $.totalLoad
+              operation: Add
+              valuePath: $.meterHgOgPower
+              itemTargetPath: $.totalLoad
+            - type: Math@1
+              path: $
+              itemPath: $.totalLoad
+              operation: Add
+              valuePath: $.meterHgDgPower
+              itemTargetPath: $.totalLoad
+            - type: Math@1
+              path: $
+              itemPath: $.totalLoad
+              operation: Add
+              valuePath: $.meterNgEgPower
+              itemTargetPath: $.totalLoad
+            - type: Math@1
+              path: $
+              itemPath: $.totalLoad
+              operation: Add
+              valuePath: $.wallboxLinksPower
+              itemTargetPath: $.totalLoad
+            - type: Math@1
+              path: $
+              itemPath: $.totalLoad
+              operation: Add
+              valuePath: $.wallboxRechtsPower
+              itemTargetPath: $.totalLoad
+            - type: Math@1
+              path: $
+              itemPath: $.totalLoad
+              operation: Add
+              valuePath: $.applianceWaschmaschinePower
+              itemTargetPath: $.totalLoad
+            - type: Math@1
+              path: $
+              itemPath: $.totalLoad
+              operation: Add
+              valuePath: $.applianceTrocknerPower
+              itemTargetPath: $.totalLoad
+            - type: Math@1
+              path: $
+              itemPath: $.totalLoad
+              operation: Add
+              valuePath: $.chargingPower
+              itemTargetPath: $.totalLoad
+            - type: Math@1
+              path: $
+              itemPath: $.totalLoad
+              operation: Subtract
+              valuePath: $.totalPvPower
+              itemTargetPath: $.gridActivePower
             - type: Project@1
               fields:
                 - path: "$.tempBase"
@@ -280,6 +434,15 @@ entities:
                 - path: "$.socBase"
                 - path: "$.valveBase"
                 - path: "$.fanBase"
+                - path: "$.meterHgEgBase"
+                - path: "$.meterHgOgBase"
+                - path: "$.meterHgDgBase"
+                - path: "$.meterNgEgBase"
+                - path: "$.wallboxLinksBase"
+                - path: "$.wallboxRechtsBase"
+                - path: "$.applianceWaschmaschineBase"
+                - path: "$.applianceTrocknerBase"
+                - path: "$.totalLoad"
             - type: ToPipelineDataEvent@1
               description: Send to entity updater
               targetPipelineRtId: 6789a00000000000000090c1
@@ -829,6 +992,116 @@ entities:
                 - attributeName: FanSpeedSupply
                   attributeValueType: Double
                   valuePath: $.ahuFanSpeed
+
+            # ===== ENERGY METERING — closed balance (consumption + grid) =====
+            - type: CreateUpdateInfo@1
+              description: Update Grid Connection (signed ActivePower:+ import / − export)
+              targetPath: $._updateItems
+              targetValueKind: Array
+              targetValueWriteMode: Append
+              updateKind: UPDATE
+              rtId: "6789a00000000000003000a1"
+              ckTypeId: EnergyIQ/GridConnection
+              attributeUpdates:
+                - attributeName: ActivePower
+                  attributeValueType: Double
+                  valuePath: $.gridActivePower
+            - type: CreateUpdateInfo@1
+              description: Update Meter Hauptgebäude EG
+              targetPath: $._updateItems
+              targetValueKind: Array
+              targetValueWriteMode: Append
+              updateKind: UPDATE
+              rtId: "6789a00000000000003001a2"
+              ckTypeId: EnergyIQ/Meter
+              attributeUpdates:
+                - attributeName: ActivePower
+                  attributeValueType: Double
+                  valuePath: $.meterHgEgPower
+            - type: CreateUpdateInfo@1
+              description: Update Meter Hauptgebäude OG
+              targetPath: $._updateItems
+              targetValueKind: Array
+              targetValueWriteMode: Append
+              updateKind: UPDATE
+              rtId: "6789a00000000000003002a3"
+              ckTypeId: EnergyIQ/Meter
+              attributeUpdates:
+                - attributeName: ActivePower
+                  attributeValueType: Double
+                  valuePath: $.meterHgOgPower
+            - type: CreateUpdateInfo@1
+              description: Update Meter Hauptgebäude DG
+              targetPath: $._updateItems
+              targetValueKind: Array
+              targetValueWriteMode: Append
+              updateKind: UPDATE
+              rtId: "6789a00000000000003003a4"
+              ckTypeId: EnergyIQ/Meter
+              attributeUpdates:
+                - attributeName: ActivePower
+                  attributeValueType: Double
+                  valuePath: $.meterHgDgPower
+            - type: CreateUpdateInfo@1
+              description: Update Meter Nebengebäude EG
+              targetPath: $._updateItems
+              targetValueKind: Array
+              targetValueWriteMode: Append
+              updateKind: UPDATE
+              rtId: "6789a00000000000003004a5"
+              ckTypeId: EnergyIQ/Meter
+              attributeUpdates:
+                - attributeName: ActivePower
+                  attributeValueType: Double
+                  valuePath: $.meterNgEgPower
+            - type: CreateUpdateInfo@1
+              description: Update Wallbox links
+              targetPath: $._updateItems
+              targetValueKind: Array
+              targetValueWriteMode: Append
+              updateKind: UPDATE
+              rtId: "6789a00000000000003010b1"
+              ckTypeId: EnergyIQ/ChargingStation
+              attributeUpdates:
+                - attributeName: ActivePower
+                  attributeValueType: Double
+                  valuePath: $.wallboxLinksPower
+            - type: CreateUpdateInfo@1
+              description: Update Wallbox rechts
+              targetPath: $._updateItems
+              targetValueKind: Array
+              targetValueWriteMode: Append
+              updateKind: UPDATE
+              rtId: "6789a00000000000003011b2"
+              ckTypeId: EnergyIQ/ChargingStation
+              attributeUpdates:
+                - attributeName: ActivePower
+                  attributeValueType: Double
+                  valuePath: $.wallboxRechtsPower
+            - type: CreateUpdateInfo@1
+              description: Update Appliance Waschmaschine
+              targetPath: $._updateItems
+              targetValueKind: Array
+              targetValueWriteMode: Append
+              updateKind: UPDATE
+              rtId: "6789a00000000000003020c1"
+              ckTypeId: EnergyIQ/Appliance
+              attributeUpdates:
+                - attributeName: ActivePower
+                  attributeValueType: Double
+                  valuePath: $.applianceWaschmaschinePower
+            - type: CreateUpdateInfo@1
+              description: Update Appliance Trockner
+              targetPath: $._updateItems
+              targetValueKind: Array
+              targetValueWriteMode: Append
+              updateKind: UPDATE
+              rtId: "6789a00000000000003021c2"
+              ckTypeId: EnergyIQ/Appliance
+              attributeUpdates:
+                - attributeName: ActivePower
+                  attributeValueType: Double
+                  valuePath: $.applianceTrocknerPower
 
             - type: ApplyChanges@1
               path: $._updateItems
