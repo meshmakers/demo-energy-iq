@@ -1096,13 +1096,84 @@ entities:
                   childTargetCkTypeId: EnergyIQ/ShadingDevice
                   childTargetAssociationRoleId: EnergyIQ/SpaceElements
 
-              # ── Energy meters ──
-              # In v2 energy isn't tracked on Space directly anymore; an EnergyMeter
-              # sensor subtype is on the future roadmap. Until then, no v2 mapping.
-              # The rule is kept in place for documentation but won't match a Sensor type.
-              # When the EnergyMeter sensor exists, add:
-              #   childTargetCkTypeId: EnergyIQ/EnergyMeter
-              #   childTargetAssociationRoleId: EnergyIQ/SpaceSensors
+              # ── Energy meters → see directControlMappings below ──
+              # Energy data points (grid, PV, battery, sub-meters, wallboxes) are building-/area-
+              # level, not room-scoped, so they are NOT room-matched here. They use the direct
+              # control-name → entity-name mappings below instead.
+
+            # ── Direct (non-container) energy mappings: Loxone control Name → EnergyIQ entity Name ──
+            # NOTE: the control/entity Name pairs below assume the Firmianstraße Miniserver + the
+            # rt-firmianstrasse EnergyIQ Names. Adjust if the real Names differ. Loxone Meter states:
+            # actual (W/kW power), total (kWh import), totalNeg (kWh export, bidirectional only).
+            # EnergyManager2 states: Gpwr (grid), Ppwr (PV), Spwr (storage power), Ssoc (storage SOC).
+            directControlMappings:
+              # ── Whole-house Grid / PV / Battery from the single EnergyManager2 ──
+              - id: em-grid
+                controlType: EnergyManager2
+                controlName: Energiemanager
+                targetCkTypeId: EnergyIQ/GridConnection
+                targetName: Hausanschluss
+                states:
+                  - { stateName: Gpwr, targetAttribute: ActivePower }
+              - id: em-pv
+                controlType: EnergyManager2
+                controlName: Energiemanager
+                targetCkTypeId: EnergyIQ/PhotovoltaicSystem
+                targetName: "PV-Anlage Firmianstraße"
+                states:
+                  - { stateName: Ppwr, targetAttribute: TotalCurrentPower }
+              - id: em-battery
+                controlType: EnergyManager2
+                controlName: Energiemanager
+                targetCkTypeId: EnergyIQ/BatteryStorage
+                targetName: Batteriespeicher
+                states:
+                  - { stateName: Spwr, targetAttribute: ChargingPower }
+                  - { stateName: Ssoc, targetAttribute: StateOfCharge }
+              # ── Per-floor consumption sub-meters (Loxone "Verbrauch X" → EnergyIQ Stromzähler) ──
+              - id: meter-eg
+                controlType: Meter
+                controlName: Verbrauch EG
+                targetCkTypeId: EnergyIQ/Meter
+                targetName: Stromzähler HG-EG
+                states:
+                  - { stateName: actual, targetAttribute: ActivePower }
+                  - { stateName: total, targetAttribute: ImportedEnergy }
+              - id: meter-og
+                controlType: Meter
+                controlName: Verbrauch OG
+                targetCkTypeId: EnergyIQ/Meter
+                targetName: Stromzähler HG-1.OG
+                states:
+                  - { stateName: actual, targetAttribute: ActivePower }
+                  - { stateName: total, targetAttribute: ImportedEnergy }
+              - id: meter-dg
+                controlType: Meter
+                controlName: Verbrauch DG
+                targetCkTypeId: EnergyIQ/Meter
+                targetName: Stromzähler HG-DG
+                states:
+                  - { stateName: actual, targetAttribute: ActivePower }
+                  - { stateName: total, targetAttribute: ImportedEnergy }
+              # ── EV wallboxes (Loxone Wallbox2 → EnergyIQ ChargingStation) ──
+              - id: wallbox-garage
+                controlType: Wallbox2
+                controlName: Garage Ladestation
+                targetCkTypeId: EnergyIQ/ChargingStation
+                targetName: Wallbox-Links
+                states:
+                  - { stateName: actual, targetAttribute: ActivePower }
+                  - { stateName: total, targetAttribute: ImportedEnergy }
+              - id: wallbox-parkplatz
+                controlType: Wallbox2
+                controlName: Parkplatz Ladestation
+                targetCkTypeId: EnergyIQ/ChargingStation
+                targetName: Wallbox-Rechts
+                states:
+                  - { stateName: actual, targetAttribute: ActivePower }
+                  - { stateName: total, targetAttribute: ImportedEnergy }
+              # NOT mapped (no clean 1:1 Loxone source): NG-EG meter, and the appliances
+              # (Loxone has a single combined "Verbrauch Waschmaschine Trockner" meter).
 
           # ── Step 2: Persist suggestions as DataPointMapping entities + associations ──
           # Identical logic to the AI pipeline below — by design, so behaviour stays in sync.
