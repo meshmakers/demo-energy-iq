@@ -2646,6 +2646,16 @@ entities:
       - roleId: EnergyIQ/SystemMembers
         targetRtId: 6789a00000000000000062f3
         targetCkTypeId: EnergyIQ/Pump
+      # IfcRelServicesBuildings: the heating circuit serves the 3 Hauptgebäude storeys.
+      - roleId: EnergyIQ/SystemSpaces
+        targetRtId: 6789a00000000000000010c1  # storey-hg-eg (EG)
+        targetCkTypeId: EnergyIQ/BuildingStorey
+      - roleId: EnergyIQ/SystemSpaces
+        targetRtId: 6789a00000000000000020c2  # storey-hg-og (OG)
+        targetCkTypeId: EnergyIQ/BuildingStorey
+      - roleId: EnergyIQ/SystemSpaces
+        targetRtId: 6789a00000000000000030c3  # storey-hg-dg (DG)
+        targetCkTypeId: EnergyIQ/BuildingStorey
 
   - rtId: 6789a00000000000006000d2
     ckTypeId: EnergyIQ/DistributionSystem
@@ -2660,6 +2670,16 @@ entities:
       - roleId: EnergyIQ/SystemMembers
         targetRtId: 6789a00000000000000061f2
         targetCkTypeId: EnergyIQ/AirHandlingUnit
+      # IfcRelServicesBuildings: the KWL serves all 3 Hauptgebäude storeys.
+      - roleId: EnergyIQ/SystemSpaces
+        targetRtId: 6789a00000000000000010c1  # storey-hg-eg (EG)
+        targetCkTypeId: EnergyIQ/BuildingStorey
+      - roleId: EnergyIQ/SystemSpaces
+        targetRtId: 6789a00000000000000020c2  # storey-hg-og (OG)
+        targetCkTypeId: EnergyIQ/BuildingStorey
+      - roleId: EnergyIQ/SystemSpaces
+        targetRtId: 6789a00000000000000030c3  # storey-hg-dg (DG)
+        targetCkTypeId: EnergyIQ/BuildingStorey
 
   - rtId: 6789a00000000000006000d3
     ckTypeId: EnergyIQ/DistributionSystem
@@ -2706,6 +2726,16 @@ entities:
       - roleId: EnergyIQ/SystemMembers
         targetRtId: 6789a00000000000000062f3  # Heizkreispumpe
         targetCkTypeId: EnergyIQ/Pump
+      # IfcRelServicesBuildings: passive cooling serves the same 3 Hauptgebäude storeys.
+      - roleId: EnergyIQ/SystemSpaces
+        targetRtId: 6789a00000000000000010c1  # storey-hg-eg (EG)
+        targetCkTypeId: EnergyIQ/BuildingStorey
+      - roleId: EnergyIQ/SystemSpaces
+        targetRtId: 6789a00000000000000020c2  # storey-hg-og (OG)
+        targetCkTypeId: EnergyIQ/BuildingStorey
+      - roleId: EnergyIQ/SystemSpaces
+        targetRtId: 6789a00000000000000030c3  # storey-hg-dg (DG)
+        targetCkTypeId: EnergyIQ/BuildingStorey
 
   # ============================================================
   # ENERGY METERING (EnergyIQ-2.1.0)

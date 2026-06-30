@@ -1,7 +1,13 @@
 $schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
 associationRoles:
 - id: SystemSpaces
-  inboundName: ServesSpaces
-  outboundName: ServedBy
+  # IfcRelServicesBuildings: which spatial structure (Space and/or BuildingStorey) a logical
+  # DistributionSystem serves. Lifted in 2.5.0 from the legacy equipment-level (TechnicalSystem
+  # -> Space) to the system level. Wired origin = DistributionSystem -> target = Space/Storey, so
+  # the outbound nav (on the system) is the served-spaces list and the inbound nav (on the
+  # Space/Storey) lists the systems serving it.
+  inboundName: ServedBySystem
+  outboundName: ServesSpaces
   inboundMultiplicity: N
   outboundMultiplicity: N
+  description: "IfcRelServicesBuildings — the spatial structure (Space / BuildingStorey) a DistributionSystem serves. N:N: a storey is served by several systems (heating, passive cooling, ventilation), and a system serves several storeys/spaces."

@@ -8,7 +8,7 @@ EnergyIQ is an OctoMesh Construction Kit (CK) model for intelligent building ene
 
 **Key Principle:** IFC-faithful entity modeling. Sensors, actuators, and terminal units are **separate entities** (not attributes on Space). Design requirements (Pset_*) are captured as records, distinct from runtime values held by Sensor entities.
 
-**Version:** `EnergyIQ-2.4.0` (2.0.0 was the breaking change vs 1.x — Haystack mixins removed, Space restructured per IFC/VDI; 2.1.0 added energy-metering types; 2.2.0 introduced `PassiveBuildingElement` so `SpaceElements` no longer overlaps the device associations; 2.3.0 added `StoreyElements` so whole-floor sub-meters anchor to their `BuildingStorey`; 2.4.0 fixed the `SystemMembers` nav-name inversion — outbound `SystemMembers` is now on the `DistributionSystem` side, inbound `MemberOfSystem` on the member side).
+**Version:** `EnergyIQ-2.4.0` (2.0.0 was the breaking change vs 1.x — Haystack mixins removed, Space restructured per IFC/VDI; 2.1.0 added energy-metering types; 2.2.0 introduced `PassiveBuildingElement` so `SpaceElements` no longer overlaps the device associations; 2.3.0 added `StoreyElements` so whole-floor sub-meters anchor to their `BuildingStorey`; 2.4.0 fixed the `SystemMembers` nav-name inversion — outbound `SystemMembers` is now on the `DistributionSystem` side, inbound `MemberOfSystem` on the member side; 2.5.0 lifted `SystemSpaces` from the legacy equipment level to `DistributionSystem` → `Space`/`BuildingStorey` coverage, the IFC `IfcRelServicesBuildings` analog).
 
 ## Build Commands
 
@@ -107,7 +107,7 @@ NamedEntity (Basic)
 | `SystemMembers` | DistributionSystem (outbound `SystemMembers`) | NamedEntity member, inbound `MemberOfSystem` (HeatPump/Pump/buffer/…) | N:N |
 | `SpaceSchedules` | Schedule | Space | N:N |
 | `TerminalServedBy` | TechnicalSystem | RoomTerminal | N:N |
-| `SystemSpaces` (legacy) | TechnicalSystem | Space | N:N |
+| `SystemSpaces` | DistributionSystem (out `ServesSpaces`) | Space/BuildingStorey (in `ServedBySystem`) — IfcRelServicesBuildings | N:N |
 
 **Note:** Name and Description are inherited from Basic/NamedEntity, not defined in EnergyIQ.
 

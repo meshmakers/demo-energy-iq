@@ -149,7 +149,7 @@ IFC: `IfcSpace`. VDI 3814 Raumautomation. ISO 4157-2/3.
 | SpaceSensors | Sensor | SensorInSpace | 1:N |
 | SpaceActuators | Actuator | ActuatorInSpace | 1:N |
 | SpaceTerminals | RoomTerminal | ContainedInSpace | 1:N |
-| SystemSpaces | TechnicalSystem | ServedBy | N:N |
+| SystemSpaces | DistributionSystem | ServesSpaces | N:N |
 | SpaceSchedules | Schedule | SchedulesAppliedTo | N:N |
 
 ---
@@ -590,7 +590,7 @@ IFC: `IfcElectricFlowStorageDevice`.
 | SystemMembers | MemberOfSystem | SystemMembers | N:N | DistributionSystem members (outbound `SystemMembers` on the system, inbound `MemberOfSystem` on the member; a reversible aggregate joins both heating + cooling circuits) |
 | SpaceSchedules | SchedulesAppliedTo | UsedSchedules | N:N | Schedule ↔ Space |
 | TerminalServedBy | ServesTerminals | ServedBy | N:N | Plant ↔ Terminal |
-| SystemSpaces (legacy) | ServesSpaces | ServedBy | N:N | Plant ↔ Space (high-level) |
+| SystemSpaces | ServedBySystem | ServesSpaces | N:N | DistributionSystem → Space/BuildingStorey it serves (IfcRelServicesBuildings); lifted from equipment level in 2.5.0 |
 
 ---
 

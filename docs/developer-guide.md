@@ -1,6 +1,6 @@
 # EnergyIQ Construction Kit - Developer Guide
 
-**Version:** EnergyIQ-2.4.0
+**Version:** EnergyIQ-2.5.0
 **Standards:** ISO 16739-1:2024 (IFC 4.3), ISO 4157, VDI 3814
 
 ## Quick Start
@@ -247,7 +247,7 @@ SpaceActuators:  [Valve, Damper, ...]               # room-level (rare)
 SpaceTerminals:  [RadiantSurface, AirTerminal, ...] # heating/cooling/ventilation
 SpaceElements:   [PassiveBuildingElement (Wall, Window, Door, ShadingDevice, Luminaire), Meter (+ Appliance/ChargingStation/GridConnection)]
 SpaceSchedules:  [Schedule (M:N — shared across rooms)]
-SystemSpaces:    [TechnicalSystem]                   # high-level plant assignment
+SystemSpaces:    [DistributionSystem]                # IfcRelServicesBuildings: served Space/Storey
 ```
 
 ## Sensor entities (v2)
@@ -315,7 +315,7 @@ Each terminal is normally linked to:
 
 Plant equipment carries its own `SupplyTemp`/`ReturnTemp`/`ModulationLevel` etc. directly as attributes (one main reading per equipment), and additionally supports attached `EquipmentSensors` / `EquipmentActuators` for richer modeling (e.g. dedicated supply/return temp sensors, changeover valves).
 
-`Boiler`/`Chiller`/`AHU` keep the legacy `SystemSpaces` association for high-level "this plant serves these spaces" assignment. For fine-grained "this terminal is served by this plant" use `TerminalServedBy`.
+`SystemSpaces` (2.5.0) is the IFC `IfcRelServicesBuildings` analog at the **system** level: a `DistributionSystem` (heating / passive-cooling / ventilation circuit) declares the `Space`/`BuildingStorey` it serves via outbound `ServesSpaces`; a storey/space sees the systems serving it via inbound `ServedBySystem`. (It was lifted in 2.5.0 from a legacy equipment-level plant→Space assignment.) For fine-grained "this terminal is served by this plant" use `TerminalServedBy`.
 
 ## Schedules (v2)
 
