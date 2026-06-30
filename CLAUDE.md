@@ -8,7 +8,7 @@ EnergyIQ is an OctoMesh Construction Kit (CK) model for intelligent building ene
 
 **Key Principle:** IFC-faithful entity modeling. Sensors, actuators, and terminal units are **separate entities** (not attributes on Space). Design requirements (Pset_*) are captured as records, distinct from runtime values held by Sensor entities.
 
-**Version:** `EnergyIQ-2.3.0` (2.0.0 was the breaking change vs 1.x — Haystack mixins removed, Space restructured per IFC/VDI; 2.1.0 added energy-metering types; 2.2.0 introduced `PassiveBuildingElement` so `SpaceElements` no longer overlaps the device associations; 2.3.0 added `StoreyElements` so whole-floor sub-meters anchor to their `BuildingStorey` instead of a single representative Space).
+**Version:** `EnergyIQ-2.4.0` (2.0.0 was the breaking change vs 1.x — Haystack mixins removed, Space restructured per IFC/VDI; 2.1.0 added energy-metering types; 2.2.0 introduced `PassiveBuildingElement` so `SpaceElements` no longer overlaps the device associations; 2.3.0 added `StoreyElements` so whole-floor sub-meters anchor to their `BuildingStorey`; 2.4.0 fixed the `SystemMembers` nav-name inversion — outbound `SystemMembers` is now on the `DistributionSystem` side, inbound `MemberOfSystem` on the member side).
 
 ## Build Commands
 
@@ -104,7 +104,7 @@ NamedEntity (Basic)
 | `EquipmentSensors` | Sensor | BuildingElement (equip/terminal) | N:ZeroOrOne |
 | `EquipmentActuators` | Actuator | BuildingElement (equip/terminal) | N:ZeroOrOne |
 | `TerminalActuators` | Actuator | RoomTerminal | N:ZeroOrOne |
-| `SystemMembers` | NamedEntity | DistributionSystem | N:N |
+| `SystemMembers` | DistributionSystem (outbound `SystemMembers`) | NamedEntity member, inbound `MemberOfSystem` (HeatPump/Pump/buffer/…) | N:N |
 | `SpaceSchedules` | Schedule | Space | N:N |
 | `TerminalServedBy` | TechnicalSystem | RoomTerminal | N:N |
 | `SystemSpaces` (legacy) | TechnicalSystem | Space | N:N |
@@ -158,14 +158,14 @@ The `data/bim/rt-firmianstrasse.yaml` file demonstrates the full v2 model for a 
 - **~50 Sensors** (Temperature, Humidity, CO2, Illuminance, Presence, WindowContact per room as appropriate)
 - **~20 Room Terminals** — mostly `RadiantSurface` (Fußbodenheizung, reversible) + `AirTerminal` for KWL outlets; `Radiator` for the Nebengebäude
 - **~25 Actuators** (Valves, Dampers, Motors)
-- **Plant equipment:**
+- **Plant equipment** (all spatially under the `Technikraum` Space, not the Building):
   - `HeatPump` (Luft-Wasser, reversibel, Passivkühlung über Bodenheizkreis)
   - `ThermalEnergyStorage` (500l Pufferspeicher)
   - `AirHandlingUnit` (KWL mit Wärmerückgewinnung)
   - `Pump` (Heizkreispumpe)
   - `PhotovoltaicSystem` mit 4 Strings, 2 Wechselrichtern, 15 kWh Batterie
 - **4 Schedules** (Wohnen-Werktag, Wohnen-Wochenende, Schlafzimmer-Nacht, Buero-Werktag)
-- **3 DistributionSystems** (Heizkreis, Lüftung, PV)
+- **4 DistributionSystems** (Heizkreis · Kühlkreis/Passivkühlung · Lüftung · Elektrisch-PV). The Heizkreis and Kühlkreis **share** the same reversible plant (HeatPump/buffer/Pump) via N:N `SystemMembers` — the canonical example of why system membership is not the spatial `ParentChild` tree.
 
 Total: ~140 RT entities.
 

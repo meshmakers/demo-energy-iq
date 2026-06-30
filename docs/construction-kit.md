@@ -587,7 +587,7 @@ IFC: `IfcElectricFlowStorageDevice`.
 | EquipmentSensors | AttachedSensors | AttachedToEquipment | 1:N | Sensor on plant equipment |
 | EquipmentActuators | AttachedActuators | AttachedToEquipment | 1:N | Actuator on plant equipment |
 | TerminalActuators | TerminalActuators | AttachedToTerminal | 1:N | Actuator on terminal |
-| SystemMembers | SystemMembers | MemberOfSystem | N:N | DistributionSystem members |
+| SystemMembers | MemberOfSystem | SystemMembers | N:N | DistributionSystem members (outbound `SystemMembers` on the system, inbound `MemberOfSystem` on the member; a reversible aggregate joins both heating + cooling circuits) |
 | SpaceSchedules | SchedulesAppliedTo | UsedSchedules | N:N | Schedule ↔ Space |
 | TerminalServedBy | ServesTerminals | ServedBy | N:N | Plant ↔ Terminal |
 | SystemSpaces (legacy) | ServesSpaces | ServedBy | N:N | Plant ↔ Space (high-level) |

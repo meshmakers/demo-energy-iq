@@ -1,8 +1,11 @@
 $schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
 associationRoles:
 - id: SystemMembers
-  inboundName: SystemMembers
-  outboundName: MemberOfSystem
+  # Wired origin = DistributionSystem -> target = member entity. So the outbound
+  # nav (on the DistributionSystem) is the member list, and the inbound nav (on
+  # the member, e.g. a Pump) points back to the system(s) it belongs to.
+  inboundName: MemberOfSystem
+  outboundName: SystemMembers
   inboundMultiplicity: N
   outboundMultiplicity: N
-  description: "Members of a logical DistributionSystem (e.g. heat pump, buffer tank, distribution pumps, all radiant surfaces belonging to one heating circuit)"
+  description: "Members of a logical DistributionSystem (e.g. heat pump, buffer tank, distribution pumps, all radiant surfaces belonging to one heating circuit). N:N — a reversible aggregate can belong to both a heating and a cooling circuit."

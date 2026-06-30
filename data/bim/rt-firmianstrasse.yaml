@@ -2013,8 +2013,8 @@ entities:
         value: false
     associations:
       - roleId: System/ParentChild
-        targetRtId: 6789a00000000000000001b1
-        targetCkTypeId: EnergyIQ/Building
+        targetRtId: 6789a00000000000000015d5  # space-hg-eg-technik (Technikraum)
+        targetCkTypeId: EnergyIQ/Space
 
   # Umschaltventil Heizen/Kühlen (an HeatPump attached)
   - rtId: 6789a00000000000000060f2
@@ -2084,8 +2084,8 @@ entities:
         value: true
     associations:
       - roleId: System/ParentChild
-        targetRtId: 6789a00000000000000001b1
-        targetCkTypeId: EnergyIQ/Building
+        targetRtId: 6789a00000000000000015d5  # space-hg-eg-technik (Technikraum)
+        targetCkTypeId: EnergyIQ/Space
 
   # ============================================================
   # PLANT - AirHandlingUnit (KWL)
@@ -2125,8 +2125,8 @@ entities:
         value: 85.0
     associations:
       - roleId: System/ParentChild
-        targetRtId: 6789a00000000000000001b1
-        targetCkTypeId: EnergyIQ/Building
+        targetRtId: 6789a00000000000000015d5  # space-hg-eg-technik (Technikraum)
+        targetCkTypeId: EnergyIQ/Space
 
   # ============================================================
   # PLANT - Heizkreispumpe
@@ -2154,8 +2154,8 @@ entities:
         value: 0.045
     associations:
       - roleId: System/ParentChild
-        targetRtId: 6789a00000000000000001b1
-        targetCkTypeId: EnergyIQ/Building
+        targetRtId: 6789a00000000000000015d5  # space-hg-eg-technik (Technikraum)
+        targetCkTypeId: EnergyIQ/Space
 
   # ============================================================
   # BUILDING ELEMENTS - Beispiele
@@ -2674,6 +2674,38 @@ entities:
       - roleId: EnergyIQ/SystemMembers
         targetRtId: 6789a00000000000000080a1
         targetCkTypeId: EnergyIQ/PhotovoltaicSystem
+
+  # --- Kühlkreis (Passivkühlung) ---
+  # Passive cooling circuit. It reuses the SAME reversible plant as the heating
+  # circuit (heat pump in PassiveCooling mode via the changeover valve, the buffer
+  # tank, and the circulation pump). This is the textbook N:N SystemMembers case:
+  # HeatPump / ThermalEnergyStorage / Pump each belong to BOTH the Heizkreis (…6000d1)
+  # and this Kühlkreis — a relationship the spatial ParentChild tree cannot express.
+  - rtId: 6789a00000000000006000d4
+    ckTypeId: EnergyIQ/DistributionSystem
+    attributes:
+      - id: System/Name
+        value: Kühlkreis Hauptgebäude (Passivkühlung)
+      - id: System/Description
+        value: Passive Kühlung über die reversiblen Fußbodenheizkreise (Wärmepumpe im Passivkühlmodus, Umschaltventil V-Umschalt-HzgKlt)
+      - id: EnergyIQ/DistributionSystemTypeValue
+        value: 1  # Cooling
+      - id: EnergyIQ/TotalEnergyConsumed
+        value: 320.0
+      - id: EnergyIQ/TotalEnergyDelivered
+        value: 4150.0
+      - id: EnergyIQ/SystemEfficiency
+        value: 13.0
+    associations:
+      - roleId: EnergyIQ/SystemMembers
+        targetRtId: 6789a00000000000000060f1  # Wärmepumpe (reversibel)
+        targetCkTypeId: EnergyIQ/HeatPump
+      - roleId: EnergyIQ/SystemMembers
+        targetRtId: 6789a00000000000000063f4  # Heizpufferspeicher
+        targetCkTypeId: EnergyIQ/ThermalEnergyStorage
+      - roleId: EnergyIQ/SystemMembers
+        targetRtId: 6789a00000000000000062f3  # Heizkreispumpe
+        targetCkTypeId: EnergyIQ/Pump
 
   # ============================================================
   # ENERGY METERING (EnergyIQ-2.1.0)

@@ -1,6 +1,6 @@
 # EnergyIQ Construction Kit - Developer Guide
 
-**Version:** EnergyIQ-2.3.0
+**Version:** EnergyIQ-2.4.0
 **Standards:** ISO 16739-1:2024 (IFC 4.3), ISO 4157, VDI 3814
 
 ## Quick Start
