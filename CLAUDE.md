@@ -194,8 +194,10 @@ cd scripts && pwsh om_initialize_tenant.ps1
 6. `om_importrt.ps1` — `EnableCommunication` (auto-applies the System.Communication
    blueprint → seeds the default Cloud pool + Mesh adapter) + `EnableStreamData`,
    then imports & **activates** the three per-sensor archives
-   (`6a0e…0001/0002/0003`), the simulation pipelines, the `_trees` query and the
-   `rt-firmianstrasse.yaml` BIM sample.
+   (`6a0e…0001/0002/0003`), the simulation pipelines, the `_trees` query, the
+   `rt-tree-navigation.yaml` Runtime Browser config (role labels/visibility +
+   the switchable **Systems** perspective on `DistributionSystem`, needs
+   System.UI ≥ 2.3.0) and the `rt-firmianstrasse.yaml` BIM sample.
 7. `om_importrt_sample_general.ps1` — the **Loxone smart-home sample** (migrated
    from `octo-adapter-loxone` so the whole demo is in one repo). Imports the
    Loxone CK model from the **sibling `octo-adapter-loxone` build output**

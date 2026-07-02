@@ -34,5 +34,12 @@ octo-cli -c ImportRt -f (Join-Path $dataPath "_pipelines/rt-simulation-adapters.
 # --- Queries ----------------------------------------------------------------
 octo-cli -c ImportRt -f (Join-Path $dataPath "_queries/_trees.yaml")
 
+# --- UI: Runtime Browser tree navigation ------------------------------------
+# Per-tenant tree config (System.UI/TreeNavigationConfiguration): role labels/visibility
+# (AB#4262) + the switchable "Systems" perspective rooting on DistributionSystem (AB#4263).
+# Requires System.UI >= 2.3.0 (auto-distributed by octo-platform-services). -r/Upsert so
+# re-runs update the already-seeded singleton.
+octo-cli -c ImportRt -f (Join-Path $dataPath "_general/rt-tree-navigation.yaml") -w -r
+
 # --- BIM --------------------------------------------------------------------
 octo-cli -c ImportRt -f (Join-Path $dataPath "bim/rt-firmianstrasse.yaml") -w
