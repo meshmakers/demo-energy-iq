@@ -189,7 +189,7 @@ cd scripts && pwsh om_initialize_tenant.ps1
 3. `AddContext` + `UseContext` for the tenant context (`local_energyiq`).
 4. `LogIn -i` against the new tenant — the fresh token carries it in its
    `allowed_tenants` claim.
-5. `om_importck.ps1` — imports `Basic-2.0.2` / `Basic.Energy-1.1.3` from the
+5. `om_importck.ps1` — imports `Basic-2.0.2` / `Basic.Energy-1.1.4` from the
    `LocalFileSystemCatalog` and `EnergyIQ` (`ck-energyiq-2.yaml`) from the local
    build output (`-configuration`, default `DebugL`).
 6. `om_importrt.ps1` — `EnableCommunication` (auto-applies the System.Communication
