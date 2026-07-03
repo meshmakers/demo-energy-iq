@@ -69,3 +69,7 @@ entities:
         value: EnergyIQ/DistributionSystem
       - id: System.UI/TreePerspectiveConfig.PrimaryRoleId
         value: EnergyIQ/SystemMembers
+      # Members are reached OUTBOUND from the DistributionSystem: the SystemMembers
+      # association is authored on the DistributionSystem (System --SystemMembers--> member).
+      - id: System.UI/TreePerspectiveConfig.PrimaryDirection
+        value: Outbound
