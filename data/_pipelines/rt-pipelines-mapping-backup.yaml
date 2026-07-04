@@ -1,0 +1,238 @@
+$schema: https://schemas.meshmakers.cloud/runtime-model.schema.json
+dependencies:
+  - System.Communication-[3.6,)
+entities:
+  # ==========================================================================
+  # Data Flow: Mapping Backup
+  #
+  # Export/import of DataPointMappings via NATURAL keys so manually created
+  # mappings survive a tenant re-initialisation (om_initialize_tenant), where
+  # all RtIds change:
+  #   - Source side (Loxone/Control): keyed by LoxoneUuid — the Miniserver
+  #     assigns it, and the browse pipeline GetOrCreates controls by it, so it
+  #     is stable across re-imports.
+  #   - Target side (EnergyIQ/*): keyed by GlobalId (and by the fixed seed
+  #     RtIds from rt-firmianstrasse.yaml, which are stable anyway).
+  #
+  # Only the MANUAL delta is exported (excludeNameRegex skips the
+  # rule-generated "ruleId|rtId|state" names): the rules pipeline recreates
+  # the generated mass with NEW rtIds after a re-init, so importing the old
+  # generated names would only create duplicates.
+  #
+  # Workflow (see data/mappings/README.md):
+  #   Export:  GET  https://localhost:5020/energyiq/mappings/export
+  #            → save as data/mappings/datapoint-mappings.json (checked into Git)
+  #   Import:  POST the file to https://localhost:5020/energyiq/mappings/import
+  #            → response = statistics incl. unresolved entries
+  # Both require the "Mapping Backup" data flow to be DEPLOYED on the mesh
+  # adapter (Studio → Communication → Data Flows → Deploy).
+  # ==========================================================================
+  - rtId: 67f0b00ec4ff02221e0b6020
+    ckTypeId: System.Communication/DataFlow
+    attributes:
+    - id: System/Name
+      value: Mapping Backup
+    - id: System/Description
+      value: Export/import DataPointMappings via natural keys (survives tenant re-initialisation)
+
+  # --------------------------------------------------------------------------
+  # Pipeline: Export DataPoint Mappings
+  # Two triggers: HTTP GET (returns the export document as the response body —
+  # curl/Invoke-WebRequest it straight into a file) and ExecutePipelineCommand
+  # (run it from the Studio; the document lands in the execution's OutputData).
+  # --------------------------------------------------------------------------
+  - rtId: 67f0b00ec4ff02221e0b6021
+    ckTypeId: System.Communication/Pipeline
+    associations:
+    - roleId: System/ParentChild
+      targetRtId: 67f0b00ec4ff02221e0b6020
+      targetCkTypeId: System.Communication/DataFlow
+    - roleId: System.Communication/Executes
+      targetRtId: "670000000000000000000002"
+      targetCkTypeId: System.Communication/Adapter
+    attributes:
+    - id: System/Name
+      value: Export DataPoint Mappings
+    - id: System/Description
+      value: Exports manually created DataPointMappings with natural identities (LoxoneUuid / GlobalId) for backup in Git
+    - id: System/Enabled
+      value: true
+    - id: System.Communication/PipelineDefinition
+      value: |-
+        triggers:
+          - type: FromHttpRequest@1
+            method: GET
+            path: /mappings/export
+          - type: FromExecutePipelineCommand@1
+        transformations:
+          - type: ExportDataPointMappings@1
+            description: Export manual mappings with natural identities
+            targetPath: $.export
+            # Skip rule-generated mappings ("ruleId|rtId|state") — they are
+            # reproducible by re-running the Rules-based Auto-Map pipeline and
+            # would duplicate under their old rtId-based names after a re-init.
+            excludeNameRegex: '^[\w-]+\|[0-9a-f]{24}\|'
+            identityAttributes:
+              - ckTypeId: Loxone/Control
+                attribute: LoxoneUuid
+              - ckTypeId: EnergyIQ/Space
+                attribute: GlobalId
+              - ckTypeId: EnergyIQ/TemperatureSensor
+                attribute: GlobalId
+              - ckTypeId: EnergyIQ/HumiditySensor
+                attribute: GlobalId
+              - ckTypeId: EnergyIQ/CO2Sensor
+                attribute: GlobalId
+              - ckTypeId: EnergyIQ/Meter
+                attribute: GlobalId
+              - ckTypeId: EnergyIQ/GridConnection
+                attribute: GlobalId
+              - ckTypeId: EnergyIQ/PhotovoltaicSystem
+                attribute: GlobalId
+              - ckTypeId: EnergyIQ/BatteryStorage
+                attribute: GlobalId
+              - ckTypeId: EnergyIQ/ChargingStation
+                attribute: GlobalId
+          # The execution result doubles as the HTTP response body (GET) and
+          # as OutputData when run via ExecutePipelineCommand.
+          - type: SetPipelineExecutionResult@1
+            description: Return the export document
+            path: $.export
+
+  # --------------------------------------------------------------------------
+  # Pipeline: Import DataPoint Mappings
+  # POST the export document; endpoints are resolved RtId → identity attribute
+  # → unique name, resolved entries are persisted with the same idempotent
+  # GetOrCreate-by-Name chain as the generation pipelines, and the response is
+  # the import statistics (incl. unresolved entries for manual follow-up).
+  # --------------------------------------------------------------------------
+  - rtId: 67f0b00ec4ff02221e0b6022
+    ckTypeId: System.Communication/Pipeline
+    associations:
+    - roleId: System/ParentChild
+      targetRtId: 67f0b00ec4ff02221e0b6020
+      targetCkTypeId: System.Communication/DataFlow
+    - roleId: System.Communication/Executes
+      targetRtId: "670000000000000000000002"
+      targetCkTypeId: System.Communication/Adapter
+    attributes:
+    - id: System/Name
+      value: Import DataPoint Mappings
+    - id: System/Description
+      value: Restores DataPointMappings from an export document (resolves LoxoneUuid / GlobalId back to entities)
+    - id: System/Enabled
+      value: true
+    - id: System.Communication/PipelineDefinition
+      value: |-
+        triggers:
+          - type: FromHttpRequest@1
+            method: POST
+            path: /mappings/import
+        transformations:
+          # ── Step 1: Resolve the posted document back to entities ──
+          - type: ImportDataPointMappings@1
+            description: Resolve natural identities to runtime entities
+            path: $.body
+            targetPath: $.mappingSuggestions
+            statisticsTargetPath: $.importStatistics
+
+          # ── Step 2: Persist suggestions as DataPointMapping entities + associations ──
+          # Same idempotent chain as the Rules-based Auto-Map pipeline, with two
+          # differences: Enabled comes from the imported document, and the
+          # MapsFrom target type comes from the suggestion (imports are not
+          # limited to Loxone/Control sources).
+          - type: ForEach@1
+            description: Create DataPointMapping entities and associations
+            iterationPath: $.mappingSuggestions
+            targetPath: $.mappingResults
+            mergePath: $.updates
+            transformations:
+              # Pre-allocate RtId via GetOrCreate (matches by deterministic Name → idempotent)
+              - type: GetOrCreateRtEntitiesByType@1
+                description: Get or create DataPointMapping by Name
+                ckTypeId: System.Communication/DataPointMapping
+                rtIdTargetPath: $.updates._mappingRtId
+                ckTypeIdTargetPath: $.updates._mappingCkTypeId
+                modOperationPath: $.updates._mappingModOp
+                fieldFilters:
+                  - attributePath: Name
+                    operator: Equals
+                    comparisonValuePath: $.key.name
+              - type: CreateUpdateInfo@1
+                description: Create or update DataPointMapping entity
+                targetPath: $.updates._mappingUpdate
+                updateKindPath: $.updates._mappingModOp
+                ckTypeIdPath: $.updates._mappingCkTypeId
+                rtIdPath: $.updates._mappingRtId
+                attributeUpdates:
+                  - attributeName: Name
+                    attributeValueType: String
+                    valuePath: $.key.name
+                  - attributeName: Enabled
+                    attributeValueType: Boolean
+                    valuePath: $.key.enabled
+                  - attributeName: SourceAttributePath
+                    attributeValueType: String
+                    valuePath: $.key.sourceAttributePath
+                  - attributeName: TargetAttributePath
+                    attributeValueType: String
+                    valuePath: $.key.targetAttributePath
+                  - attributeName: MappingExpression
+                    attributeValueType: String
+                    valuePath: $.key.mappingExpression
+              # MapsFrom / MapsTo only on insert, to keep re-runs idempotent.
+              - type: If@1
+                description: Create associations only for new entities
+                path: $.updates._mappingModOp
+                operator: Equals
+                value: 0
+                valueType: Int
+                transformations:
+                  - type: CreateAssociationUpdate@1
+                    targetPath: $.updates._assocUpdateItems
+                    targetValueKind: Array
+                    targetValueWriteMode: Append
+                    updateKind: CREATE
+                    originRtIdPath: $.updates._mappingUpdate.RtId
+                    originCkTypeIdPath: $.updates._mappingUpdate.CkTypeId
+                    targetRtIdPath: $.key.controlRtId
+                    targetCkTypeIdPath: $.key.controlCkTypeId
+                    associationRoleId: System.Communication/MapsFrom
+                  - type: CreateAssociationUpdate@1
+                    targetPath: $.updates._assocUpdateItems
+                    targetValueKind: Array
+                    targetValueWriteMode: Append
+                    updateKind: CREATE
+                    originRtIdPath: $.updates._mappingUpdate.RtId
+                    originCkTypeIdPath: $.updates._mappingUpdate.CkTypeId
+                    targetRtIdPath: $.key.spaceRtId
+                    targetCkTypeIdPath: $.key.spaceCkTypeId
+                    associationRoleId: System.Communication/MapsTo
+
+          # ── Step 3: Persist ──
+          - type: Flatten@1
+            path: $.mappingResults[*]._mappingUpdate
+            targetPath: $._updateItems
+            targetValueKind: Simple
+            targetValueWriteMode: Overwrite
+          - type: Flatten@1
+            path: $.mappingResults[*]._assocUpdateItems[*]
+            targetPath: $._assocUpdateItems
+            targetValueKind: Simple
+            targetValueWriteMode: Overwrite
+          - type: If@1
+            description: Only apply if there are mappings to create
+            path: $._updateItems[0].RtId
+            operator: NotEquals
+            value: null
+            valueType: String
+            transformations:
+              - type: ApplyChanges@2
+                entityUpdatesPath: $._updateItems
+                associationUpdatesPath: $._assocUpdateItems
+
+          # The statistics double as the HTTP response body (resolved counts +
+          # unresolved entries with reasons for manual follow-up).
+          - type: SetPipelineExecutionResult@1
+            description: Return the import statistics
+            path: $.importStatistics

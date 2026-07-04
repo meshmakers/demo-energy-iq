@@ -38,3 +38,7 @@ octo-cli -c ImportRt -f (Join-Path $dataPath "_general/rt-ai-configuration.yaml"
 # energyiq archives imported+activated by om_importrt.ps1. -r/Upsert so re-runs
 # correct already-imported pipeline definitions.
 octo-cli -c ImportRt -f (Join-Path $dataPath "_pipelines/rt-pipelines-loxone.yaml") -w -r
+
+# Mapping backup pipelines (export/import DataPointMappings via natural keys).
+# Restore a saved backup after init with scripts/om_import_mappings.ps1.
+octo-cli -c ImportRt -f (Join-Path $dataPath "_pipelines/rt-pipelines-mapping-backup.yaml") -w -r

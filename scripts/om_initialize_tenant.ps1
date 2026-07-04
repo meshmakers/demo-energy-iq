@@ -83,3 +83,18 @@ Write-Host "Importing Loxone sample..." -ForegroundColor Yellow
 & "$PSScriptRoot/om_importrt_sample_general.ps1" -configuration $configuration
 
 Write-Host "=== Tenant initialization complete ===" -ForegroundColor Green
+
+# ---------------------------------------------------------------------------
+# Manually created DataPointMappings are wiped by the re-initialisation, but a
+# versioned backup can restore them (data/mappings/datapoint-mappings.json,
+# created via scripts/om_export_mappings.ps1). The restore needs running
+# services, the deployed "Mapping Backup" data flow and one Loxone browse run
+# (so the controls exist again) — it cannot run inside this script.
+# ---------------------------------------------------------------------------
+if (Test-Path (Join-Path $PSScriptRoot "../data/mappings/datapoint-mappings.json")) {
+    Write-Host ""
+    Write-Host "A DataPointMapping backup exists. To restore it:" -ForegroundColor Cyan
+    Write-Host "  1. Start the services and deploy the 'Mapping Backup' data flow (Studio -> Communication -> Data Flows)." -ForegroundColor Cyan
+    Write-Host "  2. Run the Loxone browse pipeline once (controls must exist again)." -ForegroundColor Cyan
+    Write-Host "  3. Run scripts/om_import_mappings.ps1" -ForegroundColor Cyan
+}

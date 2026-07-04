@@ -212,6 +212,27 @@ The Loxone sample data lives in `data/_general/rt-{adapters,loxone-configuration
 and `data/_pipelines/rt-pipelines-loxone.yaml`. Only the Loxone **edge adapter**
 (the .NET worker and `AdapterEdgeLoxone.CkModel`) remains in `octo-adapter-loxone`.
 
+### DataPointMapping backup (survives re-initialisation)
+
+Manually created DataPointMappings are wiped by `om_initialize_tenant.ps1`. The
+**Mapping Backup** data flow (`data/_pipelines/rt-pipelines-mapping-backup.yaml`,
+imported in step 7) exports/imports them via NATURAL keys — `LoxoneUuid` on the
+source side, `GlobalId` + the fixed seed RtIds on the EnergyIQ target side — so
+a backup taken before the re-init can be restored afterwards:
+
+- `scripts/om_export_mappings.ps1` → `GET /energyiq/mappings/export` →
+  `data/mappings/datapoint-mappings.json` (commit it — the backup is versioned).
+- `scripts/om_import_mappings.ps1` → `POST /energyiq/mappings/import`; the
+  response lists unresolved entries for manual follow-up in the Studio.
+
+Only the **manual delta** is exported (`excludeNameRegex` skips the
+rule-generated `ruleId|rtId|state` names — the Rules-based Auto-Map pipeline
+recreates those with the new RtIds). Both endpoints require the deployed
+"Mapping Backup" data flow and, for import, a prior Loxone browse run so the
+controls exist again. See `data/mappings/README.md`. The nodes
+(`ExportDataPointMappings@1` / `ImportDataPointMappings@1`) live in
+`octo-mesh-adapter`.
+
 ## Documentation
 
 Detailed specifications are in `docs/`:
