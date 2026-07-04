@@ -630,8 +630,9 @@ entities:
               - type: ApplyChanges@2
                 entityUpdatesPath: $._updateItems
               # EnergyIQ-2.0.0: measurements live on dedicated Sensor entities, so the
-              # previous single SpaceArchive has been split into 3 per-sensor archives
-              # (TemperatureSensorArchive / HumiditySensorArchive / CO2SensorArchive).
+              # previous single SpaceArchive has been split into per-type archives
+              # (13 in total since AB#3442: room sensors, light, shading, energy
+              # consumption and production — see rt-archives-energyiq.yaml).
               # Each Backfill+Save block iterates over $._updateItems but the archive
               # node itself filters to entities matching its TargetCkTypeId — items of
               # other types are skipped. So the same path is fed to each archive in turn.
@@ -663,6 +664,89 @@ entities:
                 description: Save CO2 time-series
                 path: $._updateItems
                 archiveRtId: 6a0e000000000000000a0003
+              # ── Light + shading (AB#3442) ──
+              - type: BackfillFromRtEntity@1
+                description: Backfill Luminaire archive
+                path: $._updateItems
+                archiveRtId: 6a0e000000000000000a0004
+              - type: SaveStreamDataInArchive@1
+                description: Save Luminaire time-series
+                path: $._updateItems
+                archiveRtId: 6a0e000000000000000a0004
+              - type: BackfillFromRtEntity@1
+                description: Backfill ShadingDevice archive
+                path: $._updateItems
+                archiveRtId: 6a0e000000000000000a0005
+              - type: SaveStreamDataInArchive@1
+                description: Save ShadingDevice time-series
+                path: $._updateItems
+                archiveRtId: 6a0e000000000000000a0005
+              # ── Energy consumption (AB#3442) ──
+              - type: BackfillFromRtEntity@1
+                description: Backfill Meter archive
+                path: $._updateItems
+                archiveRtId: 6a0e000000000000000a0006
+              - type: SaveStreamDataInArchive@1
+                description: Save Meter time-series
+                path: $._updateItems
+                archiveRtId: 6a0e000000000000000a0006
+              - type: BackfillFromRtEntity@1
+                description: Backfill GridConnection archive
+                path: $._updateItems
+                archiveRtId: 6a0e000000000000000a0007
+              - type: SaveStreamDataInArchive@1
+                description: Save GridConnection time-series
+                path: $._updateItems
+                archiveRtId: 6a0e000000000000000a0007
+              - type: BackfillFromRtEntity@1
+                description: Backfill ChargingStation archive
+                path: $._updateItems
+                archiveRtId: 6a0e000000000000000a0008
+              - type: SaveStreamDataInArchive@1
+                description: Save ChargingStation time-series
+                path: $._updateItems
+                archiveRtId: 6a0e000000000000000a0008
+              - type: BackfillFromRtEntity@1
+                description: Backfill Appliance archive
+                path: $._updateItems
+                archiveRtId: 6a0e000000000000000a0009
+              - type: SaveStreamDataInArchive@1
+                description: Save Appliance time-series
+                path: $._updateItems
+                archiveRtId: 6a0e000000000000000a0009
+              # ── Energy production + storage (AB#3442) ──
+              - type: BackfillFromRtEntity@1
+                description: Backfill PVString archive
+                path: $._updateItems
+                archiveRtId: 6a0e000000000000000a000a
+              - type: SaveStreamDataInArchive@1
+                description: Save PVString time-series
+                path: $._updateItems
+                archiveRtId: 6a0e000000000000000a000a
+              - type: BackfillFromRtEntity@1
+                description: Backfill Inverter archive
+                path: $._updateItems
+                archiveRtId: 6a0e000000000000000a000b
+              - type: SaveStreamDataInArchive@1
+                description: Save Inverter time-series
+                path: $._updateItems
+                archiveRtId: 6a0e000000000000000a000b
+              - type: BackfillFromRtEntity@1
+                description: Backfill PhotovoltaicSystem archive
+                path: $._updateItems
+                archiveRtId: 6a0e000000000000000a000c
+              - type: SaveStreamDataInArchive@1
+                description: Save PhotovoltaicSystem time-series
+                path: $._updateItems
+                archiveRtId: 6a0e000000000000000a000c
+              - type: BackfillFromRtEntity@1
+                description: Backfill BatteryStorage archive
+                path: $._updateItems
+                archiveRtId: 6a0e000000000000000a000d
+              - type: SaveStreamDataInArchive@1
+                description: Save BatteryStorage time-series
+                path: $._updateItems
+                archiveRtId: 6a0e000000000000000a000d
 
   # ==========================================================================
   # DataFlow: Loxone Auto-Map Controls

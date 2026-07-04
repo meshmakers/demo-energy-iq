@@ -76,6 +76,16 @@ entities:
                 - targetPath: $.fanBase
                   simulatorKey: Math.Triangle
                   configuration: '{"amplitude": 1, "frequency": 600}'
+                # ── Light + shading (AB#3442) ──
+                - targetPath: $.lightBase
+                  simulatorKey: Math.Triangle
+                  configuration: '{"amplitude": 1, "frequency": 700}'
+                - targetPath: $.shadingBase
+                  simulatorKey: Math.Triangle
+                  configuration: '{"amplitude": 1, "frequency": 1400}'
+                - targetPath: $.slatBase
+                  simulatorKey: Math.Triangle
+                  configuration: '{"amplitude": 1, "frequency": 500}'
                 # ── Energy consumers (each scaled to an ActivePower range below) ──
                 - targetPath: $.meterHgEgBase
                   simulatorKey: Math.Triangle
@@ -287,6 +297,31 @@ entities:
                       scaleInputMax: 1
                       scaleOutputMin: 40
                       scaleOutputMax: 80
+                # ── Light + shading (AB#3442) ──
+                - path: "$.lightBase"
+                  targetPath: $.dimmingLevel
+                  transformations:
+                    - type: LinearScaler@1
+                      scaleInputMin: -1
+                      scaleInputMax: 1
+                      scaleOutputMin: 0
+                      scaleOutputMax: 100
+                - path: "$.shadingBase"
+                  targetPath: $.shadingPosition
+                  transformations:
+                    - type: LinearScaler@1
+                      scaleInputMin: -1
+                      scaleInputMax: 1
+                      scaleOutputMin: 0
+                      scaleOutputMax: 100
+                - path: "$.slatBase"
+                  targetPath: $.slatAngle
+                  transformations:
+                    - type: LinearScaler@1
+                      scaleInputMin: -1
+                      scaleInputMax: 1
+                      scaleOutputMin: 0
+                      scaleOutputMax: 90
                 - path: "$.tempBase"
                   targetPath: $.ahuSupplyAirTemp
                   transformations:
@@ -835,6 +870,69 @@ entities:
                   attributeValueType: Double
                   valuePath: $.data.valvePosition
 
+            # ===== Licht + Beschattung (AB#3442) =====
+            # IsOn is derived from the simulated dimming level: > 10 % means the
+            # light is on at that level, otherwise it is off and dims to 0.
+            - type: If@1
+              description: Deckenleuchte Buero DG1 is on (dimming > 10 %)
+              path: $.data.dimmingLevel
+              operator: GreaterThan
+              value: 10
+              valueType: Double
+              transformations:
+                - type: CreateUpdateInfo@1
+                  description: Update Deckenleuchte Buero DG1 (on)
+                  targetPath: $._updateItems
+                  targetValueKind: Array
+                  targetValueWriteMode: Append
+                  updateKind: UPDATE
+                  rtId: "6789a00000000000000072f6"
+                  ckTypeId: EnergyIQ/Luminaire
+                  attributeUpdates:
+                    - attributeName: IsOn
+                      attributeValueType: Boolean
+                      value: true
+                    - attributeName: DimmingLevel
+                      attributeValueType: Double
+                      valuePath: $.data.dimmingLevel
+            - type: If@1
+              description: Deckenleuchte Buero DG1 is off (dimming <= 10 %)
+              path: $.data.dimmingLevel
+              operator: LessEqualsThan
+              value: 10
+              valueType: Double
+              transformations:
+                - type: CreateUpdateInfo@1
+                  description: Update Deckenleuchte Buero DG1 (off)
+                  targetPath: $._updateItems
+                  targetValueKind: Array
+                  targetValueWriteMode: Append
+                  updateKind: UPDATE
+                  rtId: "6789a00000000000000072f6"
+                  ckTypeId: EnergyIQ/Luminaire
+                  attributeUpdates:
+                    - attributeName: IsOn
+                      attributeValueType: Boolean
+                      value: false
+                    - attributeName: DimmingLevel
+                      attributeValueType: Double
+                      value: 0
+            - type: CreateUpdateInfo@1
+              description: Update Raffstore Sued Wohnbereich
+              targetPath: $._updateItems
+              targetValueKind: Array
+              targetValueWriteMode: Append
+              updateKind: UPDATE
+              rtId: "6789a00000000000000071f5"
+              ckTypeId: EnergyIQ/ShadingDevice
+              attributeUpdates:
+                - attributeName: Position
+                  attributeValueType: Double
+                  valuePath: $.data.shadingPosition
+                - attributeName: SlatAngle
+                  attributeValueType: Double
+                  valuePath: $.data.slatAngle
+
             # ===== PV / Inverter / Battery (unchanged in v2) =====
             - type: CreateUpdateInfo@1
               description: Update PV System
@@ -1097,6 +1195,122 @@ entities:
 
             - type: ApplyChanges@1
               path: $._updateItems
+
+            # ===== Stream-data archiving (AB#3442) =====
+            # Same pattern as the Loxone "Store Control States" pipeline: every
+            # archive gets the full $._updateItems; each archive node filters to
+            # entities matching its TargetCkTypeId, items of other types are
+            # skipped. BackfillFromRtEntity fills columns that are not part of
+            # the current update batch from the entity before the row is saved.
+            #
+            # ── Room sensors ──
+            - type: BackfillFromRtEntity@1
+              description: Backfill TemperatureSensor archive
+              path: $._updateItems
+              archiveRtId: 6a0e000000000000000a0001
+            - type: SaveStreamDataInArchive@1
+              description: Save Temperature time-series
+              path: $._updateItems
+              archiveRtId: 6a0e000000000000000a0001
+            - type: BackfillFromRtEntity@1
+              description: Backfill HumiditySensor archive
+              path: $._updateItems
+              archiveRtId: 6a0e000000000000000a0002
+            - type: SaveStreamDataInArchive@1
+              description: Save Humidity time-series
+              path: $._updateItems
+              archiveRtId: 6a0e000000000000000a0002
+            - type: BackfillFromRtEntity@1
+              description: Backfill CO2Sensor archive
+              path: $._updateItems
+              archiveRtId: 6a0e000000000000000a0003
+            - type: SaveStreamDataInArchive@1
+              description: Save CO2 time-series
+              path: $._updateItems
+              archiveRtId: 6a0e000000000000000a0003
+            # ── Light + shading ──
+            - type: BackfillFromRtEntity@1
+              description: Backfill Luminaire archive
+              path: $._updateItems
+              archiveRtId: 6a0e000000000000000a0004
+            - type: SaveStreamDataInArchive@1
+              description: Save Luminaire time-series
+              path: $._updateItems
+              archiveRtId: 6a0e000000000000000a0004
+            - type: BackfillFromRtEntity@1
+              description: Backfill ShadingDevice archive
+              path: $._updateItems
+              archiveRtId: 6a0e000000000000000a0005
+            - type: SaveStreamDataInArchive@1
+              description: Save ShadingDevice time-series
+              path: $._updateItems
+              archiveRtId: 6a0e000000000000000a0005
+            # ── Energy consumption ──
+            - type: BackfillFromRtEntity@1
+              description: Backfill Meter archive
+              path: $._updateItems
+              archiveRtId: 6a0e000000000000000a0006
+            - type: SaveStreamDataInArchive@1
+              description: Save Meter time-series
+              path: $._updateItems
+              archiveRtId: 6a0e000000000000000a0006
+            - type: BackfillFromRtEntity@1
+              description: Backfill GridConnection archive
+              path: $._updateItems
+              archiveRtId: 6a0e000000000000000a0007
+            - type: SaveStreamDataInArchive@1
+              description: Save GridConnection time-series
+              path: $._updateItems
+              archiveRtId: 6a0e000000000000000a0007
+            - type: BackfillFromRtEntity@1
+              description: Backfill ChargingStation archive
+              path: $._updateItems
+              archiveRtId: 6a0e000000000000000a0008
+            - type: SaveStreamDataInArchive@1
+              description: Save ChargingStation time-series
+              path: $._updateItems
+              archiveRtId: 6a0e000000000000000a0008
+            - type: BackfillFromRtEntity@1
+              description: Backfill Appliance archive
+              path: $._updateItems
+              archiveRtId: 6a0e000000000000000a0009
+            - type: SaveStreamDataInArchive@1
+              description: Save Appliance time-series
+              path: $._updateItems
+              archiveRtId: 6a0e000000000000000a0009
+            # ── Energy production + storage ──
+            - type: BackfillFromRtEntity@1
+              description: Backfill PVString archive
+              path: $._updateItems
+              archiveRtId: 6a0e000000000000000a000a
+            - type: SaveStreamDataInArchive@1
+              description: Save PVString time-series
+              path: $._updateItems
+              archiveRtId: 6a0e000000000000000a000a
+            - type: BackfillFromRtEntity@1
+              description: Backfill Inverter archive
+              path: $._updateItems
+              archiveRtId: 6a0e000000000000000a000b
+            - type: SaveStreamDataInArchive@1
+              description: Save Inverter time-series
+              path: $._updateItems
+              archiveRtId: 6a0e000000000000000a000b
+            - type: BackfillFromRtEntity@1
+              description: Backfill PhotovoltaicSystem archive
+              path: $._updateItems
+              archiveRtId: 6a0e000000000000000a000c
+            - type: SaveStreamDataInArchive@1
+              description: Save PhotovoltaicSystem time-series
+              path: $._updateItems
+              archiveRtId: 6a0e000000000000000a000c
+            - type: BackfillFromRtEntity@1
+              description: Backfill BatteryStorage archive
+              path: $._updateItems
+              archiveRtId: 6a0e000000000000000a000d
+            - type: SaveStreamDataInArchive@1
+              description: Save BatteryStorage time-series
+              path: $._updateItems
+              archiveRtId: 6a0e000000000000000a000d
     associations:
       - roleId: System/ParentChild
         targetRtId: 6789a00000000000000090a3

@@ -18,15 +18,26 @@ octo-cli -c EnableStreamData
 #octo-cli -c ImportRt -f (Join-Path $dataPath "_general/rt-autoincrement.yaml") -w
 
 # --- Stream-data archives ---------------------------------------------------
-# One archive per sensor type since v2 (TemperatureSensor / HumiditySensor /
-# CO2Sensor). -r/Upsert lets us correct the Columns of an already-imported but
+# One archive per target type (13 since AB#3442: room sensors, light, shading,
+# energy consumption and production — see rt-archives-energyiq.yaml).
+# -r/Upsert lets us correct the Columns of an already-imported but
 # not-yet-activated archive. ActivateArchive provisions each CrateDB table so it
-# can accept writes (needs CrateDB reachable). The Loxone sample pipelines
-# (om_importrt_sample_general.ps1) write into these archives.
+# can accept writes (needs CrateDB reachable). The simulation and Loxone sample
+# pipelines write into these archives.
 octo-cli -c ImportRt -f (Join-Path $dataPath "_general/rt-archives-energyiq.yaml") -w -r
-octo-cli -c ActivateArchive -id 6a0e000000000000000a0001
-octo-cli -c ActivateArchive -id 6a0e000000000000000a0002
-octo-cli -c ActivateArchive -id 6a0e000000000000000a0003
+octo-cli -c ActivateArchive -id 6a0e000000000000000a0001  # TemperatureSensor
+octo-cli -c ActivateArchive -id 6a0e000000000000000a0002  # HumiditySensor
+octo-cli -c ActivateArchive -id 6a0e000000000000000a0003  # CO2Sensor
+octo-cli -c ActivateArchive -id 6a0e000000000000000a0004  # Luminaire
+octo-cli -c ActivateArchive -id 6a0e000000000000000a0005  # ShadingDevice
+octo-cli -c ActivateArchive -id 6a0e000000000000000a0006  # Meter
+octo-cli -c ActivateArchive -id 6a0e000000000000000a0007  # GridConnection
+octo-cli -c ActivateArchive -id 6a0e000000000000000a0008  # ChargingStation
+octo-cli -c ActivateArchive -id 6a0e000000000000000a0009  # Appliance
+octo-cli -c ActivateArchive -id 6a0e000000000000000a000a  # PVString
+octo-cli -c ActivateArchive -id 6a0e000000000000000a000b  # Inverter
+octo-cli -c ActivateArchive -id 6a0e000000000000000a000c  # PhotovoltaicSystem
+octo-cli -c ActivateArchive -id 6a0e000000000000000a000d  # BatteryStorage
 
 # --- Pipelines --------------------------------------------------------------
 octo-cli -c ImportRt -f (Join-Path $dataPath "_pipelines/rt-simulation-adapters.yaml") -w

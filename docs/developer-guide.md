@@ -35,7 +35,7 @@ cd scripts
 ./om_importrt.ps1
 ```
 
-After setup, the simulation automatically generates data every 10 seconds, writing values onto the Sensor entities of the Firmianstrasse demo building. The three per-sensor archives (Temperature, Humidity, CO2) collect time-series data in CrateDB.
+After setup, the simulation automatically generates data every 10 seconds, writing values onto the Sensor entities of the Firmianstrasse demo building. The 13 per-type archives (room sensors, light, shading, energy consumption and production — see "Archives (Stream Data)") collect time-series data in CrateDB.
 
 **Access GraphQL API:** `https://localhost:5001/graphql` (Tenant: `energyiq`)
 
@@ -497,17 +497,32 @@ OccupancyTimePerDay: 8.0
 
 ## Archives (Stream Data)
 
-Per-sensor archives provision CrateDB tables for time-series storage. Defined in `data/_general/rt-archives-energyiq.yaml`:
+Per-type archives provision CrateDB tables for time-series storage. Defined in `data/_general/rt-archives-energyiq.yaml` (13 RawArchives since AB#3442):
 
-| Archive (rtId) | TargetCkTypeId | Path |
+| Archive (rtId) | TargetCkTypeId | Columns (Paths) |
 |---|---|---|
 | TemperatureSensorArchive (`6a0e…0001`) | `EnergyIQ/TemperatureSensor` | `CurrentValue` |
 | HumiditySensorArchive (`6a0e…0002`) | `EnergyIQ/HumiditySensor` | `CurrentValue` |
 | CO2SensorArchive (`6a0e…0003`) | `EnergyIQ/CO2Sensor` | `CurrentValue` |
+| LuminaireArchive (`6a0e…0004`) | `EnergyIQ/Luminaire` | `IsOn`, `DimmingLevel` |
+| ShadingDeviceArchive (`6a0e…0005`) | `EnergyIQ/ShadingDevice` | `Position`, `SlatAngle` |
+| MeterArchive (`6a0e…0006`) | `EnergyIQ/Meter` | `ActivePower` |
+| GridConnectionArchive (`6a0e…0007`) | `EnergyIQ/GridConnection` | `ActivePower` (signed: + import / − export) |
+| ChargingStationArchive (`6a0e…0008`) | `EnergyIQ/ChargingStation` | `ActivePower` |
+| ApplianceArchive (`6a0e…0009`) | `EnergyIQ/Appliance` | `ActivePower` |
+| PVStringArchive (`6a0e…000a`) | `EnergyIQ/PVString` | `CurrentPower` |
+| InverterArchive (`6a0e…000b`) | `EnergyIQ/Inverter` | `DcPower`, `AcPower` |
+| PhotovoltaicSystemArchive (`6a0e…000c`) | `EnergyIQ/PhotovoltaicSystem` | `TotalCurrentPower`, `GridFeedIn`, `SelfConsumption` |
+| BatteryStorageArchive (`6a0e…000d`) | `EnergyIQ/BatteryStorage` | `StateOfCharge`, `ChargingPower` |
 
-`Path` references the **display name at the target type**, not the global attribute id. All three sensor subtypes expose their measurement as `CurrentValue`, so all three archive Paths are `CurrentValue`.
+`Path` references the **display name at the target type**, not the global attribute id. `TargetCkTypeId` matches exactly (no derived types), which is why each concrete `Meter` subtype (GridConnection / ChargingStation / Appliance) has its own archive.
 
-Activate each archive after import via `octo-cli -c ActivateArchive -id <rtId>` (the `om_importrt.ps1` script does this automatically).
+Activate each archive after import via `octo-cli -c ActivateArchive -id <rtId>` (the `om_importrt.ps1` script does this automatically). Note that re-importing `rt-archives-energyiq.yaml` with `-r`/Upsert resets `Status` back to `Created` — always re-run the `ActivateArchive` calls afterwards (activation is idempotent for already-provisioned tables).
+
+Both write paths feed the archives with `BackfillFromRtEntity@1` + `SaveStreamDataInArchive@1` node pairs over the full `$._updateItems` batch (each archive node filters to entities matching its `TargetCkTypeId`):
+
+- **Simulation**: `EnergyIQ Entity Updater` (`data/_pipelines/rt-simulation-adapters.yaml`) archives every simulated update — including the simulated light (Luminaire `IsOn`/`DimmingLevel`, on = dimming > 10 %) and shading (`Position`/`SlatAngle`) signals.
+- **Loxone live**: `Store Control States` (`data/_pipelines/rt-pipelines-loxone.yaml`) archives real state changes applied through DataPointMappings.
 
 ## TimeSeries Support
 
@@ -771,7 +786,7 @@ src/EnergyIqCkModel/ConstructionKit/
 
 data/
 ├── _general/
-│   ├── rt-archives-energyiq.yaml      # 3 per-sensor archives
+│   ├── rt-archives-energyiq.yaml      # 13 per-type stream-data archives
 │   ├── rt-adapters-mesh.yaml
 │   └── rt-autoincrement.yaml
 ├── _pipelines/

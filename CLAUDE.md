@@ -194,8 +194,10 @@ cd scripts && pwsh om_initialize_tenant.ps1
    build output (`-configuration`, default `DebugL`).
 6. `om_importrt.ps1` — `EnableCommunication` (auto-applies the System.Communication
    blueprint → seeds the default Cloud pool + Mesh adapter) + `EnableStreamData`,
-   then imports & **activates** the three per-sensor archives
-   (`6a0e…0001/0002/0003`), the simulation pipelines, the `_trees` query, the
+   then imports & **activates** the 13 per-type stream-data archives
+   (`6a0e…0001`–`…000d`, AB#3442: room sensors, light, shading, energy
+   consumption + production — see `docs/developer-guide.md` "Archives (Stream
+   Data)"), the simulation pipelines, the `_trees` query, the
    `rt-tree-navigation.yaml` Runtime Browser config (role labels/visibility +
    the switchable **Systems** perspective on `DistributionSystem`, needs
    System.UI ≥ 2.3.0) and the `rt-firmianstrasse.yaml` BIM sample.
