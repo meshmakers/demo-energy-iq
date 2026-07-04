@@ -53,6 +53,18 @@ entities:
         value: System.Communication/MapsTo
       - id: System.UI/TreeNavigationRoleConfig.Visible
         value: false
+    # In the Systems view a PhotovoltaicSystem is a member of the electrical DistributionSystem;
+    # its own SystemMembers (strings, inverters, battery) show one hop deeper — label them "Komponenten".
+    - ckRecordId: System.UI/TreeNavigationRoleConfig
+      attributes:
+      - id: System.UI/TreeNavigationRoleConfig.SourceCkTypeId
+        value: EnergyIQ/PhotovoltaicSystem
+      - id: System.UI/TreeNavigationRoleConfig.RoleId
+        value: EnergyIQ/SystemMembers
+      - id: System.UI/TreeNavigationRoleConfig.DisplayName
+        value: Komponenten
+      - id: System.UI/TreeNavigationRoleConfig.SortIndex
+        value: 1
   - id: System.UI/TreeNavigationConfiguration.Perspectives
     value:
     - ckRecordId: System.UI/TreePerspectiveConfig

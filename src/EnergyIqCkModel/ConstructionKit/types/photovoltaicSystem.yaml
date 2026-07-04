@@ -1,9 +1,8 @@
 $schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
 types:
 - typeId: PhotovoltaicSystem
-  derivedFromCkTypeId: ${Basic}/TreeNode
-  description: "Photovoltaic system - container for PV strings, inverters and battery (IFC: IfcSystem)"
-  # Parent (Building) and Children (PVString, Inverter, BatteryStorage) via System/ParentChild
+  derivedFromCkTypeId: ${Basic}/NamedEntity
+  description: "Photovoltaic system - logical grouping of PV strings, inverters and battery (IFC: IfcSystem). A pure logical aggregate (NamedEntity, NOT a spatial TreeNode): it lives in the Systems view only. Its physical components (PVString/Inverter/BatteryStorage) are anchored in the spatial tree where they actually sit (roofs, Technikraum) and are grouped here via the outbound SystemMembers association. The PhotovoltaicSystem is itself a member of the electrical DistributionSystem via inbound MemberOfSystem (nested IfcSystem)."
   attributes:
   - id: ${this}/Identifier
     name: Identifier
@@ -30,3 +29,10 @@ types:
   - id: ${this}/FaultState
     name: FaultState
     isOptional: true
+  associations:
+  # Groups the physical PV components (PVString, Inverter, BatteryStorage). Reuses the
+  # SystemMembers role so the Systems-view navigation is uniform across every logical
+  # system: outbound SystemMembers = components, inbound MemberOfSystem (on each component)
+  # points back to this PV system. IFC IfcRelAssignsToGroup (nested IfcSystem).
+  - id: ${this}/SystemMembers
+    targetCkTypeId: ${Basic}/NamedEntity

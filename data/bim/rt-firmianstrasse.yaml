@@ -1980,9 +1980,9 @@ entities:
       - id: System/Name
         value: Wärmepumpe
       - id: System/Description
-        value: Luft-Wasser-Wärmepumpe mit Passivkühlung über Bodenheizschläuche (Umschaltmodul)
+        value: Sole-Wasser-Wärmepumpe (Erdsonde) mit Passivkühlung über die Fußbodenheizkreise — im Kühlmodus liefert die niedrige Erdreichtemperatur die Kälte ohne Kompressorbetrieb (Umschaltmodul V-Umschalt-HzgKlt)
       - id: EnergyIQ/HeatSourceValue
-        value: 0  # Air
+        value: 1  # Ground (Sole/Erdsonde — enables true passive/free cooling)
       - id: EnergyIQ/IsReversibleAggregate
         value: true
       - id: EnergyIQ/HeatPumpOperatingModeValue
@@ -2004,9 +2004,9 @@ entities:
       - id: EnergyIQ/SourceOutletTemp
         value: 1.0
       - id: EnergyIQ/COP
-        value: 3.8
+        value: 4.6  # ground-source (B0/W35) — higher than the previous air-source value
       - id: EnergyIQ/SCOP
-        value: 4.2
+        value: 5.0
       - id: EnergyIQ/IsRunning
         value: true
       - id: EnergyIQ/FaultState
@@ -2280,9 +2280,31 @@ entities:
       - id: EnergyIQ/FaultState
         value: false
     associations:
-      - roleId: System/ParentChild
-        targetRtId: 6789a00000000000000001b1
-        targetCkTypeId: EnergyIQ/Building
+      # Logical grouping (IFC IfcSystem): the PV system is NOT in the spatial tree anymore.
+      # Its physical components are anchored spatially (see each component's ParentChild) and
+      # grouped here via SystemMembers. The PV system itself is a member of the electrical
+      # DistributionSystem "Elektrisch (PV + Eigenverbrauch)" via that system's SystemMembers.
+      - roleId: EnergyIQ/SystemMembers
+        targetRtId: 6789a00000000000000081b1  # PVString Hauptdach Ost
+        targetCkTypeId: EnergyIQ/PVString
+      - roleId: EnergyIQ/SystemMembers
+        targetRtId: 6789a00000000000000082b2  # PVString Hauptdach Süd
+        targetCkTypeId: EnergyIQ/PVString
+      - roleId: EnergyIQ/SystemMembers
+        targetRtId: 6789a00000000000000083b3  # PVString Nebengebäude Dach
+        targetCkTypeId: EnergyIQ/PVString
+      - roleId: EnergyIQ/SystemMembers
+        targetRtId: 6789a00000000000000084b4  # PVString PV-Zaun
+        targetCkTypeId: EnergyIQ/PVString
+      - roleId: EnergyIQ/SystemMembers
+        targetRtId: 6789a00000000000000085c1  # Inverter 1
+        targetCkTypeId: EnergyIQ/Inverter
+      - roleId: EnergyIQ/SystemMembers
+        targetRtId: 6789a00000000000000086c2  # Inverter 2
+        targetCkTypeId: EnergyIQ/Inverter
+      - roleId: EnergyIQ/SystemMembers
+        targetRtId: 6789a00000000000000087d1  # BatteryStorage
+        targetCkTypeId: EnergyIQ/BatteryStorage
 
   - rtId: 6789a00000000000000081b1
     ckTypeId: EnergyIQ/PVString
@@ -2310,9 +2332,10 @@ entities:
       - id: EnergyIQ/IsRunning
         value: true
     associations:
+      # Physical location: on the Hauptgebäude roof. Grouped into the PV system via SystemMembers.
       - roleId: System/ParentChild
-        targetRtId: 6789a00000000000000080a1
-        targetCkTypeId: EnergyIQ/PhotovoltaicSystem
+        targetRtId: 6789a00000000000000001b1
+        targetCkTypeId: EnergyIQ/Building
 
   - rtId: 6789a00000000000000082b2
     ckTypeId: EnergyIQ/PVString
@@ -2340,9 +2363,10 @@ entities:
       - id: EnergyIQ/IsRunning
         value: true
     associations:
+      # Physical location: on the Hauptgebäude roof. Grouped into the PV system via SystemMembers.
       - roleId: System/ParentChild
-        targetRtId: 6789a00000000000000080a1
-        targetCkTypeId: EnergyIQ/PhotovoltaicSystem
+        targetRtId: 6789a00000000000000001b1
+        targetCkTypeId: EnergyIQ/Building
 
   - rtId: 6789a00000000000000083b3
     ckTypeId: EnergyIQ/PVString
@@ -2370,9 +2394,10 @@ entities:
       - id: EnergyIQ/IsRunning
         value: true
     associations:
+      # Physical location: on the Nebengebäude roof. Grouped into the PV system via SystemMembers.
       - roleId: System/ParentChild
-        targetRtId: 6789a00000000000000080a1
-        targetCkTypeId: EnergyIQ/PhotovoltaicSystem
+        targetRtId: 6789a00000000000000002b2
+        targetCkTypeId: EnergyIQ/Building
 
   - rtId: 6789a00000000000000084b4
     ckTypeId: EnergyIQ/PVString
@@ -2400,9 +2425,10 @@ entities:
       - id: EnergyIQ/IsRunning
         value: true
     associations:
+      # Physical location: free-standing PV fence in the garden (ExternalSpace). Grouped via SystemMembers.
       - roleId: System/ParentChild
-        targetRtId: 6789a00000000000000080a1
-        targetCkTypeId: EnergyIQ/PhotovoltaicSystem
+        targetRtId: 6789a00000000000000051e7
+        targetCkTypeId: EnergyIQ/ExternalSpace
 
   - rtId: 6789a00000000000000085c1
     ckTypeId: EnergyIQ/Inverter
@@ -2428,9 +2454,10 @@ entities:
       - id: EnergyIQ/IsRunning
         value: true
     associations:
+      # Physical location: in the Technikraum (HG-EG). Grouped into the PV system via SystemMembers.
       - roleId: System/ParentChild
-        targetRtId: 6789a00000000000000080a1
-        targetCkTypeId: EnergyIQ/PhotovoltaicSystem
+        targetRtId: 6789a00000000000000015d5
+        targetCkTypeId: EnergyIQ/Space
 
   - rtId: 6789a00000000000000086c2
     ckTypeId: EnergyIQ/Inverter
@@ -2456,9 +2483,10 @@ entities:
       - id: EnergyIQ/IsRunning
         value: true
     associations:
+      # Physical location: in the Technikraum (HG-EG). Grouped into the PV system via SystemMembers.
       - roleId: System/ParentChild
-        targetRtId: 6789a00000000000000080a1
-        targetCkTypeId: EnergyIQ/PhotovoltaicSystem
+        targetRtId: 6789a00000000000000015d5
+        targetCkTypeId: EnergyIQ/Space
 
   - rtId: 6789a00000000000000087d1
     ckTypeId: EnergyIQ/BatteryStorage
@@ -2490,9 +2518,10 @@ entities:
       - id: EnergyIQ/IsRunning
         value: true
     associations:
+      # Physical location: in the Technikraum (HG-EG). Grouped into the PV system via SystemMembers.
       - roleId: System/ParentChild
-        targetRtId: 6789a00000000000000080a1
-        targetCkTypeId: EnergyIQ/PhotovoltaicSystem
+        targetRtId: 6789a00000000000000015d5
+        targetCkTypeId: EnergyIQ/Space
 
   # ============================================================
   # SCHEDULES (geteilt zwischen Räumen)
@@ -2641,11 +2670,16 @@ entities:
         targetRtId: 6789a00000000000000060f1
         targetCkTypeId: EnergyIQ/HeatPump
       - roleId: EnergyIQ/SystemMembers
-        targetRtId: 6789a00000000000000063f4
+        targetRtId: 6789a00000000000000063f4  # Heizpufferspeicher — heating circuit only
         targetCkTypeId: EnergyIQ/ThermalEnergyStorage
       - roleId: EnergyIQ/SystemMembers
-        targetRtId: 6789a00000000000000062f3
+        targetRtId: 6789a00000000000000062f3  # Heizkreispumpe
         targetCkTypeId: EnergyIQ/Pump
+      # Shared changeover valve (also a member of the passive-cooling circuit, N:N): in heating
+      # mode it routes flow to the heating side.
+      - roleId: EnergyIQ/SystemMembers
+        targetRtId: 6789a00000000000000060f2  # V-Umschalt-HzgKlt (ChangeoverHeatingCooling)
+        targetCkTypeId: EnergyIQ/Valve
       # IfcRelServicesBuildings: the heating circuit serves the 3 Hauptgebäude storeys.
       - roleId: EnergyIQ/SystemSpaces
         targetRtId: 6789a00000000000000010c1  # storey-hg-eg (EG)
@@ -2687,13 +2721,57 @@ entities:
       - id: System/Name
         value: Elektrisch (PV + Eigenverbrauch)
       - id: EnergyIQ/DistributionSystemTypeValue
-        value: 9  # Solar
+        value: 3  # Electrical — the whole electrical distribution (generation PV + consumption meters/loads + grid coupling)
       - id: EnergyIQ/TotalEnergyDelivered
         value: 15420.0
     associations:
+      # Generation side: the PV system (nested IfcSystem; its own strings/inverters/battery hang one hop deeper).
       - roleId: EnergyIQ/SystemMembers
         targetRtId: 6789a00000000000000080a1
         targetCkTypeId: EnergyIQ/PhotovoltaicSystem
+      # Grid coupling point (Hausanschluss, bidirectional).
+      - roleId: EnergyIQ/SystemMembers
+        targetRtId: 6789a00000000000003000a1
+        targetCkTypeId: EnergyIQ/GridConnection
+      # Consumption side: the 4 per-storey electricity sub-meters.
+      - roleId: EnergyIQ/SystemMembers
+        targetRtId: 6789a00000000000003001a2  # Stromzähler HG-EG
+        targetCkTypeId: EnergyIQ/Meter
+      - roleId: EnergyIQ/SystemMembers
+        targetRtId: 6789a00000000000003002a3  # Stromzähler HG-1.OG
+        targetCkTypeId: EnergyIQ/Meter
+      - roleId: EnergyIQ/SystemMembers
+        targetRtId: 6789a00000000000003003a4  # Stromzähler HG-DG
+        targetCkTypeId: EnergyIQ/Meter
+      - roleId: EnergyIQ/SystemMembers
+        targetRtId: 6789a00000000000003004a5  # Stromzähler NG-EG
+        targetCkTypeId: EnergyIQ/Meter
+      # Metered loads: 2 wallboxes + 2 appliances.
+      - roleId: EnergyIQ/SystemMembers
+        targetRtId: 6789a00000000000003010b1  # Wallbox-Links
+        targetCkTypeId: EnergyIQ/ChargingStation
+      - roleId: EnergyIQ/SystemMembers
+        targetRtId: 6789a00000000000003011b2  # Wallbox-Rechts
+        targetCkTypeId: EnergyIQ/ChargingStation
+      - roleId: EnergyIQ/SystemMembers
+        targetRtId: 6789a00000000000003020c1  # Waschmaschine
+        targetCkTypeId: EnergyIQ/Appliance
+      - roleId: EnergyIQ/SystemMembers
+        targetRtId: 6789a00000000000003021c2  # Trockner
+        targetCkTypeId: EnergyIQ/Appliance
+      # IfcRelServicesBuildings: the electrical system serves all four storeys.
+      - roleId: EnergyIQ/SystemSpaces
+        targetRtId: 6789a00000000000000010c1  # storey-hg-eg (EG)
+        targetCkTypeId: EnergyIQ/BuildingStorey
+      - roleId: EnergyIQ/SystemSpaces
+        targetRtId: 6789a00000000000000020c2  # storey-hg-og (OG)
+        targetCkTypeId: EnergyIQ/BuildingStorey
+      - roleId: EnergyIQ/SystemSpaces
+        targetRtId: 6789a00000000000000030c3  # storey-hg-dg (DG)
+        targetCkTypeId: EnergyIQ/BuildingStorey
+      - roleId: EnergyIQ/SystemSpaces
+        targetRtId: 6789a00000000000000040c4  # storey-ng-eg (Nebengebäude EG)
+        targetCkTypeId: EnergyIQ/BuildingStorey
 
   # --- Kühlkreis (Passivkühlung) ---
   # Passive cooling circuit. It reuses the SAME reversible plant as the heating
@@ -2721,11 +2799,16 @@ entities:
         targetRtId: 6789a00000000000000060f1  # Wärmepumpe (reversibel)
         targetCkTypeId: EnergyIQ/HeatPump
       - roleId: EnergyIQ/SystemMembers
-        targetRtId: 6789a00000000000000063f4  # Heizpufferspeicher
-        targetCkTypeId: EnergyIQ/ThermalEnergyStorage
-      - roleId: EnergyIQ/SystemMembers
         targetRtId: 6789a00000000000000062f3  # Heizkreispumpe
         targetCkTypeId: EnergyIQ/Pump
+      # The changeover valve is what turns the shared reversible loop into the cooling circuit
+      # (ChangeoverHeatingCooling) — the identifying member of THIS system. The heating buffer
+      # (…63f4) is intentionally NOT a member here: it is hydraulically bypassed in cooling mode
+      # (a Heizpufferspeicher is not condensation-safe below dew point, and passive cooling wants
+      # minimal thermal mass). It stays a member of the heating circuit only.
+      - roleId: EnergyIQ/SystemMembers
+        targetRtId: 6789a00000000000000060f2  # V-Umschalt-HzgKlt (ChangeoverHeatingCooling)
+        targetCkTypeId: EnergyIQ/Valve
       # IfcRelServicesBuildings: passive cooling serves the same 3 Hauptgebäude storeys.
       - roleId: EnergyIQ/SystemSpaces
         targetRtId: 6789a00000000000000010c1  # storey-hg-eg (EG)
@@ -2870,7 +2953,7 @@ entities:
       - id: System/Name
         value: Wallbox-Rechts
       - id: System/Description
-        value: EV-Ladestation rechts in der Garage
+        value: EV-Ladestation im Außenbereich (Parkplatz an der Zufahrt)
       - id: EnergyIQ/MeterIdentifier
         value: LOXONE-WALLBOX-2
       - id: EnergyIQ/MeterCarrierTypeValue
@@ -2880,9 +2963,10 @@ entities:
       - id: EnergyIQ/MaxChargingPower
         value: 11.0
     associations:
+      # Outdoor parking on the driveway (ExternalSpace), not the garage.
       - roleId: EnergyIQ/SpaceElements
-        targetRtId: 6789a00000000000000041e3  # space-ng-garage
-        targetCkTypeId: EnergyIQ/Space
+        targetRtId: 6789a00000000000000050e6  # ext-site-zufahrt (Außenbereich/Parkplatz)
+        targetCkTypeId: EnergyIQ/ExternalSpace
 
   # --- 2× Appliance in der Waschküche ---
   - rtId: 6789a00000000000003020c1

@@ -31,5 +31,3 @@ types:
     targetCkTypeId: ${this}/Actuator
   - id: ${this}/TerminalServedBy
     targetCkTypeId: ${this}/RoomTerminal
-  - id: ${this}/SystemMembers
-    targetCkTypeId: ${this}/DistributionSystem

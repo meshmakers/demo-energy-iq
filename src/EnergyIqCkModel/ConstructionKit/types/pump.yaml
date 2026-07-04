@@ -23,5 +23,3 @@ types:
     targetCkTypeId: ${this}/Sensor
   - id: ${this}/EquipmentActuators
     targetCkTypeId: ${this}/Actuator
-  - id: ${this}/SystemMembers
-    targetCkTypeId: ${this}/DistributionSystem

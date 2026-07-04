@@ -47,7 +47,7 @@ Solange das Modell nur Firmianstrasse abdecken soll, reicht eine schlanke Varian
 
 ### 3.2 Passivkühlung als Testfall
 
-Die Firmianstrasse hat eine Luft-Wasser-Wärmepumpe mit **Passivkühlung über dieselben Bodenheizschläuche** (Umschaltmodul). Das ist im aktuellen Modell nicht korrekt darstellbar:
+Die Firmianstrasse hat eine Sole-Wasser-Wärmepumpe (Erdsonde) mit **Passivkühlung über dieselben Bodenheizschläuche** (Umschaltmodul; die niedrige Erdreichtemperatur ist die Kältequelle — echte Passivkühlung ohne Kompressor). Das ist im aktuellen Modell nicht korrekt darstellbar:
 
 - Es ist **kein Boiler** (Aggregat ist reversibel, kann auch kühlen)
 - Es ist **kein Boiler + Chiller** (es gibt nur einen Hydraulikkreis, nicht zwei getrennte)
@@ -362,8 +362,8 @@ Plus auf Plant-Ebene (einmalig pro Haus, nicht pro Raum):
 ```
 1× HeatPump (statt aktueller Boiler-Modellierung)
     - OperatingMode: Heating (kann auch PassiveCooling)
-    - HeatSource: Air
-    - COP: 3.8
+    - HeatSource: Ground (Sole-Wasser/Erdsonde → echte Passivkühlung)
+    - COP: 4.6
     - SupplyTemp: 35 °C, ReturnTemp: 28 °C, ModulationLevel: 65 %
     - 1× Valve (Umschaltmodul Heizen/Kühlen)
         - ValveType: ChangeoverHeatingCooling

@@ -41,3 +41,8 @@ types:
   # Located in a space (e.g. floor meter in a hallway, appliance meter in a room)
   - id: ${this}/SpaceElements
     targetCkTypeId: ${this}/Space
+  # Or located in an outdoor spatial element (e.g. an EV charger on the driveway / outdoor
+  # parking, an irrigation sub-meter in the garden). ExternalSpace already declares the inbound
+  # SpaceElements -> BuildingElement side; this completes the Meter (source) side.
+  - id: ${this}/SpaceElements
+    targetCkTypeId: ${this}/ExternalSpace

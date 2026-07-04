@@ -8,7 +8,7 @@ EnergyIQ is an OctoMesh Construction Kit (CK) model for intelligent building ene
 
 **Key Principle:** IFC-faithful entity modeling. Sensors, actuators, and terminal units are **separate entities** (not attributes on Space). Design requirements (Pset_*) are captured as records, distinct from runtime values held by Sensor entities.
 
-**Version:** `EnergyIQ-2.4.0` (2.0.0 was the breaking change vs 1.x — Haystack mixins removed, Space restructured per IFC/VDI; 2.1.0 added energy-metering types; 2.2.0 introduced `PassiveBuildingElement` so `SpaceElements` no longer overlaps the device associations; 2.3.0 added `StoreyElements` so whole-floor sub-meters anchor to their `BuildingStorey`; 2.4.0 fixed the `SystemMembers` nav-name inversion — outbound `SystemMembers` is now on the `DistributionSystem` side, inbound `MemberOfSystem` on the member side; 2.5.0 lifted `SystemSpaces` from the legacy equipment level to `DistributionSystem` → `Space`/`BuildingStorey` coverage, the IFC `IfcRelServicesBuildings` analog).
+**Version:** `EnergyIQ-2.6.0` (2.0.0 was the breaking change vs 1.x — Haystack mixins removed, Space restructured per IFC/VDI; 2.1.0 added energy-metering types; 2.2.0 introduced `PassiveBuildingElement` so `SpaceElements` no longer overlaps the device associations; 2.3.0 added `StoreyElements` so whole-floor sub-meters anchor to their `BuildingStorey`; 2.4.0 fixed the `SystemMembers` nav-name inversion — outbound `SystemMembers` is now on the `DistributionSystem` side, inbound `MemberOfSystem` on the member side; 2.5.0 lifted `SystemSpaces` from the legacy equipment level to `DistributionSystem` → `Space`/`BuildingStorey` coverage, the IFC `IfcRelServicesBuildings` analog; 2.6.0 made `PhotovoltaicSystem` a pure logical `IfcSystem` (`NamedEntity`, no longer a spatial `TreeNode`) grouping its components via outbound `SystemMembers` — the physical `PVString`/`Inverter`/`BatteryStorage` now anchor spatially where they sit (roofs → Building, WR+battery → Technikraum, PV fence → `ExternalSpace`), and the electrical `DistributionSystem` now aggregates the full electrical picture: PV + GridConnection + per-storey meters + wallboxes + appliances; `Meter` also gained a `SpaceElements → ExternalSpace` target so outdoor meters/chargers can anchor to an `ExternalSpace` — the demo's second wallbox now sits at the outdoor parking (`Zufahrt`) instead of the garage; the reversible heat pump became `HeatSource: Ground` (Sole-Wasser/Erdsonde) so the passive-cooling circuit is physically real; 2.6.0 also dropped the stale pre-2.4.0 member-side `SystemMembers` declarations (AirHandlingUnit/Boiler/Chiller/HeatPump/Pump/RoomTerminal/ThermalEnergyStorage → DistributionSystem) — the association is authored on the `DistributionSystem`/`PhotovoltaicSystem` origin side only, members navigate it inbound as `MemberOfSystem`).
 
 ## Build Commands
 
@@ -104,7 +104,7 @@ NamedEntity (Basic)
 | `EquipmentSensors` | Sensor | BuildingElement (equip/terminal) | N:ZeroOrOne |
 | `EquipmentActuators` | Actuator | BuildingElement (equip/terminal) | N:ZeroOrOne |
 | `TerminalActuators` | Actuator | RoomTerminal | N:ZeroOrOne |
-| `SystemMembers` | DistributionSystem (outbound `SystemMembers`) | NamedEntity member, inbound `MemberOfSystem` (HeatPump/Pump/buffer/…) | N:N |
+| `SystemMembers` | DistributionSystem **or** PhotovoltaicSystem (outbound `SystemMembers`) | NamedEntity member, inbound `MemberOfSystem` (HeatPump/Pump/buffer/meters/loads; for the PV system: its PVString/Inverter/BatteryStorage) | N:N |
 | `SpaceSchedules` | Schedule | Space | N:N |
 | `TerminalServedBy` | TechnicalSystem | RoomTerminal | N:N |
 | `SystemSpaces` | DistributionSystem (out `ServesSpaces`) | Space/BuildingStorey (in `ServedBySystem`) — IfcRelServicesBuildings | N:N |
@@ -159,13 +159,13 @@ The `data/bim/rt-firmianstrasse.yaml` file demonstrates the full v2 model for a 
 - **~20 Room Terminals** — mostly `RadiantSurface` (Fußbodenheizung, reversible) + `AirTerminal` for KWL outlets; `Radiator` for the Nebengebäude
 - **~25 Actuators** (Valves, Dampers, Motors)
 - **Plant equipment** (all spatially under the `Technikraum` Space, not the Building):
-  - `HeatPump` (Luft-Wasser, reversibel, Passivkühlung über Bodenheizkreis)
+  - `HeatPump` (Sole-Wasser/Erdsonde, reversibel, **echte Passivkühlung** über Bodenheizkreis — Erdreich als Kältequelle, kein Kompressor)
   - `ThermalEnergyStorage` (500l Pufferspeicher)
   - `AirHandlingUnit` (KWL mit Wärmerückgewinnung)
   - `Pump` (Heizkreispumpe)
   - `PhotovoltaicSystem` mit 4 Strings, 2 Wechselrichtern, 15 kWh Batterie
 - **4 Schedules** (Wohnen-Werktag, Wohnen-Wochenende, Schlafzimmer-Nacht, Buero-Werktag)
-- **4 DistributionSystems** (Heizkreis · Kühlkreis/Passivkühlung · Lüftung · Elektrisch-PV). The Heizkreis and Kühlkreis **share** the same reversible plant (HeatPump/buffer/Pump) via N:N `SystemMembers` — the canonical example of why system membership is not the spatial `ParentChild` tree.
+- **4 DistributionSystems** (Heizkreis · Kühlkreis/Passivkühlung · Lüftung · Elektrisch). The Heizkreis and Kühlkreis **share** the same reversible plant (HeatPump + Pump + the `ChangeoverHeatingCooling` valve) via N:N `SystemMembers` — the canonical example of why system membership is not the spatial `ParentChild` tree. The heating buffer is a member of the Heizkreis **only** (bypassed in cooling mode); the changeover valve is the identifying member that turns the shared loop into the cooling circuit. The Elektrisch system aggregates PV + GridConnection + per-storey meters + wallboxes + appliances.
 
 Total: ~140 RT entities.
 

@@ -209,7 +209,10 @@ IFC: `IfcUnitaryEquipment/HEATPUMP`.
 | EquipmentSensors | Sensor | 1:N |
 | EquipmentActuators | Actuator | 1:N |
 | TerminalServedBy | RoomTerminal | N:N |
-| SystemMembers | DistributionSystem | N:N |
+
+System membership is not declared here: the `SystemMembers` association is
+authored on the `DistributionSystem` side (outbound); members see it as the
+inbound `MemberOfSystem` navigation.
 
 ---
 
@@ -233,7 +236,7 @@ Same associations as HeatPump, plus `SystemSpaces`.
 Cooling-only chiller. IFC: `IfcChiller`.
 
 Attributes: SupplyTemp/ReturnTemp/SupplyTempSetpoint, ModulationLevel, PowerConsumption, Efficiency.
-Associations: `EquipmentSensors`, `EquipmentActuators`, `TerminalServedBy`, `SystemMembers`, `SystemSpaces`.
+Associations: `EquipmentSensors`, `EquipmentActuators`, `TerminalServedBy`, `SystemSpaces`.
 
 ---
 
@@ -248,7 +251,7 @@ Circulation pump. IFC: `IfcPump`.
 | SpeedSetpoint | Double? (0-100%) |
 | PowerConsumption | Double? (kW) |
 
-Associations: `EquipmentSensors`, `EquipmentActuators`, `SystemMembers`, `SystemSpaces`.
+Associations: `EquipmentSensors`, `EquipmentActuators`, `SystemSpaces`.
 
 ---
 
@@ -266,7 +269,7 @@ Central ventilation unit (KWL with heat recovery). IFC: `IfcUnitaryEquipment`.
 | HeatRecoveryEfficiency | Double? (0-100%) |
 | HeatingCoilPosition, CoolingCoilPosition | Double? |
 
-Associations: `EquipmentSensors`, `EquipmentActuators`, `TerminalServedBy` → `AirTerminal`, `SystemMembers`, `SystemSpaces`.
+Associations: `EquipmentSensors`, `EquipmentActuators`, `TerminalServedBy` → `AirTerminal`, `SystemSpaces`.
 
 ---
 
@@ -281,7 +284,7 @@ Buffer tank / hot-water cylinder. IFC: `IfcTank/THERMALTANK`.
 | StorageTempTop, StorageTempMiddle, StorageTempBottom | Double? (°C, stratification) |
 | ChargeLevel | Double? (0-100%) |
 
-Associations: `EquipmentSensors`, `SystemMembers`.
+Associations: `EquipmentSensors`.
 
 ---
 
@@ -302,7 +305,9 @@ Base for room-level terminal units. Derives from `BuildingElement`.
 | TerminalActuators | Actuator | 1:N |
 | EquipmentSensors | Sensor | 1:N |
 | TerminalServedBy | TechnicalSystem | N:N |
-| SystemMembers | DistributionSystem | N:N |
+
+(System membership via inbound `MemberOfSystem` — the `SystemMembers`
+association is authored on the `DistributionSystem` side.)
 
 ### HydronicTerminal (abstract)
 

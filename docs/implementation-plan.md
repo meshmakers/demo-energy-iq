@@ -187,7 +187,7 @@ Full restructure following IFC 4.3 and VDI 3814 (Anlagen- vs. Raumautomation spl
 - [x] ~50 Sensors (Temperature/Humidity/CO2/Illuminance/Presence/WindowContact distributed across rooms)
 - [x] ~20 RoomTerminals (RadiantSurface for HG with IsReversible, Radiator for NG, AirTerminal for KWL outlets)
 - [x] ~25 Actuators (Valves, Dampers, Motor for shading)
-- [x] HeatPump replacing v1 Boiler (`IsReversibleAggregate: true`, OperatingMode `Heating`, COP 3.8 / SCOP 4.2)
+- [x] HeatPump replacing v1 Boiler (`IsReversibleAggregate: true`, OperatingMode `Heating`, `HeatSource: Ground` (Sole-Wasser/Erdsonde → true passive cooling), COP 4.6 / SCOP 5.0)
 - [x] ChangeoverHeatingCooling Valve at HeatPump (passive cooling mode switch)
 - [x] ThermalEnergyStorage (500l buffer)
 - [x] AirHandlingUnit (KWL), Pump, full PV chain (unchanged)

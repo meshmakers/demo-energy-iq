@@ -67,6 +67,3 @@ types:
   # Serves terminals
   - id: ${this}/TerminalServedBy
     targetCkTypeId: ${this}/RoomTerminal
-  # Membership in a DistributionSystem
-  - id: ${this}/SystemMembers
-    targetCkTypeId: ${this}/DistributionSystem

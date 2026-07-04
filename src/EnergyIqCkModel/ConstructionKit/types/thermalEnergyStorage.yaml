@@ -25,5 +25,3 @@ types:
   associations:
   - id: ${this}/EquipmentSensors
     targetCkTypeId: ${this}/Sensor
-  - id: ${this}/SystemMembers
-    targetCkTypeId: ${this}/DistributionSystem

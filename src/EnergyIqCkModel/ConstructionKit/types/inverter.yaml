@@ -3,7 +3,8 @@ types:
 - typeId: Inverter
   derivedFromCkTypeId: ${Basic}/TreeNode
   description: "Inverter - converts DC to AC power (IFC: IfcUnitaryEquipment)"
-  # Parent (PhotovoltaicSystem) via System/ParentChild
+  # Spatial parent = the Space it physically sits in (e.g. Technikraum), via System/ParentChild.
+  # Logical grouping into the PhotovoltaicSystem is via inbound MemberOfSystem (SystemMembers role).
   attributes:
   - id: ${this}/Identifier
     name: Identifier

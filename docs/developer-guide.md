@@ -1,6 +1,6 @@
 # EnergyIQ Construction Kit - Developer Guide
 
-**Version:** EnergyIQ-2.5.0
+**Version:** EnergyIQ-2.6.0
 **Standards:** ISO 16739-1:2024 (IFC 4.3), ISO 4157, VDI 3814
 
 ## Quick Start
@@ -300,7 +300,9 @@ Each terminal is normally linked to:
 - One Space via `SpaceTerminals`
 - One or more `Actuator`s (the valve/damper) via `TerminalActuators`
 - One plant equipment via `TerminalServedBy` (e.g. `HeatPump` → many `RadiantSurface`)
-- Optionally a `DistributionSystem` via `SystemMembers`
+- Optionally a `DistributionSystem` via the inbound `MemberOfSystem` navigation
+  (the `SystemMembers` association is authored on the `DistributionSystem` side;
+  member types declare nothing themselves)
 
 ## Plant Equipment (v2 - VDI 3814 Anlagenautomation)
 
@@ -362,14 +364,19 @@ Members are linked via `SystemMembers` (N:N to `NamedEntity` — both TechnicalS
 
 Luminaires/ShadingDevices keep their internal state attributes (`DimmingLevel`, `Position`) — they ARE the building element, the actuator is internal. For modeling explicit separate dimmer/motor actuators (e.g. DALI ballast as its own device), use `EquipmentActuators` to attach an `Actuator` entity.
 
-## Renewable Energy Systems (unchanged)
+## Renewable Energy Systems (v2.6.0 — PV is a logical system)
+
+`PhotovoltaicSystem` is a **logical `IfcSystem`**, not a spatial node. It derives from `NamedEntity` (not `TreeNode`) and lives only in the Systems view. It groups its physical components via the **outbound `SystemMembers`** association (reusing the same role every logical system uses), and is itself a member of the electrical `DistributionSystem`:
 
 ```
-PhotovoltaicSystem (TreeNode → Building)
-├── PVString          — RatedPowerKWp, Orientation, Tilt, ModuleCount, CurrentPower
-├── Inverter          — RatedPowerKVA, DcPower, AcPower, Efficiency
-└── BatteryStorage    — RatedCapacityKWh, StateOfCharge, ChargingPower, CycleCount
+DistributionSystem "Elektrisch"      (Systems view root)
+└── PhotovoltaicSystem   (SystemMembers)          ← logical IfcSystem, aggregate values
+    ├── PVString          — RatedPowerKWp, Orientation, Tilt, ModuleCount, CurrentPower
+    ├── Inverter          — RatedPowerKVA, DcPower, AcPower, Efficiency
+    └── BatteryStorage    — RatedCapacityKWh, StateOfCharge, ChargingPower, CycleCount
 ```
+
+The physical components stay `TreeNode`s and are anchored in the **spatial** tree via `ParentChild` where they actually sit — PV strings on the roof of their `Building` (or an `ExternalSpace` for a free-standing PV fence), inverters and battery in the `Technikraum` `Space`. This mirrors the plant-equipment convention (HeatPump/AHU under Technikraum) and IFC's split: components are *contained in spatial structure*, the system is a *logical group*. Before 2.6.0 the whole PV subtree hung under `Building` in the spatial view — including strings that physically sit on the Nebengebäude and the garden fence; 2.6.0 removes that misattribution.
 
 `PhotovoltaicSystem` aggregates: `TotalRatedPowerKWp`, `TotalCurrentPowerKW`, `TotalEnergyProducedKWh`, `GridFeedIn`, `SelfConsumption`.
 
@@ -401,7 +408,7 @@ Common readings inherited from `Meter`:
 - `ChargingConnectorType` (Schuko, Type1, Type2, CCS, CHAdeMO, Tesla, Other)
 - `ApplianceCategory` (LaundryAndCleaning, KitchenMajor, …, Office, Other)
 
-The Firmianstraße demo seed (`data/bim/rt-firmianstrasse.yaml`) ships a representative metering layout in v2.1.0: 1× `GridConnection` (bidirektional, with example Zählpunktnummer), 4× per-storey `Meter` (HG-EG/1.OG/DG + NG-EG), 2× `ChargingStation` in the Garage (Type 2, 11 kW), and 2× `Appliance` in the Waschküche (Miele washer + heat-pump dryer).
+The Firmianstraße demo seed (`data/bim/rt-firmianstrasse.yaml`) ships a representative metering layout in v2.1.0: 1× `GridConnection` (bidirektional, with example Zählpunktnummer), 4× per-storey `Meter` (HG-EG/1.OG/DG + NG-EG), 2× `ChargingStation` Type 2, 11 kW — one in the Garage (`SpaceElements` → Garage `Space`), one at the outdoor parking on the driveway (`SpaceElements` → `Zufahrt` `ExternalSpace`; the `Meter` type declares `SpaceElements` against `ExternalSpace` too since 2.6.0), and 2× `Appliance` in the Waschküche (Miele washer + heat-pump dryer).
 
 ## Haystack Compatibility
 
@@ -680,7 +687,7 @@ Site: Firmianstraße 31A (47.7833, 13.0333)
 
 ### Plant Equipment
 
-- `HeatPump` "Wärmepumpe" — Luft-Wasser-WP with passive cooling via floor heating loop (`IsReversibleAggregate: true`), `HeatPumpOperatingMode: Heating`, COP 3.8, SCOP 4.2
+- `HeatPump` "Wärmepumpe" — Sole-Wasser (ground-source / Erdsonde) heat pump with **true passive cooling** via the floor loops (the low ground temperature is the cold sink, no compressor), `HeatSource: Ground`, `IsReversibleAggregate: true`, `HeatPumpOperatingMode: Heating`, COP 4.6, SCOP 5.0
 - `Valve` "V-Umschalt-HzgKlt" — `ChangeoverHeatingCooling` valve attached to the heat pump
 - `ThermalEnergyStorage` "Heizpufferspeicher" — 500 l stratified buffer
 - `AirHandlingUnit` "KWL" — heat recovery 85%
@@ -719,9 +726,10 @@ PhotovoltaicSystem (18.4 kWp total)
 
 ### DistributionSystems
 
-- `Heizkreis Hauptgebäude` — HeatPump + ThermalEnergyStorage + Pump (members)
-- `Lüftung Hauptgebäude` — AHU (member)
-- `Elektrisch (PV + Eigenverbrauch)` — PhotovoltaicSystem (member)
+- `Heizkreis Hauptgebäude` (`Heating`) — HeatPump + ThermalEnergyStorage (heating buffer) + Pump + the changeover valve (members)
+- `Kühlkreis Hauptgebäude (Passivkühlung)` (`Cooling`) — the **same** reversible plant as the heating circuit, minus the buffer: HeatPump + Pump + the `ChangeoverHeatingCooling` valve. The heating buffer is deliberately **not** a member — it is hydraulically bypassed in cooling mode (a Heizpufferspeicher is not condensation-safe below dew point, and passive cooling wants minimal thermal mass). The changeover valve is the identifying member that turns the shared loop into the cooling circuit. This shared-plant N:N overlap is the canonical example of why system membership is not the spatial `ParentChild` tree.
+- `Lüftung Hauptgebäude` (`Ventilation`) — AHU (member)
+- `Elektrisch (PV + Eigenverbrauch)` (`Electrical`) — the full electrical picture as members: `PhotovoltaicSystem` (generation; its strings/inverters/battery hang one hop deeper via the PV system's own `SystemMembers`), the `GridConnection` (Hausanschluss), the 4 per-storey `Meter`s, the 2 `ChargingStation` wallboxes and the 2 `Appliance`s. Serves all 4 storeys via `SystemSpaces`.
 
 ### Key RT-IDs Reference
 

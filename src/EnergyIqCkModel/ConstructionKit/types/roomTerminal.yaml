@@ -24,6 +24,3 @@ types:
   # Served by plant equipment
   - id: ${this}/TerminalServedBy
     targetCkTypeId: ${this}/TechnicalSystem
-  # Membership in a DistributionSystem
-  - id: ${this}/SystemMembers
-    targetCkTypeId: ${this}/DistributionSystem

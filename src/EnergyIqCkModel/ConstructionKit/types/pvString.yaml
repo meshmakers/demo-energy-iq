@@ -3,7 +3,8 @@ types:
 - typeId: PVString
   derivedFromCkTypeId: ${Basic}/TreeNode
   description: "PV string - group of connected PV modules (IFC: IfcSolarDevice)"
-  # Parent (PhotovoltaicSystem) via System/ParentChild
+  # Spatial parent = the Building/ExternalSpace whose roof/fabric it sits on, via System/ParentChild.
+  # Logical grouping into the PhotovoltaicSystem is via inbound MemberOfSystem (SystemMembers role).
   attributes:
   - id: ${this}/Identifier
     name: Identifier
