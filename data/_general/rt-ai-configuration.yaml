@@ -6,10 +6,15 @@ entities:
     ckTypeId: System.Communication/AiConfiguration
     rtWellKnownName: AnthropicAiConfig
     attributes:
+      # Secret — intentionally NOT committed. Set the real Anthropic key after import
+      # (Refinery Studio → Configurations → AnthropicAiConfig, or a GraphQL update). Re-running
+      # the import resets this to the placeholder, so re-enter the key after each (re-)provision.
       - id: System.Communication/ApiKey
         value: "<anthropic-api-key-here>"
+      # Mandatory since System.Communication 3.24.0 (no default). Keep this a current model id —
+      # pinned dated snapshots (e.g. "…-20250514") get retired and return HTTP 404 not_found.
       - id: System.Communication/AiModel
-        value: "claude-sonnet-4-20250514"
+        value: "claude-sonnet-4-6"
       - id: System.Communication/MaxTokens
         value: 8000
       - id: System.Communication/Temperature
