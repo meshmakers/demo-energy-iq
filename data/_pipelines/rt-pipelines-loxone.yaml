@@ -842,7 +842,8 @@ entities:
                   EnergyIQ/ShadingDevice -> "Position"
               - The heating setpoint (Loxone tempTarget) is a DESIGN value on the Space itself
                 (no sensor): target the EnergyIQ/Space rtId, targetAttributePath
-                "ThermalRequirementsRecord.SpaceTemperature".
+                "thermalRequirements.spaceTemperature" (attribute NAME path, not the
+                attribute id "ThermalRequirementsRecord").
               - Building-level energy entities (NOT room-scoped), matched by Name:
                   EnergyIQ/GridConnection, EnergyIQ/PhotovoltaicSystem, EnergyIQ/BatteryStorage,
                   EnergyIQ/Meter, EnergyIQ/ChargingStation.
@@ -878,7 +879,7 @@ entities:
                   tempActual    -> the room's TemperatureSensor, "Temperature"
                   co2           -> the room's CO2Sensor, "CO2Level"
                   humidityActual-> the room's HumiditySensor, "Humidity", expression "value / 100"
-                  tempTarget    -> the SPACE itself, "ThermalRequirementsRecord.SpaceTemperature"
+                  tempTarget    -> the SPACE itself, "thermalRequirements.spaceTemperature"
               - InfoOnlyAnalog standalone sensors, by control name:
                   name ~ temperatur/temp -> TemperatureSensor "Temperature"
                   name ~ feuchte/humid   -> HumiditySensor "Humidity"
@@ -1182,10 +1183,12 @@ entities:
               # tempTarget — heating setpoint. In v2 this is the Pset_ThermalRequirements
               # record on the Space (design target), not a sensor measurement. Keep this
               # rule pointed at the Space; the DataPointMapping will update the record
-              # field. The CK attribute path uses the Pset record name + slot.
+              # field. The path uses the attribute NAME ("ThermalRequirements", not the
+              # attribute id "ThermalRequirementsRecord") + record slot — RtPathEvaluator
+              # resolves segments by name, same as the query columns.
               - id: roomController-tempTarget
                 when: { controlType: IRoomControllerV2, stateName: tempTarget }
-                map:  { targetAttribute: ThermalRequirementsRecord.SpaceTemperature }
+                map:  { targetAttribute: thermalRequirements.spaceTemperature }
 
               # ── Standalone InfoOnlyAnalog sensors by naming ──
               # Match Loxone sensor name → corresponding v2 Sensor entity in the Space.
