@@ -812,6 +812,9 @@ entities:
           - type: AnthropicAiQuery@1
             description: Match Loxone Controls to EnergyIQ entities via MCP
             apiKeyConfigurationName: AnthropicAiConfig
+            # AB#4315: the MCP server now enforces auth — authenticate via the shared
+            # ServiceAccountConfiguration (client octo-pipelines) so the MCP tools load.
+            mcpServiceAccountConfigName: ServiceAccountConfig
             maxToolRounds: 16
             mcpToolNames:
               - query_entities_simple
