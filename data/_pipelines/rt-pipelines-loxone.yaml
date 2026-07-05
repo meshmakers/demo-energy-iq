@@ -822,7 +822,10 @@ entities:
               - get_association_tree
             responseFormat: json
             temperature: 0.0
-            maxTokens: 16000
+            # 32k output head-room (claude-sonnet-4-6 supports 64k): a full mapping run emits
+            # ~60+ entries; 16k got cut off mid-array (stop_reason max_tokens) and the truncated
+            # JSON then failed the downstream ForEach with "value ... is not an array".
+            maxTokens: 32000
             systemPrompt: |-
               You are a building-automation mapping assistant for OctoMesh. You map Loxone
               Miniserver controls to the EnergyIQ v2 building model by querying the live data
@@ -831,12 +834,15 @@ entities:
               EnergyIQ v2 TARGET MODEL — read carefully. Measurements live on DEDICATED
               entities, NOT as attributes on Space:
               - Room climate sensors are separate entities linked to a Space via the
-                EnergyIQ/SpaceSensors role. The MAPPING TARGET is the SENSOR entity's rtId:
-                  EnergyIQ/TemperatureSensor  -> targetAttributePath "Temperature"
-                  EnergyIQ/HumiditySensor     -> targetAttributePath "Humidity"
-                  EnergyIQ/CO2Sensor          -> targetAttributePath "CO2Level"
-                  EnergyIQ/IlluminanceSensor  -> targetAttributePath "Illuminance"
-                  EnergyIQ/PresenceSensor     -> targetAttributePath "PresenceDetected"
+                EnergyIQ/SpaceSensors role. The MAPPING TARGET is the SENSOR entity's rtId and
+                targetAttributePath is ALWAYS "CurrentValue" (every sensor subtype renames its
+                typed value attribute — id Temperature/Humidity/CO2Level/… — to that uniform
+                NAME, and mappings resolve attributes by NAME):
+                  EnergyIQ/TemperatureSensor  -> targetAttributePath "CurrentValue"
+                  EnergyIQ/HumiditySensor     -> targetAttributePath "CurrentValue"
+                  EnergyIQ/CO2Sensor          -> targetAttributePath "CurrentValue"
+                  EnergyIQ/IlluminanceSensor  -> targetAttributePath "CurrentValue"
+                  EnergyIQ/PresenceSensor     -> targetAttributePath "CurrentValue"
               - Lighting/shading are building elements linked via EnergyIQ/SpaceElements:
                   EnergyIQ/Luminaire     -> "DimmingLevel"
                   EnergyIQ/ShadingDevice -> "Position"
@@ -851,10 +857,11 @@ entities:
               STEP 1 — QUERY THE DATA (reuse results; do not re-query):
               a) Loxone controls grouped by room:
                  get_association_tree(rootCkTypeId="Loxone/Room", ckRoleId="System/ParentChild",
-                   direction="Inbound", maxDepth=2,
-                   attributePaths=["Name","ControlType","LoxoneUuid","States.Name"])
+                   direction="Inbound", maxDepth=2, attributePaths=["Name","ControlType"])
                  -> each Room node (Name) -> Category children -> Control children. Every control
-                 node carries RtId, ControlType, and its States list.
+                 node carries RtId and ControlType. Do NOT request States or LoxoneUuid — the
+                 state names you need per ControlType are listed below, and requesting more
+                 attributes makes the result exceed the tool output limit (truncated data).
               b) EnergyIQ spaces with their sensors:
                  get_association_tree(rootCkTypeId="EnergyIQ/Space", ckRoleId="EnergyIQ/SpaceSensors",
                    direction="Inbound", maxDepth=1, attributePaths=["Name"])
@@ -868,26 +875,30 @@ entities:
                  EnergyIQ/ChargingStation.
               d) Loxone energy controls (they may sit under any room; query them directly):
                  query_entities_simple(ckTypeId="Loxone/Control", filters={"ControlType":"EnergyManager2"},
-                   attributePaths=["Name","ControlType","LoxoneUuid","States.Name"]) and likewise for
-                 ControlType "Meter" and "Wallbox2".
+                   attributePaths=["Name","ControlType"]) and likewise for
+                 ControlType "Meter" and "Wallbox2". Again: no States, no LoxoneUuid.
 
               STEP 2 — ROOM SENSOR MAPPINGS:
               Match each Loxone Room.Name to an EnergyIQ Space.Name (exact first, then
               case/diacritic/whitespace-insensitive). For each matched room's controls, target the
-              SENSOR/element entity rtId of the right TYPE from step (b):
+              SENSOR/element entity rtId of the right TYPE from step (b).
+              IMPORTANT: every v2 Sensor subtype renames its typed value attribute to the uniform
+              NAME "CurrentValue" — targetAttributePath for ALL sensors is "CurrentValue".
               - IRoomControllerV2 (multi-state), per state:
-                  tempActual    -> the room's TemperatureSensor, "Temperature"
-                  co2           -> the room's CO2Sensor, "CO2Level"
-                  humidityActual-> the room's HumiditySensor, "Humidity", expression "value / 100"
+                  tempActual    -> the room's TemperatureSensor, "CurrentValue"
+                  co2           -> the room's CO2Sensor, "CurrentValue"
+                  humidityActual-> the room's HumiditySensor, "CurrentValue" (both %RH, no scaling)
                   tempTarget    -> the SPACE itself, "thermalRequirements.spaceTemperature"
-              - InfoOnlyAnalog standalone sensors, by control name:
-                  name ~ temperatur/temp -> TemperatureSensor "Temperature"
-                  name ~ feuchte/humid   -> HumiditySensor "Humidity"
-                  name ~ co2             -> CO2Sensor "CO2Level"
-                  name ~ helligkeit/lux/illumin -> IlluminanceSensor "Illuminance"
-              - PresenceDetector -> PresenceSensor "PresenceDetected"
-              - Dimmer in a "lights" category -> the room's Luminaire "DimmingLevel", expression "value / 100"
-              - Jalousie -> the room's ShadingDevice "Position", expression "value / 100"
+              - InfoOnlyAnalog standalone sensors (sourceAttributePath "value"), by control name:
+                  name ~ temperatur/temp -> TemperatureSensor "CurrentValue"
+                  name ~ feuchte/humid   -> HumiditySensor "CurrentValue"
+                  name ~ co2             -> CO2Sensor "CurrentValue"
+                  name ~ helligkeit/lux/illumin -> IlluminanceSensor "CurrentValue"
+              - PresenceDetector (sourceAttributePath "active") -> PresenceSensor "CurrentValue"
+              - Dimmer in a "lights" category (sourceAttributePath "position", already 0-100 %)
+                -> the room's Luminaire "DimmingLevel"
+              - Jalousie (sourceAttributePath "position", 0..1) -> the room's ShadingDevice
+                "Position", expression "value * 100"
               If a matched room has no sensor/element entity of the required type, OMIT that mapping.
 
               STEP 3 — BUILDING ENERGY MAPPINGS (match Loxone energy control NAME -> EnergyIQ energy
@@ -909,14 +920,16 @@ entities:
               - Loxone Wallbox2 -> the matching EnergyIQ/ChargingStation:
                   actual -> "ActivePower", total -> "ImportedEnergy"
 
-              SourceAttributePath: for multi-state controls use the Loxone STATE name (tempActual, co2,
-              humidityActual, tempTarget, Gpwr, Ppwr, Spwr, Ssoc, actual, total); for single-state
-              controls (InfoOnlyAnalog, Switch, Dimmer, Jalousie) use "CurrentValue".
+              SourceAttributePath is ALWAYS the real Loxone STATE name — the runtime filters
+              mappings by the state name of each incoming event: tempActual, co2, humidityActual,
+              tempTarget, Gpwr, Ppwr, Spwr, Ssoc, actual, total; InfoOnlyAnalog -> "value",
+              PresenceDetector -> "active", Dimmer/Jalousie -> "position". NEVER use
+              "CurrentValue" as sourceAttributePath — no state event carries that name.
 
               MAPPING NAME — deterministic and UNIQUE (the pipeline GetOrCreate-matches by name, so a
               stable name keeps re-runs idempotent; multiple targets from one state MUST differ):
               use exactly "<controlName>|<stateName>|<targetAttribute>" (e.g.
-              "Energiemanager|Spwr|IsCharging", "Temp Wohnbereich|tempActual|Temperature").
+              "Energiemanager|Spwr|IsCharging", "Temp Wohnbereich|tempActual|CurrentValue").
 
               CRITICAL — RtId RULES (violating these crashes the pipeline):
               - controlRtId and targetRtId MUST be copied EXACTLY from tool results — each is a
@@ -926,37 +939,26 @@ entities:
               - Do NOT query existing DataPointMappings (idempotency is handled downstream); it wastes
                 tool rounds.
 
-              Return ONLY a JSON array with every mapping you can resolve. No prose. Be thorough.
+              OUTPUT FORMAT — the response is MACHINE-PARSED; violating this crashes the pipeline:
+              - Your final message must contain NOTHING but the complete JSON array wrapped in a
+                ```json fence. No analysis, no summaries, no room-match lists, no text before or
+                after the fence. Every character of prose eats output tokens and has caused the
+                array to be cut off mid-stream in past runs.
+              - Do any reasoning in the messages where you call tools — NEVER in the final message.
+              - COMPACT JSON: no indentation, no spaces after ':' or ','. One entry per line is OK.
+              - Emit EXACTLY these fields per entry: name, controlRtId, controlCkTypeId,
+                targetRtId, targetCkTypeId, sourceAttributePath, targetAttributePath,
+                mappingExpression (empty string if none). Do NOT emit reason, confidence,
+                or any other field — they are discarded and only waste output tokens.
+              Be thorough: cover every control you can resolve.
             question: |-
               Query the Loxone controls and the EnergyIQ v2 entities via the MCP tools, then match
               them and return the DataPointMapping entries as a JSON array.
             jsonFormatSample: |-
-              [
-                {
-                  "name": "Temp Wohnbereich|tempActual|Temperature",
-                  "controlRtId": "67f0c00ec4ff02221e0b7001",
-                  "controlCkTypeId": "Loxone/Control",
-                  "targetRtId": "6789a00000000000010000a1",
-                  "targetCkTypeId": "EnergyIQ/TemperatureSensor",
-                  "sourceAttributePath": "tempActual",
-                  "targetAttributePath": "Temperature",
-                  "mappingExpression": "",
-                  "confidence": "high",
-                  "reason": "Room 'Wohnbereich' exact match; IRoomControllerV2 tempActual -> room TemperatureSensor"
-                },
-                {
-                  "name": "Energiemanager|Spwr|IsDischarging",
-                  "controlRtId": "6a42ba7da65fa6e13110a4cf",
-                  "controlCkTypeId": "Loxone/Control",
-                  "targetRtId": "6789a00000000000000087d1",
-                  "targetCkTypeId": "EnergyIQ/BatteryStorage",
-                  "sourceAttributePath": "Spwr",
-                  "targetAttributePath": "IsDischarging",
-                  "mappingExpression": "value < 0",
-                  "confidence": "high",
-                  "reason": "EnergyManager2 storage power sign < 0 means discharging"
-                }
-              ]
+              ```json
+              [{"name":"Temp Wohnbereich|tempActual|CurrentValue","controlRtId":"67f0c00ec4ff02221e0b7001","controlCkTypeId":"Loxone/Control","targetRtId":"6789a00000000000010000a1","targetCkTypeId":"EnergyIQ/TemperatureSensor","sourceAttributePath":"tempActual","targetAttributePath":"CurrentValue","mappingExpression":""},
+              {"name":"Energiemanager|Spwr|IsDischarging","controlRtId":"6a42ba7da65fa6e13110a4cf","controlCkTypeId":"Loxone/Control","targetRtId":"6789a00000000000000087d1","targetCkTypeId":"EnergyIQ/BatteryStorage","sourceAttributePath":"Spwr","targetAttributePath":"IsDischarging","mappingExpression":"value < 0"}]
+              ```
             targetPath: $.mappingSuggestions
             includeRawResponse: true
             rawResponseOutputPath: $.rawAiResponse
@@ -1161,23 +1163,27 @@ entities:
               # ── IRoomControllerV2 — multi-state Loxone room controller ──
               # Each state targets the matching sensor entity inside the Space.
               # If no such sensor exists in the room, the rule is silently skipped.
+              # NOTE: targetAttribute is resolved by attribute NAME, not id. All v2 sensor
+              # types rename their typed value attribute (id Temperature/Humidity/CO2Level/…)
+              # to the uniform NAME "CurrentValue" — mappings must use CurrentValue.
               - id: roomController-tempActual
                 when: { controlType: IRoomControllerV2, stateName: tempActual }
                 map:
-                  targetAttribute: Temperature
+                  targetAttribute: CurrentValue
                   childTargetCkTypeId: EnergyIQ/TemperatureSensor
                   childTargetAssociationRoleId: EnergyIQ/SpaceSensors
               - id: roomController-co2
                 when: { controlType: IRoomControllerV2, stateName: co2 }
                 map:
-                  targetAttribute: CO2Level
+                  targetAttribute: CurrentValue
                   childTargetCkTypeId: EnergyIQ/CO2Sensor
                   childTargetAssociationRoleId: EnergyIQ/SpaceSensors
+              # humidityActual is already %RH (0-100) and HumiditySensor.CurrentValue is %RH
+              # too — no scaling (the old "value / 100" stems from the v1 Space.Humidity fraction).
               - id: roomController-humidity
                 when: { controlType: IRoomControllerV2, stateName: humidityActual }
                 map:
-                  targetAttribute: Humidity
-                  expression: "value / 100"
+                  targetAttribute: CurrentValue
                   childTargetCkTypeId: EnergyIQ/HumiditySensor
                   childTargetAssociationRoleId: EnergyIQ/SpaceSensors
               # tempTarget — heating setpoint. In v2 this is the Pset_ThermalRequirements
@@ -1192,44 +1198,54 @@ entities:
 
               # ── Standalone InfoOnlyAnalog sensors by naming ──
               # Match Loxone sensor name → corresponding v2 Sensor entity in the Space.
+              # NOTE: stateName must be the REAL Loxone state name ("value" for InfoOnlyAnalog,
+              # "active" for PresenceDetector, "position" for Dimmer/Jalousie). The WebSocket
+              # path (pipeline 6008) filters mappings by state name — a mapping generated with
+              # the defaultSourceAttributePath "CurrentValue" never matches any state event.
               - id: infoonly-temperature-by-name
                 when:
                   controlType: InfoOnlyAnalog
                   controlNameRegex: "(?i)(temperatur|temp(?!late))"
+                  stateName: value
                 map:
-                  targetAttribute: Temperature
+                  targetAttribute: CurrentValue
                   childTargetCkTypeId: EnergyIQ/TemperatureSensor
                   childTargetAssociationRoleId: EnergyIQ/SpaceSensors
               - id: infoonly-humidity-by-name
                 when:
                   controlType: InfoOnlyAnalog
                   controlNameRegex: "(?i)(feuchte|humid)"
+                  stateName: value
                 map:
-                  targetAttribute: Humidity
+                  targetAttribute: CurrentValue
                   childTargetCkTypeId: EnergyIQ/HumiditySensor
                   childTargetAssociationRoleId: EnergyIQ/SpaceSensors
               - id: infoonly-co2-by-name
                 when:
                   controlType: InfoOnlyAnalog
                   controlNameRegex: "(?i)co2"
+                  stateName: value
                 map:
-                  targetAttribute: CO2Level
+                  targetAttribute: CurrentValue
                   childTargetCkTypeId: EnergyIQ/CO2Sensor
                   childTargetAssociationRoleId: EnergyIQ/SpaceSensors
               - id: infoonly-illuminance-by-name
                 when:
                   controlType: InfoOnlyAnalog
                   controlNameRegex: "(?i)(helligkeit|lux|illumin)"
+                  stateName: value
                 map:
-                  targetAttribute: Illuminance
+                  targetAttribute: CurrentValue
                   childTargetCkTypeId: EnergyIQ/IlluminanceSensor
                   childTargetAssociationRoleId: EnergyIQ/SpaceSensors
 
               # ── Presence ──
+              # Loxone PresenceDetector: value state is "active" (0/1); the typed
+              # Evaluate cast lands it as a real Boolean on PresenceSensor.CurrentValue.
               - id: presence-detector
-                when: { controlType: PresenceDetector }
+                when: { controlType: PresenceDetector, stateName: active }
                 map:
-                  targetAttribute: PresenceDetected
+                  targetAttribute: CurrentValue
                   childTargetCkTypeId: EnergyIQ/PresenceSensor
                   childTargetAssociationRoleId: EnergyIQ/SpaceSensors
 
@@ -1237,23 +1253,25 @@ entities:
               # A Dimmer in a "lights" category drives a Luminaire's DimmingLevel directly;
               # the dimmer-as-separate-actuator pattern (Dimmer entity via SpaceActuators)
               # is not yet exercised by the demo data, so keep the rule space-targeted.
+              # Loxone Dimmer "position" is already 0-100 %, DimmingLevel is % → no scaling.
               - id: dimmer-lighting
                 when:
                   controlType: Dimmer
                   categoryType: lights
+                  stateName: position
                 map:
                   targetAttribute: DimmingLevel
-                  expression: "value / 100"
                   childTargetCkTypeId: EnergyIQ/Luminaire
                   childTargetAssociationRoleId: EnergyIQ/SpaceElements
 
               # ── Shading ──
-              # Loxone Jalousie controls a ShadingDevice's Position (kept as internal state).
+              # Loxone Jalousie "position" is 0..1 (1 = fully closed); ShadingDevice.Position
+              # is 0-100 % → scale up.
               - id: jalousie-shading
-                when: { controlType: Jalousie }
+                when: { controlType: Jalousie, stateName: position }
                 map:
                   targetAttribute: Position
-                  expression: "value / 100"
+                  expression: "value * 100"
                   childTargetCkTypeId: EnergyIQ/ShadingDevice
                   childTargetAssociationRoleId: EnergyIQ/SpaceElements
 
