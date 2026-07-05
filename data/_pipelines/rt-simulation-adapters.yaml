@@ -36,8 +36,11 @@ entities:
     attributes:
       - id: System/Name
         value: Simulation Data Generator
+      # Imported disabled: the simulation would overwrite live (Loxone) sensor
+      # values every 10s. Enable both pipelines via Studio when simulated data
+      # is wanted.
       - id: System/Enabled
-        value: true
+        value: false
       - id: System.Communication/PipelineDefinition
         value: >-
           triggers:
@@ -490,8 +493,9 @@ entities:
     attributes:
       - id: System/Name
         value: EnergyIQ Entity Updater
+      # Imported disabled — see Pipeline 1.
       - id: System/Enabled
-        value: true
+        value: false
       - id: System.Communication/PipelineDefinition
         value: >-
           triggers:

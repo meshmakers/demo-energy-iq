@@ -35,7 +35,7 @@ cd scripts
 ./om_importrt.ps1
 ```
 
-After setup, the simulation automatically generates data every 10 seconds, writing values onto the Sensor entities of the Firmianstrasse demo building. The 13 per-type archives (room sensors, light, shading, energy consumption and production — see "Archives (Stream Data)") collect time-series data in CrateDB.
+The simulation pipelines are imported **disabled** so they don't overwrite live (e.g. Loxone-fed) sensor values. To generate simulated data, enable both pipelines of the "EnergyIQ Simulation DataFlow" ("Simulation Data Generator" + "EnergyIQ Entity Updater") in the Studio; the generator then writes values onto the Sensor entities of the Firmianstrasse demo building every 10 seconds. The 13 per-type archives (room sensors, light, shading, energy consumption and production — see "Archives (Stream Data)") collect time-series data in CrateDB.
 
 **Access GraphQL API:** `https://localhost:5001/graphql` (Tenant: `energyiq`)
 
@@ -561,6 +561,8 @@ query {
 ## Simulation Pipelines (v2-targeted)
 
 The simulation pipeline writes onto Sensor / Valve / Damper entities directly (not Space attributes). Configuration file: `data/_pipelines/rt-simulation-adapters.yaml`.
+
+Both pipelines are imported with `System/Enabled: false` so a freshly initialized tenant doesn't produce simulated values (they would overwrite live Loxone-fed data every 10 seconds). Enable them in the Studio (Communication → Data Flows → EnergyIQ Simulation DataFlow) when simulated data is wanted.
 
 ### Architecture
 
