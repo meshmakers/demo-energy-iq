@@ -1,0 +1,728 @@
+$schema: https://schemas.meshmakers.cloud/runtime-model.schema.json
+# MeshBoards for the energyiq demo tenant: "Raumtemperaturen" and "Energie".
+#
+# Each board is a System.UI/Dashboard + its DashboardWidgets (parent association),
+# backed by persistent queries (System/SimpleSdQuery for archive time series,
+# System/SimpleRtQuery for live values) and 5-minute RollupArchives (AVG/MIN/MAX)
+# on the raw archives. The rollups are REQUIRED for the resolution-aware line
+# charts: raw archives declare no grain (Period=null), so without a rollup the
+# series resolver returns UNKNOWN_BASE_GRAIN with points=0 and the widget
+# degrades to a single bucket.
+#
+# Line charts get their per-entity series through the boards' entity selectors
+# (MESHBOARD_VARIABLES blob in the dashboard description): the resolution-aware
+# fan-out queries one series per resolved source rtId and labels it with the
+# entity's name. Hidden selectors (showInToolbar: false) act as fixed scopes.
+# The childScope target type must match the archive's target type EXACTLY —
+# polymorphic scopes (e.g. EnergyIQ/Meter) would fan out rtIds that have no rows
+# in the queried archive and produce ghost legend entries (gap-filled null bins).
+#
+# Imported as Status=Created; om_importrt.ps1 activates the rollups after import
+# (provisions the CrateDB tables). Backfill of pre-existing history is optional:
+#   octo-cli -c BackfillRollup -id <rollupRtId>
+dependencies:
+  - System-[2.0,3.0)
+  - System.StreamData-[1.2,2.0)
+  - System.UI-[2.1,3.0)
+  - EnergyIQ-[2.0,3.0)
+entities:
+
+  # ============================================================
+  # Dashboard: Raumtemperaturen
+  # ============================================================
+  - rtId: 6a4a9f277e487162fbe3860a
+    ckTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Raumtemperaturen
+      - id: System/Description
+        value: |-
+          Raumtemperatur-Übersicht: Verlauf aus dem TemperatureSensorArchive (Raum wählbar) + aktuelle Werte aller Sensoren.
+          ---MESHBOARD_VARIABLES---
+          {"timeFilter": {"enabled": true, "selection": {"type": "relative", "relativeValue": 24, "relativeUnit": "hours"}}, "entitySelectors": [{"id": "raum", "label": "Raum", "ckTypeId": "EnergyIQ/Space", "attributeMappings": [{"attributePath": "name", "variableName": "raumName"}], "showInToolbar": true, "defaultRtId": "6789a00000000000000011d1", "childScope": {"targetCkTypeId": "EnergyIQ/TemperatureSensor", "roleId": "EnergyIQ/SpaceSensors", "direction": "in"}}], "autoRefreshSeconds": 300}
+      - id: System.UI/Dashboard.Columns
+        value: 12
+      - id: System.UI/Dashboard.RowHeight
+        value: 50
+      - id: System.UI/Dashboard.Gap
+        value: 8
+
+  - rtId: 6a4a9f397e487162fbe3860b
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4a9f277e487162fbe3860a
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Raumtemperatur – Verlauf
+      - id: System.UI/DashboardWidget.Type
+        value: lineChart
+      - id: System.UI/DashboardWidget.Col
+        value: 1
+      - id: System.UI/DashboardWidget.Row
+        value: 1
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 8
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 7
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: systemQuery
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: 6a4a9ca67e487162fbe38608
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"chartType": "line", "categoryField": "timestamp", "seriesGroupField": "name", "valueField": "CurrentValue", "showLegend": true, "legendPosition": "bottom", "showMarkers": false, "showDataBadge": true, "queryName": "Raumtemperaturen (Archiv)", "queryRtId": "6a4a9ca67e487162fbe38608", "queryFamily": "streamData", "entitySelectorId": "raum", "resolutionAware": true, "requiredAggregation": "AVG"}
+
+  - rtId: 6a4a9f397e487162fbe3860c
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4a9f277e487162fbe3860a
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Aktuelle Raumtemperaturen
+      - id: System.UI/DashboardWidget.Type
+        value: table
+      - id: System.UI/DashboardWidget.Col
+        value: 9
+      - id: System.UI/DashboardWidget.Row
+        value: 1
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 4
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 7
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: systemQuery
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: 6a4a9ca67e487162fbe38609
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"columns": [{"field": "name", "title": "Sensor"}, {"field": "currentValue", "title": "Temperatur (°C)"}], "pageSize": 20, "sortable": true, "queryName": "Aktuelle Raumtemperaturen", "queryRtId": "6a4a9ca67e487162fbe38609", "queryFamily": "runtime"}
+
+  - rtId: 6a4a9ca67e487162fbe38608
+    ckTypeId: System/SimpleSdQuery
+    attributes:
+      - id: System/Name
+        value: Raumtemperaturen (Archiv)
+      - id: System/Description
+        value: >-
+          Raw time series of all EnergyIQ/TemperatureSensor entities from the TemperatureSensorArchive. Used by the Raumtemperaturen MeshBoard line chart.
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/TemperatureSensor
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/StreamDataQuery.ArchiveRtId
+        value: 6a0e000000000000000a0001
+      - id: System/StreamDataQuery.Columns
+        value:
+          - CurrentValue
+      - id: System/Query.Sorting
+        value:
+          - ckRecordId: System/SortOrderItem
+            attributes:
+              - id: System/AttributePath
+                value: timestamp
+              - id: System/SortOrder
+                value: 1
+
+  - rtId: 6a4a9ca67e487162fbe38609
+    ckTypeId: System/SimpleRtQuery
+    attributes:
+      - id: System/Name
+        value: Aktuelle Raumtemperaturen
+      - id: System/Description
+        value: >-
+          Current temperature per sensor (live CurrentValue on the TemperatureSensor entities). Used by the Raumtemperaturen MeshBoard table.
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/TemperatureSensor
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/Query.Columns
+        value:
+          - name
+          - currentValue
+      - id: System/Query.Sorting
+        value:
+          - ckRecordId: System/SortOrderItem
+            attributes:
+              - id: System/AttributePath
+                value: name
+              - id: System/SortOrder
+                value: 1
+
+  # 5-minute AVG/MIN/MAX rollup on CurrentValue — activation generates the storage
+  # columns from Aggregations[] (function: 0=AVG, 1=MIN, 2=MAX).
+  - rtId: 6a4a9fe67e487162fbe3860f
+    ckTypeId: System.StreamData/RollupArchive
+    rtWellKnownName: TemperatureSensorRollup5m
+    attributes:
+      - id: System.StreamData/Archive.TargetCkTypeId
+        value: EnergyIQ/TemperatureSensor
+      - id: System.StreamData/Archive.Status
+        value: 0
+      - id: System.StreamData/RollupArchive.SourceArchiveRtId
+        value: '6a0e000000000000000a0001'
+      - id: System.StreamData/RollupArchive.BucketSizeMs
+        value: 300000
+      - id: System.StreamData/RollupArchive.WatermarkLagMs
+        value: 120000
+      - id: System.StreamData/RollupArchive.Aggregations
+        value:
+          - ckRecordId: System.StreamData/CkRollupAggregation
+            attributes:
+              - id: System.StreamData/CkRollupAggregation.SourcePath
+                value: CurrentValue
+              - id: System.StreamData/CkRollupAggregation.Function
+                value: 0
+          - ckRecordId: System.StreamData/CkRollupAggregation
+            attributes:
+              - id: System.StreamData/CkRollupAggregation.SourcePath
+                value: CurrentValue
+              - id: System.StreamData/CkRollupAggregation.Function
+                value: 1
+          - ckRecordId: System.StreamData/CkRollupAggregation
+            attributes:
+              - id: System.StreamData/CkRollupAggregation.SourcePath
+                value: CurrentValue
+              - id: System.StreamData/CkRollupAggregation.Function
+                value: 2
+
+  # ============================================================
+  # Dashboard: Energie
+  # ============================================================
+  - rtId: 6a4aa4fa22664f2b26c67e7c
+    ckTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Energie
+      - id: System/Description
+        value: |-
+          Energieübersicht: Netzbezug, PV-Produktion, Wallboxen, Geräte und Batteriespeicher aus den Stream-Data-Archiven + aktuelle Leistungen aller Zähler.
+          ---MESHBOARD_VARIABLES---
+          {"timeFilter": {"enabled": true, "selection": {"type": "relative", "relativeValue": 24, "relativeUnit": "hours"}}, "autoRefreshSeconds": 300, "entitySelectors": [{"id": "netz", "label": "Netzanschluss", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "defaultRtId": "6789a00000000000006000d3", "childScope": {"targetCkTypeId": "EnergyIQ/GridConnection", "roleId": "EnergyIQ/SystemMembers", "direction": "out"}}, {"id": "wallboxen", "label": "Wallboxen", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "defaultRtId": "6789a00000000000006000d3", "childScope": {"targetCkTypeId": "EnergyIQ/ChargingStation", "roleId": "EnergyIQ/SystemMembers", "direction": "out"}}, {"id": "geraete", "label": "Geräte", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "defaultRtId": "6789a00000000000006000d3", "childScope": {"targetCkTypeId": "EnergyIQ/Appliance", "roleId": "EnergyIQ/SystemMembers", "direction": "out"}}, {"id": "pv", "label": "PV-Anlage", "ckTypeId": "EnergyIQ/PhotovoltaicSystem", "attributeMappings": [], "showInToolbar": false, "defaultRtId": "6789a00000000000000080a1"}, {"id": "batterie", "label": "Batterie", "ckTypeId": "EnergyIQ/PhotovoltaicSystem", "attributeMappings": [], "showInToolbar": false, "defaultRtId": "6789a00000000000000080a1", "childScope": {"targetCkTypeId": "EnergyIQ/BatteryStorage", "roleId": "EnergyIQ/SystemMembers", "direction": "out"}}]}
+      - id: System.UI/Dashboard.Columns
+        value: 12
+      - id: System.UI/Dashboard.RowHeight
+        value: 50
+      - id: System.UI/Dashboard.Gap
+        value: 8
+
+  - rtId: 6a4aa4fa22664f2b26c67e7d
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4aa4fa22664f2b26c67e7c
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Netzbezug (Hausanschluss)
+      - id: System.UI/DashboardWidget.Type
+        value: lineChart
+      - id: System.UI/DashboardWidget.Col
+        value: 1
+      - id: System.UI/DashboardWidget.Row
+        value: 1
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 6
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 6
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: systemQuery
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: 6a4aa4cc22664f2b26c67e5f
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"chartType": "line", "categoryField": "timestamp", "seriesGroupField": "name", "valueField": "ActivePower", "showLegend": true, "legendPosition": "bottom", "showMarkers": false, "showDataBadge": true, "queryName": "Netzbezug (Archiv)", "queryRtId": "6a4aa4cc22664f2b26c67e5f", "queryFamily": "streamData", "entitySelectorId": "netz", "resolutionAware": true, "requiredAggregation": "AVG"}
+
+  - rtId: 6a4aa4fa22664f2b26c67e7e
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4aa4fa22664f2b26c67e7c
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: PV-Produktion
+      - id: System.UI/DashboardWidget.Type
+        value: lineChart
+      - id: System.UI/DashboardWidget.Col
+        value: 7
+      - id: System.UI/DashboardWidget.Row
+        value: 1
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 6
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 6
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: systemQuery
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: 6a4aa4cc22664f2b26c67e60
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"chartType": "line", "categoryField": "timestamp", "seriesGroupField": "name", "valueField": "TotalCurrentPower", "showLegend": true, "legendPosition": "bottom", "showMarkers": false, "showDataBadge": true, "queryName": "PV-Produktion (Archiv)", "queryRtId": "6a4aa4cc22664f2b26c67e60", "queryFamily": "streamData", "entitySelectorId": "pv", "resolutionAware": true, "requiredAggregation": "AVG"}
+
+  - rtId: 6a4aa4fa22664f2b26c67e7f
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4aa4fa22664f2b26c67e7c
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Wallboxen
+      - id: System.UI/DashboardWidget.Type
+        value: lineChart
+      - id: System.UI/DashboardWidget.Col
+        value: 1
+      - id: System.UI/DashboardWidget.Row
+        value: 7
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 6
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 6
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: systemQuery
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: 6a4aa4cc22664f2b26c67e61
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"chartType": "line", "categoryField": "timestamp", "seriesGroupField": "name", "valueField": "ActivePower", "showLegend": true, "legendPosition": "bottom", "showMarkers": false, "showDataBadge": true, "queryName": "Wallboxen (Archiv)", "queryRtId": "6a4aa4cc22664f2b26c67e61", "queryFamily": "streamData", "entitySelectorId": "wallboxen", "resolutionAware": true, "requiredAggregation": "AVG"}
+
+  - rtId: 6a4aa4fa22664f2b26c67e80
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4aa4fa22664f2b26c67e7c
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Geräte
+      - id: System.UI/DashboardWidget.Type
+        value: lineChart
+      - id: System.UI/DashboardWidget.Col
+        value: 7
+      - id: System.UI/DashboardWidget.Row
+        value: 7
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 6
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 6
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: systemQuery
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: 6a4aa4cc22664f2b26c67e62
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"chartType": "line", "categoryField": "timestamp", "seriesGroupField": "name", "valueField": "ActivePower", "showLegend": true, "legendPosition": "bottom", "showMarkers": false, "showDataBadge": true, "queryName": "Geräte (Archiv)", "queryRtId": "6a4aa4cc22664f2b26c67e62", "queryFamily": "streamData", "entitySelectorId": "geraete", "resolutionAware": true, "requiredAggregation": "AVG"}
+
+  - rtId: 6a4aa4fa22664f2b26c67e81
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4aa4fa22664f2b26c67e7c
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Batteriespeicher (Ladeleistung)
+      - id: System.UI/DashboardWidget.Type
+        value: lineChart
+      - id: System.UI/DashboardWidget.Col
+        value: 1
+      - id: System.UI/DashboardWidget.Row
+        value: 13
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 6
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 6
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: systemQuery
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: 6a4aa4cc22664f2b26c67e63
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"chartType": "line", "categoryField": "timestamp", "seriesGroupField": "name", "valueField": "ChargingPower", "showLegend": true, "legendPosition": "bottom", "showMarkers": false, "showDataBadge": true, "queryName": "Batteriespeicher (Archiv)", "queryRtId": "6a4aa4cc22664f2b26c67e63", "queryFamily": "streamData", "entitySelectorId": "batterie", "resolutionAware": true, "requiredAggregation": "AVG"}
+
+  - rtId: 6a4aa4fa22664f2b26c67e82
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4aa4fa22664f2b26c67e7c
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Aktuelle Leistungen
+      - id: System.UI/DashboardWidget.Type
+        value: table
+      - id: System.UI/DashboardWidget.Col
+        value: 7
+      - id: System.UI/DashboardWidget.Row
+        value: 13
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 6
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 6
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: systemQuery
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: 6a4aa4cc22664f2b26c67e64
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"columns": [{"field": "name", "title": "Zähler / Verbraucher"}, {"field": "activePower", "title": "Wirkleistung (W)"}], "pageSize": 15, "sortable": true, "queryName": "Aktuelle Leistungen", "queryRtId": "6a4aa4cc22664f2b26c67e64", "queryFamily": "runtime"}
+
+  - rtId: 6a4aa4cc22664f2b26c67e5f
+    ckTypeId: System/SimpleSdQuery
+    attributes:
+      - id: System/Name
+        value: Netzbezug (Archiv)
+      - id: System/Description
+        value: >-
+          Raw ActivePower time series from the GridConnectionArchive (EnergyIQ/GridConnection). Used by the Energie MeshBoard.
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/GridConnection
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/StreamDataQuery.ArchiveRtId
+        value: 6a0e000000000000000a0007
+      - id: System/StreamDataQuery.Columns
+        value:
+          - ActivePower
+      - id: System/Query.Sorting
+        value:
+          - ckRecordId: System/SortOrderItem
+            attributes:
+              - id: System/AttributePath
+                value: timestamp
+              - id: System/SortOrder
+                value: 1
+
+  - rtId: 6a4aa4cc22664f2b26c67e60
+    ckTypeId: System/SimpleSdQuery
+    attributes:
+      - id: System/Name
+        value: PV-Produktion (Archiv)
+      - id: System/Description
+        value: >-
+          Raw TotalCurrentPower time series from the PhotovoltaicSystemArchive (EnergyIQ/PhotovoltaicSystem). Used by the Energie MeshBoard.
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/PhotovoltaicSystem
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/StreamDataQuery.ArchiveRtId
+        value: 6a0e000000000000000a000c
+      - id: System/StreamDataQuery.Columns
+        value:
+          - TotalCurrentPower
+      - id: System/Query.Sorting
+        value:
+          - ckRecordId: System/SortOrderItem
+            attributes:
+              - id: System/AttributePath
+                value: timestamp
+              - id: System/SortOrder
+                value: 1
+
+  - rtId: 6a4aa4cc22664f2b26c67e61
+    ckTypeId: System/SimpleSdQuery
+    attributes:
+      - id: System/Name
+        value: Wallboxen (Archiv)
+      - id: System/Description
+        value: >-
+          Raw ActivePower time series from the ChargingStationArchive (EnergyIQ/ChargingStation). Used by the Energie MeshBoard.
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/ChargingStation
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/StreamDataQuery.ArchiveRtId
+        value: 6a0e000000000000000a0008
+      - id: System/StreamDataQuery.Columns
+        value:
+          - ActivePower
+      - id: System/Query.Sorting
+        value:
+          - ckRecordId: System/SortOrderItem
+            attributes:
+              - id: System/AttributePath
+                value: timestamp
+              - id: System/SortOrder
+                value: 1
+
+  - rtId: 6a4aa4cc22664f2b26c67e62
+    ckTypeId: System/SimpleSdQuery
+    attributes:
+      - id: System/Name
+        value: Geräte (Archiv)
+      - id: System/Description
+        value: >-
+          Raw ActivePower time series from the ApplianceArchive (EnergyIQ/Appliance). Used by the Energie MeshBoard.
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/Appliance
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/StreamDataQuery.ArchiveRtId
+        value: 6a0e000000000000000a0009
+      - id: System/StreamDataQuery.Columns
+        value:
+          - ActivePower
+      - id: System/Query.Sorting
+        value:
+          - ckRecordId: System/SortOrderItem
+            attributes:
+              - id: System/AttributePath
+                value: timestamp
+              - id: System/SortOrder
+                value: 1
+
+  - rtId: 6a4aa4cc22664f2b26c67e63
+    ckTypeId: System/SimpleSdQuery
+    attributes:
+      - id: System/Name
+        value: Batteriespeicher (Archiv)
+      - id: System/Description
+        value: >-
+          Raw ChargingPower time series from the BatteryStorageArchive (EnergyIQ/BatteryStorage). Used by the Energie MeshBoard.
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/BatteryStorage
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/StreamDataQuery.ArchiveRtId
+        value: 6a0e000000000000000a000d
+      - id: System/StreamDataQuery.Columns
+        value:
+          - ChargingPower
+      - id: System/Query.Sorting
+        value:
+          - ckRecordId: System/SortOrderItem
+            attributes:
+              - id: System/AttributePath
+                value: timestamp
+              - id: System/SortOrder
+                value: 1
+
+  - rtId: 6a4aa4cc22664f2b26c67e64
+    ckTypeId: System/SimpleRtQuery
+    attributes:
+      - id: System/Name
+        value: Aktuelle Leistungen
+      - id: System/Description
+        value: >-
+          Current active power of all meters (grid connection, sub-meters, wallboxes, appliances). Used by the Energie MeshBoard table.
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/Meter
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/Query.Columns
+        value:
+          - name
+          - activePower
+      - id: System/Query.Sorting
+        value:
+          - ckRecordId: System/SortOrderItem
+            attributes:
+              - id: System/AttributePath
+                value: name
+              - id: System/SortOrder
+                value: 1
+
+  # 5-minute AVG/MIN/MAX rollup on ActivePower — activation generates the storage
+  # columns from Aggregations[] (function: 0=AVG, 1=MIN, 2=MAX).
+  - rtId: 6a4aa4cc22664f2b26c67e65
+    ckTypeId: System.StreamData/RollupArchive
+    rtWellKnownName: GridConnectionRollup5m
+    attributes:
+      - id: System.StreamData/Archive.TargetCkTypeId
+        value: EnergyIQ/GridConnection
+      - id: System.StreamData/Archive.Status
+        value: 0
+      - id: System.StreamData/RollupArchive.SourceArchiveRtId
+        value: '6a0e000000000000000a0007'
+      - id: System.StreamData/RollupArchive.BucketSizeMs
+        value: 300000
+      - id: System.StreamData/RollupArchive.WatermarkLagMs
+        value: 120000
+      - id: System.StreamData/RollupArchive.Aggregations
+        value:
+          - ckRecordId: System.StreamData/CkRollupAggregation
+            attributes:
+              - id: System.StreamData/CkRollupAggregation.SourcePath
+                value: ActivePower
+              - id: System.StreamData/CkRollupAggregation.Function
+                value: 0
+          - ckRecordId: System.StreamData/CkRollupAggregation
+            attributes:
+              - id: System.StreamData/CkRollupAggregation.SourcePath
+                value: ActivePower
+              - id: System.StreamData/CkRollupAggregation.Function
+                value: 1
+          - ckRecordId: System.StreamData/CkRollupAggregation
+            attributes:
+              - id: System.StreamData/CkRollupAggregation.SourcePath
+                value: ActivePower
+              - id: System.StreamData/CkRollupAggregation.Function
+                value: 2
+
+  # 5-minute AVG/MIN/MAX rollup on TotalCurrentPower — activation generates the storage
+  # columns from Aggregations[] (function: 0=AVG, 1=MIN, 2=MAX).
+  - rtId: 6a4aa4cc22664f2b26c67e66
+    ckTypeId: System.StreamData/RollupArchive
+    rtWellKnownName: PhotovoltaicSystemRollup5m
+    attributes:
+      - id: System.StreamData/Archive.TargetCkTypeId
+        value: EnergyIQ/PhotovoltaicSystem
+      - id: System.StreamData/Archive.Status
+        value: 0
+      - id: System.StreamData/RollupArchive.SourceArchiveRtId
+        value: '6a0e000000000000000a000c'
+      - id: System.StreamData/RollupArchive.BucketSizeMs
+        value: 300000
+      - id: System.StreamData/RollupArchive.WatermarkLagMs
+        value: 120000
+      - id: System.StreamData/RollupArchive.Aggregations
+        value:
+          - ckRecordId: System.StreamData/CkRollupAggregation
+            attributes:
+              - id: System.StreamData/CkRollupAggregation.SourcePath
+                value: TotalCurrentPower
+              - id: System.StreamData/CkRollupAggregation.Function
+                value: 0
+          - ckRecordId: System.StreamData/CkRollupAggregation
+            attributes:
+              - id: System.StreamData/CkRollupAggregation.SourcePath
+                value: TotalCurrentPower
+              - id: System.StreamData/CkRollupAggregation.Function
+                value: 1
+          - ckRecordId: System.StreamData/CkRollupAggregation
+            attributes:
+              - id: System.StreamData/CkRollupAggregation.SourcePath
+                value: TotalCurrentPower
+              - id: System.StreamData/CkRollupAggregation.Function
+                value: 2
+
+  # 5-minute AVG/MIN/MAX rollup on ActivePower — activation generates the storage
+  # columns from Aggregations[] (function: 0=AVG, 1=MIN, 2=MAX).
+  - rtId: 6a4aa4cc22664f2b26c67e67
+    ckTypeId: System.StreamData/RollupArchive
+    rtWellKnownName: ChargingStationRollup5m
+    attributes:
+      - id: System.StreamData/Archive.TargetCkTypeId
+        value: EnergyIQ/ChargingStation
+      - id: System.StreamData/Archive.Status
+        value: 0
+      - id: System.StreamData/RollupArchive.SourceArchiveRtId
+        value: '6a0e000000000000000a0008'
+      - id: System.StreamData/RollupArchive.BucketSizeMs
+        value: 300000
+      - id: System.StreamData/RollupArchive.WatermarkLagMs
+        value: 120000
+      - id: System.StreamData/RollupArchive.Aggregations
+        value:
+          - ckRecordId: System.StreamData/CkRollupAggregation
+            attributes:
+              - id: System.StreamData/CkRollupAggregation.SourcePath
+                value: ActivePower
+              - id: System.StreamData/CkRollupAggregation.Function
+                value: 0
+          - ckRecordId: System.StreamData/CkRollupAggregation
+            attributes:
+              - id: System.StreamData/CkRollupAggregation.SourcePath
+                value: ActivePower
+              - id: System.StreamData/CkRollupAggregation.Function
+                value: 1
+          - ckRecordId: System.StreamData/CkRollupAggregation
+            attributes:
+              - id: System.StreamData/CkRollupAggregation.SourcePath
+                value: ActivePower
+              - id: System.StreamData/CkRollupAggregation.Function
+                value: 2
+
+  # 5-minute AVG/MIN/MAX rollup on ActivePower — activation generates the storage
+  # columns from Aggregations[] (function: 0=AVG, 1=MIN, 2=MAX).
+  - rtId: 6a4aa4cc22664f2b26c67e68
+    ckTypeId: System.StreamData/RollupArchive
+    rtWellKnownName: ApplianceRollup5m
+    attributes:
+      - id: System.StreamData/Archive.TargetCkTypeId
+        value: EnergyIQ/Appliance
+      - id: System.StreamData/Archive.Status
+        value: 0
+      - id: System.StreamData/RollupArchive.SourceArchiveRtId
+        value: '6a0e000000000000000a0009'
+      - id: System.StreamData/RollupArchive.BucketSizeMs
+        value: 300000
+      - id: System.StreamData/RollupArchive.WatermarkLagMs
+        value: 120000
+      - id: System.StreamData/RollupArchive.Aggregations
+        value:
+          - ckRecordId: System.StreamData/CkRollupAggregation
+            attributes:
+              - id: System.StreamData/CkRollupAggregation.SourcePath
+                value: ActivePower
+              - id: System.StreamData/CkRollupAggregation.Function
+                value: 0
+          - ckRecordId: System.StreamData/CkRollupAggregation
+            attributes:
+              - id: System.StreamData/CkRollupAggregation.SourcePath
+                value: ActivePower
+              - id: System.StreamData/CkRollupAggregation.Function
+                value: 1
+          - ckRecordId: System.StreamData/CkRollupAggregation
+            attributes:
+              - id: System.StreamData/CkRollupAggregation.SourcePath
+                value: ActivePower
+              - id: System.StreamData/CkRollupAggregation.Function
+                value: 2
+
+  # 5-minute AVG/MIN/MAX rollup on ChargingPower — activation generates the storage
+  # columns from Aggregations[] (function: 0=AVG, 1=MIN, 2=MAX).
+  - rtId: 6a4aa4cc22664f2b26c67e69
+    ckTypeId: System.StreamData/RollupArchive
+    rtWellKnownName: BatteryStorageRollup5m
+    attributes:
+      - id: System.StreamData/Archive.TargetCkTypeId
+        value: EnergyIQ/BatteryStorage
+      - id: System.StreamData/Archive.Status
+        value: 0
+      - id: System.StreamData/RollupArchive.SourceArchiveRtId
+        value: '6a0e000000000000000a000d'
+      - id: System.StreamData/RollupArchive.BucketSizeMs
+        value: 300000
+      - id: System.StreamData/RollupArchive.WatermarkLagMs
+        value: 120000
+      - id: System.StreamData/RollupArchive.Aggregations
+        value:
+          - ckRecordId: System.StreamData/CkRollupAggregation
+            attributes:
+              - id: System.StreamData/CkRollupAggregation.SourcePath
+                value: ChargingPower
+              - id: System.StreamData/CkRollupAggregation.Function
+                value: 0
+          - ckRecordId: System.StreamData/CkRollupAggregation
+            attributes:
+              - id: System.StreamData/CkRollupAggregation.SourcePath
+                value: ChargingPower
+              - id: System.StreamData/CkRollupAggregation.Function
+                value: 1
+          - ckRecordId: System.StreamData/CkRollupAggregation
+            attributes:
+              - id: System.StreamData/CkRollupAggregation.SourcePath
+                value: ChargingPower
+              - id: System.StreamData/CkRollupAggregation.Function
+                value: 2

@@ -45,6 +45,20 @@ octo-cli -c ImportRt -f (Join-Path $dataPath "_pipelines/rt-simulation-adapters.
 # --- Queries ----------------------------------------------------------------
 octo-cli -c ImportRt -f (Join-Path $dataPath "_queries/_trees.yaml")
 
+# --- UI: MeshBoards ----------------------------------------------------------
+# "Raumtemperaturen" + "Energie" dashboards with their persistent queries and
+# 5-minute AVG/MIN/MAX rollups (see rt-meshboards-energyiq.yaml for why the
+# rollups are required by the resolution-aware line charts). -r/Upsert so
+# re-runs update the boards in place. The rollups are activated below like the
+# raw archives; backfill of pre-existing history is optional (BackfillRollup).
+octo-cli -c ImportRt -f (Join-Path $dataPath "_general/rt-meshboards-energyiq.yaml") -w -r
+octo-cli -c ActivateArchive -id 6a4a9fe67e487162fbe3860f  # TemperatureSensorRollup5m
+octo-cli -c ActivateArchive -id 6a4aa4cc22664f2b26c67e65  # GridConnectionRollup5m
+octo-cli -c ActivateArchive -id 6a4aa4cc22664f2b26c67e66  # PhotovoltaicSystemRollup5m
+octo-cli -c ActivateArchive -id 6a4aa4cc22664f2b26c67e67  # ChargingStationRollup5m
+octo-cli -c ActivateArchive -id 6a4aa4cc22664f2b26c67e68  # ApplianceRollup5m
+octo-cli -c ActivateArchive -id 6a4aa4cc22664f2b26c67e69  # BatteryStorageRollup5m
+
 # --- UI: Runtime Browser tree navigation ------------------------------------
 # Per-tenant tree config (System.UI/TreeNavigationConfiguration): role labels/visibility
 # (AB#4262) + the switchable "Systems" perspective rooting on DistributionSystem (AB#4263).
