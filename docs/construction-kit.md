@@ -146,7 +146,7 @@ IFC: `IfcSpace`. VDI 3814 Raumautomation. ISO 4157-2/3.
 |---|---|---|---|
 | ParentChild (inherited) | BuildingStorey | ContainsChild | N:1 |
 | SpaceElements | BuildingElement | ContainedInSpace | 1:N |
-| SpaceSensors | Sensor | SensorInSpace | 1:N |
+| SpaceSensors | Sensor | LocatedInSpace | 1:N |
 | SpaceActuators | Actuator | ActuatorInSpace | 1:N |
 | SpaceTerminals | RoomTerminal | ContainedInSpace | 1:N |
 | SystemSpaces | DistributionSystem | ServesSpaces | N:N |
@@ -586,7 +586,7 @@ IFC: `IfcElectricFlowStorageDevice`.
 | ParentChild (Basic) | — | — | 1:N | Spatial / tree hierarchy |
 | SpaceElements | ContainedElements | ContainedInSpace | 1:N | BuildingElement in Space |
 | StoreyElements | ContainedStoreyElements | ContainedInStorey | 1:N | Whole-floor sub-meter in BuildingStorey (2.3.0) |
-| SpaceSensors | ContainedSensors | SensorInSpace | 1:N | Sensor in Space |
+| SpaceSensors | ContainedSensors | LocatedInSpace | 1:N | Sensor in Space |
 | SpaceActuators | ContainedActuators | ActuatorInSpace | 1:N | Actuator in Space |
 | SpaceTerminals | ContainedTerminals | ContainedInSpace | 1:N | RoomTerminal in Space |
 | EquipmentSensors | AttachedSensors | AttachedToEquipment | 1:N | Sensor on plant equipment |

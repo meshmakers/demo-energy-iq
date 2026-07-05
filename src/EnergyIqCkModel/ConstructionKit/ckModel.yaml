@@ -2,4 +2,4 @@ $schema: https://schemas.meshmakers.cloud/construction-kit-meta.schema.json
 dependencies:
 - Basic-[2.0,3.0)
 - Basic.Energy-[1.0,2.0)
-modelId: EnergyIQ-2.6.0
+modelId: EnergyIQ-2.7.0
