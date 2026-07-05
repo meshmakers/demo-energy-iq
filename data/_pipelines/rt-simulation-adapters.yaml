@@ -263,10 +263,14 @@ entities:
                 - path: "$.socBase"
                   targetPath: $.chargingPower
                   transformations:
+                    # Signed: + = charging (draws from PV/grid), − = discharging
+                    # (feeds the house load). The totalLoad Math@1 add below stays
+                    # correct with signed values, and the Energiebilanz MeshBoard
+                    # splits charged/discharged energy on the sign.
                     - type: LinearScaler@1
                       scaleInputMin: -1
                       scaleInputMax: 1
-                      scaleOutputMin: 0
+                      scaleOutputMin: -5
                       scaleOutputMax: 5
                 - path: "$.tempBase"
                   targetPath: $.hpSupplyTemp

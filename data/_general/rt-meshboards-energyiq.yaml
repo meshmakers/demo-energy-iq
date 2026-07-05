@@ -1,5 +1,6 @@
 $schema: https://schemas.meshmakers.cloud/runtime-model.schema.json
-# MeshBoards for the energyiq demo tenant: "Raumtemperaturen" and "Energie".
+# MeshBoards for the energyiq demo tenant: "Raumtemperaturen", "Energie" and
+# "Energiebilanz" (cumulated kWh KPIs).
 #
 # Each board is a System.UI/Dashboard + its DashboardWidgets (parent association),
 # backed by persistent queries (System/SimpleSdQuery for archive time series,
@@ -726,3 +727,384 @@ entities:
                 value: ChargingPower
               - id: System.StreamData/CkRollupAggregation.Function
                 value: 2
+
+  # ============================================================
+  # Dashboard: Energiebilanz (cumulated kWh over the time filter)
+  #
+  # Each KPI runs a persistent AggregationSdQuery (SUM of the value column,
+  # optionally sign-filtered) bound to the board time filter and converts the
+  # kW-sample sum to kWh via the KPI valueMultiplier 10/3600 (simulator writes
+  # every 10 s, uniform sampling — SUM is linear, so the factor holds for any
+  # window). "Batterie entladen" uses the NEGATED multiplier on the < 0-filtered
+  # sum to display positive kWh discharged.
+  # ============================================================
+  - rtId: 6a4aaf1922664f2b26c67ecc
+    ckTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Energiebilanz
+      - id: System/Description
+        value: |-
+          Kumulierte Energiebilanz über den gewählten Zeitraum: PV-Produktion, Eigenverbrauch, Netzeinspeisung, Netzbezug sowie geladene/entladene Batterie-Energie. Werte in kWh (SUM der 10-s-kW-Samples × 10/3600).
+          ---MESHBOARD_VARIABLES---
+          {"timeFilter": {"enabled": true, "selection": {"type": "relative", "relativeValue": 24, "relativeUnit": "hours"}}, "autoRefreshSeconds": 300}
+      - id: System.UI/Dashboard.Columns
+        value: 12
+      - id: System.UI/Dashboard.RowHeight
+        value: 50
+      - id: System.UI/Dashboard.Gap
+        value: 8
+
+  - rtId: 6a4aaf1922664f2b26c67ecd
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4aaf1922664f2b26c67ecc
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: PV-Produktion
+      - id: System.UI/DashboardWidget.Type
+        value: kpi
+      - id: System.UI/DashboardWidget.Col
+        value: 1
+      - id: System.UI/DashboardWidget.Row
+        value: 1
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 4
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 3
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: systemQuery
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: 6a4aaddc22664f2b26c67ec4
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "totalcurrentpower_sum", "valueMultiplier": 0.002777777777777778, "suffix": " kWh", "queryName": "PV-Produktion kumuliert", "queryRtId": "6a4aaddc22664f2b26c67ec4", "queryFamily": "streamData"}
+
+  - rtId: 6a4aaf1922664f2b26c67ece
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4aaf1922664f2b26c67ecc
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Eigenverbrauch (PV)
+      - id: System.UI/DashboardWidget.Type
+        value: kpi
+      - id: System.UI/DashboardWidget.Col
+        value: 5
+      - id: System.UI/DashboardWidget.Row
+        value: 1
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 4
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 3
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: systemQuery
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: 6a4aaddc22664f2b26c67ec5
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "selfconsumption_sum", "valueMultiplier": 0.002777777777777778, "suffix": " kWh", "queryName": "Eigenverbrauch kumuliert", "queryRtId": "6a4aaddc22664f2b26c67ec5", "queryFamily": "streamData"}
+
+  - rtId: 6a4aaf1922664f2b26c67ecf
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4aaf1922664f2b26c67ecc
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Netzeinspeisung
+      - id: System.UI/DashboardWidget.Type
+        value: kpi
+      - id: System.UI/DashboardWidget.Col
+        value: 9
+      - id: System.UI/DashboardWidget.Row
+        value: 1
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 4
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 3
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: systemQuery
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: 6a4aaddc22664f2b26c67ec6
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "gridfeedin_sum", "valueMultiplier": 0.002777777777777778, "suffix": " kWh", "queryName": "Netzeinspeisung kumuliert", "queryRtId": "6a4aaddc22664f2b26c67ec6", "queryFamily": "streamData"}
+
+  - rtId: 6a4aaf1922664f2b26c67ed0
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4aaf1922664f2b26c67ecc
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Netzbezug
+      - id: System.UI/DashboardWidget.Type
+        value: kpi
+      - id: System.UI/DashboardWidget.Col
+        value: 1
+      - id: System.UI/DashboardWidget.Row
+        value: 4
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 4
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 3
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: systemQuery
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: 6a4aaddc22664f2b26c67ec7
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "activepower_sum", "valueMultiplier": 0.002777777777777778, "suffix": " kWh", "queryName": "Netzbezug kumuliert", "queryRtId": "6a4aaddc22664f2b26c67ec7", "queryFamily": "streamData"}
+
+  - rtId: 6a4aaf1922664f2b26c67ed1
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4aaf1922664f2b26c67ecc
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Batterie geladen
+      - id: System.UI/DashboardWidget.Type
+        value: kpi
+      - id: System.UI/DashboardWidget.Col
+        value: 5
+      - id: System.UI/DashboardWidget.Row
+        value: 4
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 4
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 3
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: systemQuery
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: 6a4aaddc22664f2b26c67ec8
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "chargingpower_sum", "valueMultiplier": 0.002777777777777778, "suffix": " kWh", "queryName": "Batterie geladen kumuliert", "queryRtId": "6a4aaddc22664f2b26c67ec8", "queryFamily": "streamData"}
+
+  - rtId: 6a4aaf1922664f2b26c67ed2
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4aaf1922664f2b26c67ecc
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Batterie entladen
+      - id: System.UI/DashboardWidget.Type
+        value: kpi
+      - id: System.UI/DashboardWidget.Col
+        value: 9
+      - id: System.UI/DashboardWidget.Row
+        value: 4
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 4
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 3
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: systemQuery
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: 6a4aaddc22664f2b26c67ec9
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "chargingpower_sum", "valueMultiplier": -0.002777777777777778, "suffix": " kWh", "queryName": "Batterie entladen kumuliert", "queryRtId": "6a4aaddc22664f2b26c67ec9", "queryFamily": "streamData"}
+
+  # SUM of the TotalCurrentPower kW samples — × 10/3600 = kWh (operator 2=LessThan, 4=GreaterThan).
+  - rtId: 6a4aaddc22664f2b26c67ec4
+    ckTypeId: System/AggregationSdQuery
+    attributes:
+      - id: System/Name
+        value: PV-Produktion kumuliert
+      - id: System/Description
+        value: >-
+          SUM of the uniformly sampled (10 s) TotalCurrentPower kW values over the query window —
+          multiply by 10/3600 for kWh. Used by the Energiebilanz MeshBoard KPI.
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/PhotovoltaicSystem
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/StreamDataQuery.ArchiveRtId
+        value: '6a0e000000000000000a000c'
+      - id: System/AggregationQueryColumns
+        value:
+          - ckRecordId: System/AggregationQueryColumn
+            attributes:
+              - id: System/AttributePath
+                value: TotalCurrentPower
+              - id: System/AggregationType
+                value: 4
+
+  # SUM of the SelfConsumption kW samples — × 10/3600 = kWh (operator 2=LessThan, 4=GreaterThan).
+  - rtId: 6a4aaddc22664f2b26c67ec5
+    ckTypeId: System/AggregationSdQuery
+    attributes:
+      - id: System/Name
+        value: Eigenverbrauch kumuliert
+      - id: System/Description
+        value: >-
+          SUM of the uniformly sampled (10 s) SelfConsumption kW values over the query window —
+          multiply by 10/3600 for kWh. Used by the Energiebilanz MeshBoard KPI.
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/PhotovoltaicSystem
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/StreamDataQuery.ArchiveRtId
+        value: '6a0e000000000000000a000c'
+      - id: System/AggregationQueryColumns
+        value:
+          - ckRecordId: System/AggregationQueryColumn
+            attributes:
+              - id: System/AttributePath
+                value: SelfConsumption
+              - id: System/AggregationType
+                value: 4
+
+  # SUM of the GridFeedIn kW samples — × 10/3600 = kWh (operator 2=LessThan, 4=GreaterThan).
+  - rtId: 6a4aaddc22664f2b26c67ec6
+    ckTypeId: System/AggregationSdQuery
+    attributes:
+      - id: System/Name
+        value: Netzeinspeisung kumuliert
+      - id: System/Description
+        value: >-
+          SUM of the uniformly sampled (10 s) GridFeedIn kW values over the query window —
+          multiply by 10/3600 for kWh. Used by the Energiebilanz MeshBoard KPI.
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/PhotovoltaicSystem
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/StreamDataQuery.ArchiveRtId
+        value: '6a0e000000000000000a000c'
+      - id: System/AggregationQueryColumns
+        value:
+          - ckRecordId: System/AggregationQueryColumn
+            attributes:
+              - id: System/AttributePath
+                value: GridFeedIn
+              - id: System/AggregationType
+                value: 4
+
+  # SUM of the positive ActivePower kW samples — × 10/3600 = kWh (operator 2=LessThan, 4=GreaterThan).
+  - rtId: 6a4aaddc22664f2b26c67ec7
+    ckTypeId: System/AggregationSdQuery
+    attributes:
+      - id: System/Name
+        value: Netzbezug kumuliert
+      - id: System/Description
+        value: >-
+          SUM of the uniformly sampled (10 s) ActivePower kW values over the query window —
+          multiply by 10/3600 for kWh. Used by the Energiebilanz MeshBoard KPI.
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/GridConnection
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/StreamDataQuery.ArchiveRtId
+        value: '6a0e000000000000000a0007'
+      - id: System/AggregationQueryColumns
+        value:
+          - ckRecordId: System/AggregationQueryColumn
+            attributes:
+              - id: System/AttributePath
+                value: ActivePower
+              - id: System/AggregationType
+                value: 4
+      - id: System/Query.FieldFilter
+        value:
+          - ckRecordId: System/FieldFilter
+            attributes:
+              - id: System/AttributePath
+                value: ActivePower
+              - id: System/FieldFilter.Operator
+                value: 4
+              - id: System/ComparisonValue
+                value: '0' 
+
+  # SUM of the positive ChargingPower kW samples — × 10/3600 = kWh (operator 2=LessThan, 4=GreaterThan).
+  - rtId: 6a4aaddc22664f2b26c67ec8
+    ckTypeId: System/AggregationSdQuery
+    attributes:
+      - id: System/Name
+        value: Batterie geladen kumuliert
+      - id: System/Description
+        value: >-
+          SUM of the uniformly sampled (10 s) ChargingPower kW values over the query window —
+          multiply by 10/3600 for kWh. Used by the Energiebilanz MeshBoard KPI.
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/BatteryStorage
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/StreamDataQuery.ArchiveRtId
+        value: '6a0e000000000000000a000d'
+      - id: System/AggregationQueryColumns
+        value:
+          - ckRecordId: System/AggregationQueryColumn
+            attributes:
+              - id: System/AttributePath
+                value: ChargingPower
+              - id: System/AggregationType
+                value: 4
+      - id: System/Query.FieldFilter
+        value:
+          - ckRecordId: System/FieldFilter
+            attributes:
+              - id: System/AttributePath
+                value: ChargingPower
+              - id: System/FieldFilter.Operator
+                value: 4
+              - id: System/ComparisonValue
+                value: '0' 
+
+  # SUM of the negative ChargingPower kW samples — × 10/3600 = kWh (operator 2=LessThan, 4=GreaterThan).
+  - rtId: 6a4aaddc22664f2b26c67ec9
+    ckTypeId: System/AggregationSdQuery
+    attributes:
+      - id: System/Name
+        value: Batterie entladen kumuliert
+      - id: System/Description
+        value: >-
+          SUM of the uniformly sampled (10 s) ChargingPower kW values over the query window —
+          multiply by 10/3600 for kWh. Used by the Energiebilanz MeshBoard KPI.
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/BatteryStorage
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/StreamDataQuery.ArchiveRtId
+        value: '6a0e000000000000000a000d'
+      - id: System/AggregationQueryColumns
+        value:
+          - ckRecordId: System/AggregationQueryColumn
+            attributes:
+              - id: System/AttributePath
+                value: ChargingPower
+              - id: System/AggregationType
+                value: 4
+      - id: System/Query.FieldFilter
+        value:
+          - ckRecordId: System/FieldFilter
+            attributes:
+              - id: System/AttributePath
+                value: ChargingPower
+              - id: System/FieldFilter.Operator
+                value: 2
+              - id: System/ComparisonValue
+                value: '0' 

@@ -197,8 +197,8 @@ cd scripts && pwsh om_initialize_tenant.ps1
    then imports & **activates** the 13 per-type stream-data archives
    (`6a0e…0001`–`…000d`, AB#3442: room sensors, light, shading, energy
    consumption + production — see `docs/developer-guide.md` "Archives (Stream
-   Data)"), the simulation pipelines, the `_trees` query, the two **MeshBoards**
-   (`rt-meshboards-energyiq.yaml`: "Raumtemperaturen" + "Energie" — dashboards,
+   Data)"), the simulation pipelines, the `_trees` query, the three **MeshBoards**
+   (`rt-meshboards-energyiq.yaml`: "Raumtemperaturen" + "Energie" + "Energiebilanz" — dashboards,
    widgets, persistent queries and six 5-minute AVG/MIN/MAX rollups, which are
    activated like the raw archives; the rollups are required by the
    resolution-aware line charts because raw archives declare no grain), the
