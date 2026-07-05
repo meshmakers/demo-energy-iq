@@ -1516,7 +1516,7 @@ entities:
     - id: System/Name
       value: Validate DataPoint Coverage
     - id: System/Description
-      value: Reports per-Space coverage status (ok/warning/error) for the EnergyIQ tree. v2-aware — checks for associated Sensor entities, not Space attributes.
+      value: Reports per-Space coverage status (ok/warning/error) for the EnergyIQ tree. v2-aware — checks for associated Sensor entities and descends into them (SpaceSensors/SpaceActuators/SpaceTerminals) so each device carries its own CurrentValue-mapping status.
     - id: System/Enabled
       value: true
     - id: System.Communication/PipelineDefinition
@@ -1529,12 +1529,24 @@ entities:
           # coverage is now about associated Sensor entities (v2 — measurements
           # are first-class entities); attribute-based coverage still works for
           # plant equipment that carries its own attributes directly.
+          #
+          # additionalChildRoleIds descends INTO the device entities attached to
+          # each Space (sensors / actuators / terminals), so they become report
+          # nodes of their own — the Studio coverage tree shows the same
+          # entities via association auto-discovery and colours them from this
+          # report. The per-sensor rules assert that every sensor actually has
+          # a CurrentValue mapping (the Loxone auto-map rules produce exactly
+          # that target path for every sensor subtype).
           - type: ValidateDataPointCoverage@1
             description: Validate EnergyIQ coverage
             rootRtId: 6789a00000000000000000a1
             rootCkTypeId: EnergyIQ/Site
             childRoleId: System/ParentChild
             childCkTypeId: Basic/TreeNode
+            additionalChildRoleIds:
+              - EnergyIQ/SpaceSensors
+              - EnergyIQ/SpaceActuators
+              - EnergyIQ/SpaceTerminals
             mappingRoleId: System.Communication/MapsTo
             mappingCkTypeId: System.Communication/DataPointMapping
             maxDepth: 16
@@ -1553,6 +1565,20 @@ entities:
                     targetCkTypeId: EnergyIQ/CO2Sensor
               # ExternalSpace: no thermal/lighting requirements, no sensors required.
               - ckTypeId: EnergyIQ/ExternalSpace
+              # Per-sensor coverage: every room sensor must be fed by a mapping
+              # onto its CurrentValue (rules match the EXACT concrete type).
+              - ckTypeId: EnergyIQ/TemperatureSensor
+                requiredAttributes: [CurrentValue]
+              - ckTypeId: EnergyIQ/HumiditySensor
+                requiredAttributes: [CurrentValue]
+              - ckTypeId: EnergyIQ/CO2Sensor
+                requiredAttributes: [CurrentValue]
+              - ckTypeId: EnergyIQ/IlluminanceSensor
+                requiredAttributes: [CurrentValue]
+              - ckTypeId: EnergyIQ/PresenceSensor
+                requiredAttributes: [CurrentValue]
+              - ckTypeId: EnergyIQ/WindowContactSensor
+                requiredAttributes: [CurrentValue]
 
           # Persist the report on the PipelineExecution entity so the
           # Studio can fetch it via the latest-execution query.
