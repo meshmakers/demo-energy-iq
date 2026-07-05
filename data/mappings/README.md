@@ -22,6 +22,16 @@ Both pipelines live in the **Mapping Backup** data flow
 (`data/_pipelines/rt-pipelines-mapping-backup.yaml`) and require it to be
 **deployed** on the mesh adapter (Studio → Communication → Data Flows).
 
+**From the Studio:** the Data Mappings page shows a **Backup** toolbar row
+(Export / Import…) as soon as the deployed backup pipelines are detected
+(auto-discovered by their `ExportDataPointMappings@1` /
+`ImportDataPointMappings@1` nodes). Export downloads
+`datapoint-mappings.json`; Import… uploads it and shows the
+resolved/unresolved statistics inline. Both run via the Communication
+Controller (`ExecutePipelineCommand`) — no direct adapter access needed.
+
+**From the shell:**
+
 ```powershell
 # Backup: export the manual mappings into this folder, then commit the file.
 ./scripts/om_export_mappings.ps1

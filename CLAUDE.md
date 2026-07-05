@@ -224,6 +224,11 @@ a backup taken before the re-init can be restored afterwards:
   `data/mappings/datapoint-mappings.json` (commit it — the backup is versioned).
 - `scripts/om_import_mappings.ps1` → `POST /energyiq/mappings/import`; the
   response lists unresolved entries for manual follow-up in the Studio.
+- **Studio:** the Data Mappings page has a Backup toolbar row (Export /
+  Import…) that runs the same pipelines via the Communication Controller
+  (`ExecutePipelineCommand`; the import pipeline carries a second
+  `FromExecutePipelineCommand@1` trigger and the Studio sends
+  `{ body: <document> }` so the same `$.body` path serves both entry points).
 
 Only the **manual delta** is exported (`excludeNameRegex` skips the
 rule-generated `ruleId|rtId|state` names — the Rules-based Auto-Map pipeline

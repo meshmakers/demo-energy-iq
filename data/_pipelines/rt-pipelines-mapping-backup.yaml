@@ -105,6 +105,10 @@ entities:
   # → unique name, resolved entries are persisted with the same idempotent
   # GetOrCreate-by-Name chain as the generation pipelines, and the response is
   # the import statistics (incl. unresolved entries for manual follow-up).
+  # Two triggers: HTTP POST (document = request body → $.body) and
+  # ExecutePipelineCommand (Studio Data Mappings → Backup → Import…; the Studio
+  # sends { body: <document> } as pipeline input, so the same $.body path
+  # serves both entry points and the statistics land in OutputData).
   # --------------------------------------------------------------------------
   - rtId: 67f0b00ec4ff02221e0b6022
     ckTypeId: System.Communication/Pipeline
@@ -128,6 +132,7 @@ entities:
           - type: FromHttpRequest@1
             method: POST
             path: /mappings/import
+          - type: FromExecutePipelineCommand@1
         transformations:
           # ── Step 1: Resolve the posted document back to entities ──
           - type: ImportDataPointMappings@1
