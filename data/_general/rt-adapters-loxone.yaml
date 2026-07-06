@@ -4,8 +4,24 @@ dependencies:
 entities:
   # The mesh adapter is auto-provisioned by the System.Communication blueprint
   # (rtId 670000000000000000000002); only the on-premise edge adapter is defined here.
+  # Edge pool for the on-premise Loxone adapter. Edge pools (Environment = 0) are NOT
+  # deployed by the central Communication Operator — the adapter process runs outside
+  # the cluster (here: the local edge worker started via Start-Octo).
+  - rtId: 67f0a01ec4ff02221e0b5000
+    ckTypeId: System.Communication/Pool
+    attributes:
+      - id: System/Name
+        value: Loxone Edge
+      - id: System/Description
+        value: Edge pool hosting the on-premise Loxone adapter (Firmianstraße Miniserver).
+      - id: System.Communication/Environment
+        value: 0
   - rtId: 67f0a01ec4ff02221e0b5001
     ckTypeId: System.Communication/Adapter
     attributes:
       - id: System/Name
         value: Loxone Edge Adapter
+    associations:
+      - roleId: System.Communication/Manages
+        targetRtId: 67f0a01ec4ff02221e0b5000
+        targetCkTypeId: System.Communication/Pool

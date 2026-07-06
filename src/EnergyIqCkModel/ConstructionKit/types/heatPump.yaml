@@ -31,6 +31,20 @@ types:
   - id: ${this}/SupplyTempSetpoint
     name: SupplyTempSetpoint
     isOptional: true
+  # Cooling-mode hydraulics (reversible units; separate sensors from the heating supply)
+  - id: ${this}/CoolingSupplyTemp
+    name: CoolingSupplyTemp
+    isOptional: true
+  - id: ${this}/CoolingSupplyTempSetpoint
+    name: CoolingSupplyTempSetpoint
+    isOptional: true
+  # Control parameters (heating curve as configured on the unit)
+  - id: ${this}/HeatingCurve
+    name: HeatingCurve
+    isOptional: true
+  - id: ${this}/HeatingCurveOffset
+    name: HeatingCurveOffset
+    isOptional: true
   - id: ${this}/ModulationLevel
     name: ModulationLevel
     isOptional: true
@@ -43,6 +57,10 @@ types:
     isOptional: true
   - id: ${this}/SourceOutletTemp
     name: SourceOutletTemp
+    isOptional: true
+  # Refrigerant circuit
+  - id: ${this}/HotGasTemp
+    name: HotGasTemp
     isOptional: true
   # Performance
   - id: ${this}/COP
@@ -57,13 +75,3 @@ types:
   - id: ${this}/SEER
     name: SEER
     isOptional: true
-  associations:
-  # Parent (Building) via inherited System/ParentChild
-  # Equipment-level sensors/actuators (e.g. changeover valve)
-  - id: ${this}/EquipmentSensors
-    targetCkTypeId: ${this}/Sensor
-  - id: ${this}/EquipmentActuators
-    targetCkTypeId: ${this}/Actuator
-  # Serves terminals
-  - id: ${this}/TerminalServedBy
-    targetCkTypeId: ${this}/RoomTerminal

@@ -747,6 +747,42 @@ entities:
                 description: Save BatteryStorage time-series
                 path: $._updateItems
                 archiveRtId: 6a0e000000000000000a000d
+              # ── Plant + meter counters (Heizung & Kühlung board, 2026-07-06) ──
+              - type: BackfillFromRtEntity@1
+                description: Backfill HeatPump archive
+                path: $._updateItems
+                archiveRtId: 6a0e000000000000000a000e
+              - type: SaveStreamDataInArchive@1
+                description: Save HeatPump time-series
+                path: $._updateItems
+                archiveRtId: 6a0e000000000000000a000e
+              - type: BackfillFromRtEntity@1
+                description: Backfill ThermalEnergyStorage archive
+                path: $._updateItems
+                archiveRtId: 6a0e000000000000000a000f
+              - type: SaveStreamDataInArchive@1
+                description: Save ThermalEnergyStorage time-series
+                path: $._updateItems
+                archiveRtId: 6a0e000000000000000a000f
+              - type: BackfillFromRtEntity@1
+                description: Backfill Pump archive
+                path: $._updateItems
+                archiveRtId: 6a0e000000000000000a0010
+              - type: SaveStreamDataInArchive@1
+                description: Save Pump time-series
+                path: $._updateItems
+                archiveRtId: 6a0e000000000000000a0010
+              # Second Meter block on purpose: the kWh counters live in their own archive
+              # (MeterEnergyArchive) because the already-activated MeterArchive cannot grow
+              # columns (CREATE TABLE IF NOT EXISTS only).
+              - type: BackfillFromRtEntity@1
+                description: Backfill Meter kWh-counter archive
+                path: $._updateItems
+                archiveRtId: 6a0e000000000000000a0011
+              - type: SaveStreamDataInArchive@1
+                description: Save Meter kWh-counter time-series
+                path: $._updateItems
+                archiveRtId: 6a0e000000000000000a0011
 
   # ==========================================================================
   # DataFlow: Loxone Auto-Map Controls
@@ -1202,10 +1238,17 @@ entities:
               # "active" for PresenceDetector, "position" for Dimmer/Jalousie). The WebSocket
               # path (pipeline 6008) filters mappings by state name — a mapping generated with
               # the defaultSourceAttributePath "CurrentValue" never matches any state event.
+              # Negative lookahead guards against plant/DHW/outdoor temperature readouts that
+              # live in the same Loxone room as a Space's TemperatureSensor: without it, every
+              # "…Temperatur…" InfoOnlyAnalog in the Technikraum (Sole Vor-/Rücklauf, Heißgas,
+              # Warmwasser IST, Raumtemperatur Verschiebung, Außen…) was mapped onto
+              # Temp-Technik.CurrentValue (7 bogus mappings, last-write-wins garbage).
+              # Outdoor temperature is mapped explicitly via the "outdoor-temp"/"kwl-outdoor-temp"
+              # directControlMappings instead.
               - id: infoonly-temperature-by-name
                 when:
                   controlType: InfoOnlyAnalog
-                  controlNameRegex: "(?i)(temperatur|temp(?!late))"
+                  controlNameRegex: "(?i)^(?!.*(sole|heißgas|heissgas|warmwasser|vorlauf|rücklauf|ruecklauf|verschiebung|außen|aussen)).*(temperatur|temp(?!late))"
                   stateName: value
                 map:
                   targetAttribute: CurrentValue
@@ -1305,8 +1348,9 @@ entities:
                 states:
                   - { stateName: Ppwr, targetAttribute: TotalCurrentPower }
               # Battery: derive all four runtime attributes from the single signed EnergyManager2
-              # storage power (Spwr). Loxone Firmianstraße convention: Spwr > 0 = charging,
-              # Spwr < 0 = discharging, Spwr == 0 = idle. ChargingPower/DischargingPower are the two
+              # storage power (Spwr). Loxone Firmianstraße convention: Spwr > 0 = discharging,
+              # Spwr < 0 = charging, Spwr == 0 = idle (live-verified 2026-07-05: evening without PV,
+              # Spwr ~ +1.1 kW while Ssoc fell 46 → 45). ChargingPower/DischargingPower are the two
               # positive-valued power attributes; IsCharging/IsDischarging are the boolean flags
               # (ApplyDataPointMappings casts the formula result to the target attribute's CK type, so
               # a comparison expression like "value > 0" lands as a real bool).
@@ -1319,7 +1363,7 @@ entities:
                 targetCkTypeId: EnergyIQ/BatteryStorage
                 targetName: Batteriespeicher
                 states:
-                  - { stateName: Spwr, targetAttribute: ChargingPower, expression: "value > 0 ? value : 0" }
+                  - { stateName: Spwr, targetAttribute: ChargingPower, expression: "value < 0 ? 0 - value : 0" }
                   - { stateName: Ssoc, targetAttribute: StateOfCharge }
               - id: em-battery-discharge
                 controlType: EnergyManager2
@@ -1327,21 +1371,21 @@ entities:
                 targetCkTypeId: EnergyIQ/BatteryStorage
                 targetName: Batteriespeicher
                 states:
-                  - { stateName: Spwr, targetAttribute: DischargingPower, expression: "value < 0 ? 0 - value : 0" }
+                  - { stateName: Spwr, targetAttribute: DischargingPower, expression: "value > 0 ? value : 0" }
               - id: em-battery-ischarging
                 controlType: EnergyManager2
                 controlName: Energiemanager
                 targetCkTypeId: EnergyIQ/BatteryStorage
                 targetName: Batteriespeicher
                 states:
-                  - { stateName: Spwr, targetAttribute: IsCharging, expression: "value > 0" }
+                  - { stateName: Spwr, targetAttribute: IsCharging, expression: "value < 0" }
               - id: em-battery-isdischarging
                 controlType: EnergyManager2
                 controlName: Energiemanager
                 targetCkTypeId: EnergyIQ/BatteryStorage
                 targetName: Batteriespeicher
                 states:
-                  - { stateName: Spwr, targetAttribute: IsDischarging, expression: "value < 0" }
+                  - { stateName: Spwr, targetAttribute: IsDischarging, expression: "value > 0" }
               # ── Per-floor consumption sub-meters (Loxone "Verbrauch X" → EnergyIQ Stromzähler) ──
               - id: meter-eg
                 controlType: Meter
@@ -1384,6 +1428,186 @@ entities:
                 states:
                   - { stateName: actual, targetAttribute: ActivePower }
                   - { stateName: total, targetAttribute: ImportedEnergy }
+              # ── Outdoor weather (Loxone InfoOnlyAnalog → ExternalSpace sensors + KWL) ──
+              # "Außen Temperatur" (17b3c833…) ticks live; the similarly named "Außentemperatur"
+              # (15d991b9…) has never delivered a state update, so it is deliberately NOT used.
+              - id: outdoor-temp
+                controlType: InfoOnlyAnalog
+                controlName: Außen Temperatur
+                targetCkTypeId: EnergyIQ/TemperatureSensor
+                targetName: Außentemperatur
+                states:
+                  - { stateName: value, targetAttribute: CurrentValue }
+              - id: outdoor-humidity
+                controlType: InfoOnlyAnalog
+                controlName: Außenluftfeuchtigkeit
+                targetCkTypeId: EnergyIQ/HumiditySensor
+                targetName: Außenluftfeuchtigkeit
+                states:
+                  - { stateName: value, targetAttribute: CurrentValue }
+              # KWL intake air temperature → AHU.OutdoorAirTemp (device-level reading,
+              # distinct from the free-field ExternalSpace sensor above).
+              - id: kwl-outdoor-temp
+                controlType: InfoOnlyAnalog
+                controlName: Außenlufttemperatur (AZ30-BT23)
+                targetCkTypeId: EnergyIQ/AirHandlingUnit
+                targetName: Kontrollierte Wohnraumlüftung
+                states:
+                  - { stateName: value, targetAttribute: OutdoorAirTemp }
+              # ── Heat pump hydraulics (NIBE readouts via Loxone InfoOnlyAnalog) ──
+              # BT2/BT3 = heating-circuit supply/return; Sole VL/RL = brine (source) in/out
+              # (NIBE BT10/BT11). Since EnergyIQ 2.9.0 also: Heißgas → HotGasTemp, BT25/SOLL →
+              # CoolingSupplyTemp/-Setpoint, Heizkurve/Raumtemp-Verschiebung → HeatingCurve/-Offset.
+              # NOT mapped on purpose: Kompressorstatus/Betriebsmodus (numeric Loxone codes with
+              # no verified enum translation), "Verschiebung Heizkurve" (ValueSelector = operator
+              # INPUT control, not a readout; the readout is "Raumtemperatur Verschiebung").
+              - id: hp-supply-temp
+                controlType: InfoOnlyAnalog
+                controlName: Vorlauf IST (BT2)
+                targetCkTypeId: EnergyIQ/HeatPump
+                targetName: Wärmepumpe
+                states:
+                  - { stateName: value, targetAttribute: SupplyTemp }
+              - id: hp-return-temp
+                controlType: InfoOnlyAnalog
+                controlName: Rücklauf (BT3)
+                targetCkTypeId: EnergyIQ/HeatPump
+                targetName: Wärmepumpe
+                states:
+                  - { stateName: value, targetAttribute: ReturnTemp }
+              - id: hp-source-inlet
+                controlType: InfoOnlyAnalog
+                controlName: Sole Vorlauf Temperatur
+                targetCkTypeId: EnergyIQ/HeatPump
+                targetName: Wärmepumpe
+                states:
+                  - { stateName: value, targetAttribute: SourceInletTemp }
+              - id: hp-source-outlet
+                controlType: InfoOnlyAnalog
+                controlName: Sole Rücklauf Temperatur
+                targetCkTypeId: EnergyIQ/HeatPump
+                targetName: Wärmepumpe
+                states:
+                  - { stateName: value, targetAttribute: SourceOutletTemp }
+              - id: hp-hotgas
+                controlType: InfoOnlyAnalog
+                controlName: Heißgas Temperatur
+                targetCkTypeId: EnergyIQ/HeatPump
+                targetName: Wärmepumpe
+                states:
+                  - { stateName: value, targetAttribute: HotGasTemp }
+              - id: hp-cooling-supply
+                controlType: InfoOnlyAnalog
+                controlName: "Vorlauf, Kühlung IST (BT25)"
+                targetCkTypeId: EnergyIQ/HeatPump
+                targetName: Wärmepumpe
+                states:
+                  - { stateName: value, targetAttribute: CoolingSupplyTemp }
+              - id: hp-cooling-supply-setpoint
+                controlType: InfoOnlyAnalog
+                controlName: "Vorlauf, Kühlung SOLL"
+                targetCkTypeId: EnergyIQ/HeatPump
+                targetName: Wärmepumpe
+                states:
+                  - { stateName: value, targetAttribute: CoolingSupplyTempSetpoint }
+              - id: hp-heating-curve
+                controlType: InfoOnlyAnalog
+                controlName: Heizkurve
+                targetCkTypeId: EnergyIQ/HeatPump
+                targetName: Wärmepumpe
+                states:
+                  - { stateName: value, targetAttribute: HeatingCurve }
+              - id: hp-curve-offset
+                controlType: InfoOnlyAnalog
+                controlName: Raumtemperatur Verschiebung
+                targetCkTypeId: EnergyIQ/HeatPump
+                targetName: Wärmepumpe
+                states:
+                  - { stateName: value, targetAttribute: HeatingCurveOffset }
+              # DHW tank temperature → the dedicated Warmwasserspeicher entity (NOT the
+              # 500 l heating buffer — different vessel).
+              - id: hp-dhw-temp
+                controlType: InfoOnlyAnalog
+                controlName: Warmwasser Temperatur IST
+                targetCkTypeId: EnergyIQ/ThermalEnergyStorage
+                targetName: Warmwasserspeicher
+                states:
+                  - { stateName: value, targetAttribute: StorageTempTop }
+              # ── KWL air temperatures (NIBE AZ30 module) ──
+              # BT22 Zuluft → SupplyAirTemp, BT20 Abluft → ReturnAirTemp, BT21 Fortluft →
+              # ExhaustAirTemp (EnergyIQ 2.9.0). Units per LoxAPP3 formats: °C, no scaling.
+              - id: kwl-supply-air
+                controlType: InfoOnlyAnalog
+                controlName: Räume Zuluft (AZ30-BT22)
+                targetCkTypeId: EnergyIQ/AirHandlingUnit
+                targetName: Kontrollierte Wohnraumlüftung
+                states:
+                  - { stateName: value, targetAttribute: SupplyAirTemp }
+              - id: kwl-return-air
+                controlType: InfoOnlyAnalog
+                controlName: Räume Abluft (AZ30-BT20)
+                targetCkTypeId: EnergyIQ/AirHandlingUnit
+                targetName: Kontrollierte Wohnraumlüftung
+                states:
+                  - { stateName: value, targetAttribute: ReturnAirTemp }
+              - id: kwl-exhaust-air
+                controlType: InfoOnlyAnalog
+                controlName: Fortluft (AZ30-BT21)
+                targetCkTypeId: EnergyIQ/AirHandlingUnit
+                targetName: Kontrollierte Wohnraumlüftung
+                states:
+                  - { stateName: value, targetAttribute: ExhaustAirTemp }
+              # ── Heating-medium pump (NIBE GP1 / flow meter BF1) ──
+              # GP1 reports the ACTUAL speed in % → Pump.Speed (EnergyIQ 2.9.0).
+              # BF1 reports l/min (LoxAPP3 format "%.1f l/m"); FlowRate expects m³/h → × 0.06.
+              - id: pump-speed
+                controlType: InfoOnlyAnalog
+                controlName: Drehzahl der Heizungsmediumpumpe (GP1)
+                targetCkTypeId: EnergyIQ/Pump
+                targetName: Heizkreispumpe
+                states:
+                  - { stateName: value, targetAttribute: Speed }
+              - id: pump-flow
+                controlType: InfoOnlyAnalog
+                controlName: Volumenstrommesser (BF1)
+                targetCkTypeId: EnergyIQ/Pump
+                targetName: Heizkreispumpe
+                states:
+                  - { stateName: value, targetAttribute: FlowRate, expression: "value * 0.06" }
+              # ── Technikraum consumer sub-meters (Loxone Meter controls, kW/kWh) ──
+              - id: meter-it-schrank
+                controlType: Meter
+                controlName: Verbrauch IT Schrank
+                targetCkTypeId: EnergyIQ/Meter
+                targetName: Stromzähler IT-Schrank
+                states:
+                  - { stateName: actual, targetAttribute: ActivePower }
+                  - { stateName: total, targetAttribute: ImportedEnergy }
+              - id: meter-technikraum
+                controlType: Meter
+                controlName: Verbrauch Technikraum
+                targetCkTypeId: EnergyIQ/Meter
+                targetName: Stromzähler Technikraum
+                states:
+                  - { stateName: actual, targetAttribute: ActivePower }
+                  - { stateName: total, targetAttribute: ImportedEnergy }
+              - id: meter-waermepumpe
+                controlType: Meter
+                controlName: Verbrauch Wärmepumpe
+                targetCkTypeId: EnergyIQ/Meter
+                targetName: Stromzähler Wärmepumpe
+                states:
+                  - { stateName: actual, targetAttribute: ActivePower }
+                  - { stateName: total, targetAttribute: ImportedEnergy }
+              # Same meter also feeds the heat pump's own PowerConsumption (kW) —
+              # distinct id, so the generated mapping name does not collide.
+              - id: hp-power
+                controlType: Meter
+                controlName: Verbrauch Wärmepumpe
+                targetCkTypeId: EnergyIQ/HeatPump
+                targetName: Wärmepumpe
+                states:
+                  - { stateName: actual, targetAttribute: PowerConsumption }
               # NOT mapped (no clean 1:1 Loxone source): NG-EG meter, and the appliances
               # (Loxone has a single combined "Verbrauch Waschmaschine Trockner" meter).
 

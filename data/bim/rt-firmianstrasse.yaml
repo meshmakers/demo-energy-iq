@@ -1775,6 +1775,29 @@ entities:
         targetRtId: 6789a00000000000000000a1
         targetCkTypeId: EnergyIQ/Site
 
+  # Outdoor weather sensors, hosted by the Garten ExternalSpace (IFC: external
+  # spatial element hosting free-field sensors). Fed live by Loxone via the
+  # directControlMappings "outdoor-temp" / "outdoor-humidity" in rt-pipelines-loxone.yaml.
+  - rtId: 6789a00000000000010051a1
+    ckTypeId: EnergyIQ/TemperatureSensor
+    attributes:
+      - id: System/Name
+        value: Außentemperatur
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000051e7
+        targetCkTypeId: EnergyIQ/ExternalSpace
+
+  - rtId: 6789a00000000000010051a2
+    ckTypeId: EnergyIQ/HumiditySensor
+    attributes:
+      - id: System/Name
+        value: Außenluftfeuchtigkeit
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6789a00000000000000051e7
+        targetCkTypeId: EnergyIQ/ExternalSpace
+
   # ============================================================
   # PLANT EQUIPMENT - HeatPump (reversibel, Heizen + Passivkühlung)
   # ============================================================
@@ -1854,6 +1877,23 @@ entities:
         value: 500 l Schichtenspeicher im Technikraum
       - id: EnergyIQ/StorageVolume
         value: 500.0
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6789a00000000000000015d5  # space-hg-eg-technik (Technikraum)
+        targetCkTypeId: EnergyIQ/Space
+
+  # Domestic-hot-water storage (separate vessel from the heating buffer above;
+  # NIBE-integrated DHW tank). StorageTempTop is fed live by the Loxone control
+  # "Warmwasser Temperatur IST" via the "hp-dhw-temp" directControlMapping.
+  - rtId: 6789a00000000000000064f5
+    ckTypeId: EnergyIQ/ThermalEnergyStorage
+    attributes:
+      - id: EnergyIQ/Identifier
+        value: WW-01
+      - id: System/Name
+        value: Warmwasserspeicher
+      - id: System/Description
+        value: Brauchwasserspeicher (in der Wärmepumpe integriert)
     associations:
       - roleId: System/ParentChild
         targetRtId: 6789a00000000000000015d5  # space-hg-eg-technik (Technikraum)
@@ -2368,6 +2408,16 @@ entities:
       - roleId: EnergyIQ/SystemMembers
         targetRtId: 6789a00000000000003004a5  # Stromzähler NG-EG
         targetCkTypeId: EnergyIQ/Meter
+      # Technikraum consumer sub-meters (IT-Schrank / Technikraum / Wärmepumpe).
+      - roleId: EnergyIQ/SystemMembers
+        targetRtId: 6789a00000000000003005a6  # Stromzähler IT-Schrank
+        targetCkTypeId: EnergyIQ/Meter
+      - roleId: EnergyIQ/SystemMembers
+        targetRtId: 6789a00000000000003006a7  # Stromzähler Technikraum
+        targetCkTypeId: EnergyIQ/Meter
+      - roleId: EnergyIQ/SystemMembers
+        targetRtId: 6789a00000000000003007a8  # Stromzähler Wärmepumpe
+        targetCkTypeId: EnergyIQ/Meter
       # Metered loads: 2 wallboxes + 2 appliances.
       - roleId: EnergyIQ/SystemMembers
         targetRtId: 6789a00000000000003010b1  # Wallbox-Links
@@ -2537,6 +2587,62 @@ entities:
       - roleId: EnergyIQ/StoreyElements
         targetRtId: 6789a00000000000000040c4  # storey-ng-eg (Nebengebäude EG) — whole-floor sub-meter
         targetCkTypeId: EnergyIQ/BuildingStorey
+
+  # --- 3× Verbraucher-Untermeter im Technikraum (Loxone "Verbrauch IT Schrank /
+  # Technikraum / Wärmepumpe") — room-scoped, hence SpaceElements → Technikraum. ---
+  - rtId: 6789a00000000000003005a6
+    ckTypeId: EnergyIQ/Meter
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: meter-it-schrank
+      - id: System/Name
+        value: Stromzähler IT-Schrank
+      - id: System/Description
+        value: Verbrauch IT-Schrank (Netzwerk/Server) im Technikraum
+      - id: EnergyIQ/MeterIdentifier
+        value: LOXONE-METER-IT-SCHRANK
+      - id: EnergyIQ/MeterCarrierTypeValue
+        value: 0  # Electricity
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6789a00000000000000015d5  # space-hg-eg-technik (Technikraum)
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000003006a7
+    ckTypeId: EnergyIQ/Meter
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: meter-technikraum
+      - id: System/Name
+        value: Stromzähler Technikraum
+      - id: System/Description
+        value: Verbrauch Technikraum (Haustechnik ohne Wärmepumpe)
+      - id: EnergyIQ/MeterIdentifier
+        value: LOXONE-METER-TECHNIKRAUM
+      - id: EnergyIQ/MeterCarrierTypeValue
+        value: 0  # Electricity
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6789a00000000000000015d5  # space-hg-eg-technik (Technikraum)
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a00000000000003007a8
+    ckTypeId: EnergyIQ/Meter
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: meter-waermepumpe
+      - id: System/Name
+        value: Stromzähler Wärmepumpe
+      - id: System/Description
+        value: Stromverbrauch der Wärmepumpe (Untermeter; speist auch HeatPump.PowerConsumption)
+      - id: EnergyIQ/MeterIdentifier
+        value: LOXONE-METER-WAERMEPUMPE
+      - id: EnergyIQ/MeterCarrierTypeValue
+        value: 0  # Electricity
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6789a00000000000000015d5  # space-hg-eg-technik (Technikraum)
+        targetCkTypeId: EnergyIQ/Space
 
   # --- 2× Wallbox in der Garage (Nebengebäude) ---
   - rtId: 6789a00000000000003010b1

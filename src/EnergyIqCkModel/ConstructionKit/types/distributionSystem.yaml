@@ -22,3 +22,8 @@ types:
   associations:
   - id: ${this}/SystemMembers
     targetCkTypeId: ${Basic}/NamedEntity
+  # IfcRelServicesBuildings: which spatial structure this system serves
+  - id: ${this}/SystemSpaces
+    targetCkTypeId: ${this}/Space
+  - id: ${this}/SystemSpaces
+    targetCkTypeId: ${this}/BuildingStorey

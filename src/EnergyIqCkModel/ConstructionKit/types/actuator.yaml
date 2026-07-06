@@ -23,5 +23,8 @@ types:
     targetCkTypeId: ${this}/Space
   - id: ${this}/EquipmentActuators
     targetCkTypeId: ${this}/BuildingElement
+  # Or attached to plant equipment (TechnicalSystem is a TreeNode, not a BuildingElement)
+  - id: ${this}/EquipmentActuators
+    targetCkTypeId: ${this}/TechnicalSystem
   - id: ${this}/TerminalActuators
     targetCkTypeId: ${this}/RoomTerminal

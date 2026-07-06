@@ -19,7 +19,3 @@ types:
   - id: ${this}/IsLocked
     name: IsLocked
     isOptional: true
-  associations:
-  # SpaceElements (located-in-space) inherited from PassiveBuildingElement
-  - id: ${this}/EquipmentSensors
-    targetCkTypeId: ${this}/Sensor

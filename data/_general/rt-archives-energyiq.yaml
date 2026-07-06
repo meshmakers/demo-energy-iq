@@ -354,3 +354,139 @@ entities:
                 value: false
               - id: System.StreamData/CkArchiveColumn.Indexed
                 value: false
+
+  # --- Plant archives for the Heizung & Kühlung MeshBoard (2026-07-06) ---
+  - rtId: 6a0e000000000000000a000e
+    ckTypeId: System.StreamData/RawArchive
+    rtWellKnownName: HeatPumpArchive
+    attributes:
+      - id: System.StreamData/Archive.TargetCkTypeId
+        value: EnergyIQ/HeatPump
+      - id: System.StreamData/Archive.Status
+        value: 0
+      - id: System.StreamData/Archive.Columns
+        value:
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: SupplyTemp
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: false
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: ReturnTemp
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: false
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: CoolingSupplyTemp
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: false
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: SourceInletTemp
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: false
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: SourceOutletTemp
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: false
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: HotGasTemp
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: false
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: PowerConsumption
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: false
+
+  - rtId: 6a0e000000000000000a000f
+    ckTypeId: System.StreamData/RawArchive
+    rtWellKnownName: ThermalEnergyStorageArchive
+    attributes:
+      - id: System.StreamData/Archive.TargetCkTypeId
+        value: EnergyIQ/ThermalEnergyStorage
+      - id: System.StreamData/Archive.Status
+        value: 0
+      - id: System.StreamData/Archive.Columns
+        value:
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: StorageTempTop
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: false
+
+  - rtId: 6a0e000000000000000a0010
+    ckTypeId: System.StreamData/RawArchive
+    rtWellKnownName: PumpArchive
+    attributes:
+      - id: System.StreamData/Archive.TargetCkTypeId
+        value: EnergyIQ/Pump
+      - id: System.StreamData/Archive.Status
+        value: 0
+      - id: System.StreamData/Archive.Columns
+        value:
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: Speed
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: false
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: FlowRate
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: false
+
+  # Counter values (kWh totals) for all generic sub-meters. Second archive on the
+  # SAME TargetCkTypeId as MeterArchive — the counter column was not part of the
+  # original (already activated) MeterArchive and active archives cannot grow columns.
+  - rtId: 6a0e000000000000000a0011
+    ckTypeId: System.StreamData/RawArchive
+    rtWellKnownName: MeterEnergyArchive
+    attributes:
+      - id: System.StreamData/Archive.TargetCkTypeId
+        value: EnergyIQ/Meter
+      - id: System.StreamData/Archive.Status
+        value: 0
+      - id: System.StreamData/Archive.Columns
+        value:
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: ImportedEnergy
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: false

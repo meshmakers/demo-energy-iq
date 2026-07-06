@@ -45,6 +45,9 @@ attributes:
 - id: CoolingCoilPosition
   valueType: Double
   description: "Cooling coil valve position (0-100%)"
+- id: ExhaustAirTemp
+  valueType: Double
+  description: "Exhaust air temperature after heat recovery (Fortluft, °C)"
 
 # Boiler attributes
 - id: SupplyTemp
@@ -76,6 +79,9 @@ attributes:
 - id: SpeedSetpoint
   valueType: Double
   description: "Speed setpoint (0-100%)"
+- id: Speed
+  valueType: Double
+  description: "Actual speed (0-100%, TimeSeries)"
 - id: PowerConsumption
   valueType: Double
   description: "Power consumption (kW)"

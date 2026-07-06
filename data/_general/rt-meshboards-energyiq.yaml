@@ -38,7 +38,7 @@ entities:
         value: Raumtemperaturen
       - id: System/Description
         value: |-
-          Raumtemperatur-Übersicht: Verlauf aus dem TemperatureSensorArchive (Raum wählbar) + aktuelle Werte aller Sensoren.
+          Raumtemperatur-Übersicht: Verlauf aus dem TemperatureSensorArchive (Raum wählbar) + Außentemperatur-Verlauf + aktuelle Werte aller Sensoren.
           ---MESHBOARD_VARIABLES---
           {"timeFilter": {"enabled": true, "selection": {"type": "relative", "relativeValue": 24, "relativeUnit": "hours"}}, "entitySelectors": [{"id": "raum", "label": "Raum", "ckTypeId": "EnergyIQ/Space", "attributeMappings": [{"attributePath": "name", "variableName": "raumName"}], "showInToolbar": true, "defaultRtId": "6789a00000000000000011d1", "childScope": {"targetCkTypeId": "EnergyIQ/TemperatureSensor", "roleId": "EnergyIQ/SpaceSensors", "direction": "in"}}], "autoRefreshSeconds": 300}
       - id: System.UI/Dashboard.Columns
@@ -105,6 +105,69 @@ entities:
       - id: System.UI/DashboardWidget.Config
         value: |-
           {"columns": [{"field": "name", "title": "Sensor"}, {"field": "currentValue", "title": "Temperatur (°C)"}], "pageSize": 20, "sortable": true, "queryName": "Aktuelle Raumtemperaturen", "queryRtId": "6a4a9ca67e487162fbe38609", "queryFamily": "runtime"}
+
+  # Outdoor-temperature line chart: fixed to the single outdoor sensor via
+  # StreamDataQuery.RtIds (the "Raum" selector never reaches it — the sensor
+  # hangs on the Garten ExternalSpace, not on a Space).
+  - rtId: 6a4a9f397e487162fbe38619
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4a9f277e487162fbe3860a
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Außentemperatur – Verlauf
+      - id: System.UI/DashboardWidget.Type
+        value: lineChart
+      - id: System.UI/DashboardWidget.Col
+        value: 1
+      - id: System.UI/DashboardWidget.Row
+        value: 8
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 12
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 5
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: systemQuery
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: 6a4a9ca67e487162fbe38618
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"chartType": "line", "categoryField": "timestamp", "seriesGroupField": "name", "valueField": "CurrentValue", "showLegend": true, "legendPosition": "bottom", "showMarkers": false, "showDataBadge": true, "queryName": "Außentemperatur (Archiv)", "queryRtId": "6a4a9ca67e487162fbe38618", "queryFamily": "streamData", "resolutionAware": true, "requiredAggregation": "AVG"}
+
+  - rtId: 6a4a9ca67e487162fbe38618
+    ckTypeId: System/SimpleSdQuery
+    attributes:
+      - id: System/Name
+        value: Außentemperatur (Archiv)
+      - id: System/Description
+        value: >-
+          Raw time series of the outdoor TemperatureSensor (Garten ExternalSpace, fed by Loxone
+          "Außen Temperatur") from the TemperatureSensorArchive, pinned via StreamDataQuery.RtIds.
+          Used by the Raumtemperaturen MeshBoard outdoor line chart.
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/TemperatureSensor
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/StreamDataQuery.ArchiveRtId
+        value: 6a0e000000000000000a0001
+      - id: System/StreamDataQuery.RtIds
+        value:
+          - 6789a00000000000010051a1
+      - id: System/StreamDataQuery.Columns
+        value:
+          - CurrentValue
+      - id: System/Query.Sorting
+        value:
+          - ckRecordId: System/SortOrderItem
+            attributes:
+              - id: System/AttributePath
+                value: timestamp
+              - id: System/SortOrder
+                value: 1
 
   - rtId: 6a4a9ca67e487162fbe38608
     ckTypeId: System/SimpleSdQuery
@@ -1108,3 +1171,860 @@ entities:
                 value: 2
               - id: System/ComparisonValue
                 value: '0' 
+
+
+  # --- Rollups for the Heizung & Kühlung board (resolution-aware charts) ---
+  - rtId: 6a4b4000000000000000e001
+    ckTypeId: System.StreamData/RollupArchive
+    rtWellKnownName: HeatPumpRollup5m
+    attributes:
+      - id: System.StreamData/Archive.TargetCkTypeId
+        value: EnergyIQ/HeatPump
+      - id: System.StreamData/Archive.Status
+        value: 0
+      - id: System.StreamData/RollupArchive.SourceArchiveRtId
+        value: '6a0e000000000000000a000e'
+      - id: System.StreamData/RollupArchive.BucketSizeMs
+        value: 300000
+      - id: System.StreamData/RollupArchive.WatermarkLagMs
+        value: 120000
+      - id: System.StreamData/RollupArchive.Aggregations
+        value:
+          - ckRecordId: System.StreamData/CkRollupAggregation
+            attributes:
+              - id: System.StreamData/CkRollupAggregation.SourcePath
+                value: SupplyTemp
+              - id: System.StreamData/CkRollupAggregation.Function
+                value: 0
+          - ckRecordId: System.StreamData/CkRollupAggregation
+            attributes:
+              - id: System.StreamData/CkRollupAggregation.SourcePath
+                value: ReturnTemp
+              - id: System.StreamData/CkRollupAggregation.Function
+                value: 0
+          - ckRecordId: System.StreamData/CkRollupAggregation
+            attributes:
+              - id: System.StreamData/CkRollupAggregation.SourcePath
+                value: CoolingSupplyTemp
+              - id: System.StreamData/CkRollupAggregation.Function
+                value: 0
+          - ckRecordId: System.StreamData/CkRollupAggregation
+            attributes:
+              - id: System.StreamData/CkRollupAggregation.SourcePath
+                value: SourceInletTemp
+              - id: System.StreamData/CkRollupAggregation.Function
+                value: 0
+          - ckRecordId: System.StreamData/CkRollupAggregation
+            attributes:
+              - id: System.StreamData/CkRollupAggregation.SourcePath
+                value: SourceOutletTemp
+              - id: System.StreamData/CkRollupAggregation.Function
+                value: 0
+          - ckRecordId: System.StreamData/CkRollupAggregation
+            attributes:
+              - id: System.StreamData/CkRollupAggregation.SourcePath
+                value: HotGasTemp
+              - id: System.StreamData/CkRollupAggregation.Function
+                value: 0
+          - ckRecordId: System.StreamData/CkRollupAggregation
+            attributes:
+              - id: System.StreamData/CkRollupAggregation.SourcePath
+                value: PowerConsumption
+              - id: System.StreamData/CkRollupAggregation.Function
+                value: 0
+
+  - rtId: 6a4b4000000000000000e002
+    ckTypeId: System.StreamData/RollupArchive
+    rtWellKnownName: ThermalEnergyStorageRollup5m
+    attributes:
+      - id: System.StreamData/Archive.TargetCkTypeId
+        value: EnergyIQ/ThermalEnergyStorage
+      - id: System.StreamData/Archive.Status
+        value: 0
+      - id: System.StreamData/RollupArchive.SourceArchiveRtId
+        value: '6a0e000000000000000a000f'
+      - id: System.StreamData/RollupArchive.BucketSizeMs
+        value: 300000
+      - id: System.StreamData/RollupArchive.WatermarkLagMs
+        value: 120000
+      - id: System.StreamData/RollupArchive.Aggregations
+        value:
+          - ckRecordId: System.StreamData/CkRollupAggregation
+            attributes:
+              - id: System.StreamData/CkRollupAggregation.SourcePath
+                value: StorageTempTop
+              - id: System.StreamData/CkRollupAggregation.Function
+                value: 0
+          - ckRecordId: System.StreamData/CkRollupAggregation
+            attributes:
+              - id: System.StreamData/CkRollupAggregation.SourcePath
+                value: StorageTempTop
+              - id: System.StreamData/CkRollupAggregation.Function
+                value: 1
+          - ckRecordId: System.StreamData/CkRollupAggregation
+            attributes:
+              - id: System.StreamData/CkRollupAggregation.SourcePath
+                value: StorageTempTop
+              - id: System.StreamData/CkRollupAggregation.Function
+                value: 2
+
+  - rtId: 6a4b4000000000000000e003
+    ckTypeId: System.StreamData/RollupArchive
+    rtWellKnownName: PumpRollup5m
+    attributes:
+      - id: System.StreamData/Archive.TargetCkTypeId
+        value: EnergyIQ/Pump
+      - id: System.StreamData/Archive.Status
+        value: 0
+      - id: System.StreamData/RollupArchive.SourceArchiveRtId
+        value: '6a0e000000000000000a0010'
+      - id: System.StreamData/RollupArchive.BucketSizeMs
+        value: 300000
+      - id: System.StreamData/RollupArchive.WatermarkLagMs
+        value: 120000
+      - id: System.StreamData/RollupArchive.Aggregations
+        value:
+          - ckRecordId: System.StreamData/CkRollupAggregation
+            attributes:
+              - id: System.StreamData/CkRollupAggregation.SourcePath
+                value: Speed
+              - id: System.StreamData/CkRollupAggregation.Function
+                value: 0
+          - ckRecordId: System.StreamData/CkRollupAggregation
+            attributes:
+              - id: System.StreamData/CkRollupAggregation.SourcePath
+                value: FlowRate
+              - id: System.StreamData/CkRollupAggregation.Function
+                value: 0
+
+  # MeterRollup5m also serves the per-floor meters; ImportedEnergy uses MAX (counter).
+  - rtId: 6a4b4000000000000000e004
+    ckTypeId: System.StreamData/RollupArchive
+    rtWellKnownName: MeterRollup5m
+    attributes:
+      - id: System.StreamData/Archive.TargetCkTypeId
+        value: EnergyIQ/Meter
+      - id: System.StreamData/Archive.Status
+        value: 0
+      - id: System.StreamData/RollupArchive.SourceArchiveRtId
+        value: '6a0e000000000000000a0006'
+      - id: System.StreamData/RollupArchive.BucketSizeMs
+        value: 300000
+      - id: System.StreamData/RollupArchive.WatermarkLagMs
+        value: 120000
+      - id: System.StreamData/RollupArchive.Aggregations
+        value:
+          - ckRecordId: System.StreamData/CkRollupAggregation
+            attributes:
+              - id: System.StreamData/CkRollupAggregation.SourcePath
+                value: ActivePower
+              - id: System.StreamData/CkRollupAggregation.Function
+                value: 0
+
+
+
+  - rtId: 6a4b4000000000000000e005
+    ckTypeId: System.StreamData/RollupArchive
+    rtWellKnownName: MeterEnergyRollup5m
+    attributes:
+      - id: System.StreamData/Archive.TargetCkTypeId
+        value: EnergyIQ/Meter
+      - id: System.StreamData/Archive.Status
+        value: 0
+      - id: System.StreamData/RollupArchive.SourceArchiveRtId
+        value: '6a0e000000000000000a0011'
+      - id: System.StreamData/RollupArchive.BucketSizeMs
+        value: 300000
+      - id: System.StreamData/RollupArchive.WatermarkLagMs
+        value: 120000
+      - id: System.StreamData/RollupArchive.Aggregations
+        value:
+          - ckRecordId: System.StreamData/CkRollupAggregation
+            attributes:
+              - id: System.StreamData/CkRollupAggregation.SourcePath
+                value: ImportedEnergy
+              - id: System.StreamData/CkRollupAggregation.Function
+                value: 2
+
+  # ============================================================
+  # Dashboard: Heizung & Kühlung
+  # Bilanzierung note: the Loxone meters tick event-based (not uniformly sampled),
+  # so kWh-in-window is NOT SUM×dt (that trick needs the 10-s simulator sampling).
+  # Instead: Ø-Leistung = AVG of the samples, and the window balance is shown as
+  # counter start (MIN ImportedEnergy) / end (MAX) KPIs + the cumulative chart.
+  # ============================================================
+  - rtId: 6a4b4000000000000000e100
+    ckTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Heizung & Kühlung
+      - id: System/Description
+        value: |-
+          Wärmepumpe, Warmwasser und Heizkreis: aktuelle Anlagenwerte, Temperatur-Verläufe (Heizkreis, Sole, Warmwasser) und WP-Strombilanz über den gewählten Zeitraum.
+          ---MESHBOARD_VARIABLES---
+          {"timeFilter": {"enabled": true, "selection": {"type": "relative", "relativeValue": 24, "relativeUnit": "hours"}}, "autoRefreshSeconds": 300}
+      - id: System.UI/Dashboard.Columns
+        value: 12
+      - id: System.UI/Dashboard.RowHeight
+        value: 50
+      - id: System.UI/Dashboard.Gap
+        value: 8
+
+  - rtId: 6a4b4000000000000000e301
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4b4000000000000000e100
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: WP Ø-Leistung
+      - id: System.UI/DashboardWidget.Type
+        value: kpi
+      - id: System.UI/DashboardWidget.Col
+        value: 1
+      - id: System.UI/DashboardWidget.Row
+        value: 1
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 4
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 3
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: systemQuery
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: 6a4b4000000000000000e207
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "activepower_avg", "valueMultiplier": 1, "suffix": " kW", "queryName": "WP Ø-Leistung", "queryRtId": "6a4b4000000000000000e207", "queryFamily": "streamData"}
+
+  - rtId: 6a4b4000000000000000e302
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4b4000000000000000e100
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: WP Zählerstand Fensterbeginn
+      - id: System.UI/DashboardWidget.Type
+        value: kpi
+      - id: System.UI/DashboardWidget.Col
+        value: 5
+      - id: System.UI/DashboardWidget.Row
+        value: 1
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 4
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 3
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: systemQuery
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: 6a4b4000000000000000e208
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "importedenergy_min", "valueMultiplier": 1, "suffix": " kWh", "queryName": "WP Zählerstand Fensterbeginn", "queryRtId": "6a4b4000000000000000e208", "queryFamily": "streamData"}
+
+  - rtId: 6a4b4000000000000000e303
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4b4000000000000000e100
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: WP Zählerstand Fensterende
+      - id: System.UI/DashboardWidget.Type
+        value: kpi
+      - id: System.UI/DashboardWidget.Col
+        value: 9
+      - id: System.UI/DashboardWidget.Row
+        value: 1
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 4
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 3
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: systemQuery
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: 6a4b4000000000000000e209
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "importedenergy_max", "valueMultiplier": 1, "suffix": " kWh", "queryName": "WP Zählerstand Fensterende", "queryRtId": "6a4b4000000000000000e209", "queryFamily": "streamData"}
+
+  - rtId: 6a4b4000000000000000e304
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4b4000000000000000e100
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Wärmepumpe – aktuell
+      - id: System.UI/DashboardWidget.Type
+        value: table
+      - id: System.UI/DashboardWidget.Col
+        value: 1
+      - id: System.UI/DashboardWidget.Row
+        value: 4
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 12
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 4
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: systemQuery
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: 6a4b4000000000000000e201
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"columns": [{"field": "name", "title": "Anlage"}, {"field": "supplyTemp", "title": "Vorlauf (°C)"}, {"field": "returnTemp", "title": "Rücklauf (°C)"}, {"field": "coolingSupplyTemp", "title": "Kühlvorlauf (°C)"}, {"field": "sourceInletTemp", "title": "Sole ein (°C)"}, {"field": "sourceOutletTemp", "title": "Sole aus (°C)"}, {"field": "hotGasTemp", "title": "Heißgas (°C)"}, {"field": "powerConsumption", "title": "Leistung (kW)"}, {"field": "heatingCurve", "title": "Heizkurve"}, {"field": "heatingCurveOffset", "title": "Verschiebung (K)"}], "pageSize": 10, "sortable": true, "queryName": "Wärmepumpe – aktuelle Werte", "queryRtId": "6a4b4000000000000000e201", "queryFamily": "runtime"}
+
+  - rtId: 6a4b4000000000000000e305
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4b4000000000000000e100
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Heizkreis Vorlauf (BT2)
+      - id: System.UI/DashboardWidget.Type
+        value: lineChart
+      - id: System.UI/DashboardWidget.Col
+        value: 1
+      - id: System.UI/DashboardWidget.Row
+        value: 8
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 6
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 6
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: systemQuery
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: 6a4b4000000000000000e204
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"chartType": "line", "categoryField": "timestamp", "seriesGroupField": "name", "valueField": "SupplyTemp", "showLegend": true, "legendPosition": "bottom", "showMarkers": false, "showDataBadge": true, "queryName": "Wärmepumpe (Archiv)", "queryRtId": "6a4b4000000000000000e204", "queryFamily": "streamData", "resolutionAware": true, "requiredAggregation": "AVG"}
+
+  - rtId: 6a4b4000000000000000e306
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4b4000000000000000e100
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Heizkreis Rücklauf (BT3)
+      - id: System.UI/DashboardWidget.Type
+        value: lineChart
+      - id: System.UI/DashboardWidget.Col
+        value: 7
+      - id: System.UI/DashboardWidget.Row
+        value: 8
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 6
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 6
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: systemQuery
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: 6a4b4000000000000000e204
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"chartType": "line", "categoryField": "timestamp", "seriesGroupField": "name", "valueField": "ReturnTemp", "showLegend": true, "legendPosition": "bottom", "showMarkers": false, "showDataBadge": true, "queryName": "Wärmepumpe (Archiv)", "queryRtId": "6a4b4000000000000000e204", "queryFamily": "streamData", "resolutionAware": true, "requiredAggregation": "AVG"}
+
+  - rtId: 6a4b4000000000000000e307
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4b4000000000000000e100
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Sole Eintritt (BT10)
+      - id: System.UI/DashboardWidget.Type
+        value: lineChart
+      - id: System.UI/DashboardWidget.Col
+        value: 1
+      - id: System.UI/DashboardWidget.Row
+        value: 14
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 6
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 6
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: systemQuery
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: 6a4b4000000000000000e204
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"chartType": "line", "categoryField": "timestamp", "seriesGroupField": "name", "valueField": "SourceInletTemp", "showLegend": true, "legendPosition": "bottom", "showMarkers": false, "showDataBadge": true, "queryName": "Wärmepumpe (Archiv)", "queryRtId": "6a4b4000000000000000e204", "queryFamily": "streamData", "resolutionAware": true, "requiredAggregation": "AVG"}
+
+  - rtId: 6a4b4000000000000000e308
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4b4000000000000000e100
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Sole Austritt (BT11)
+      - id: System.UI/DashboardWidget.Type
+        value: lineChart
+      - id: System.UI/DashboardWidget.Col
+        value: 7
+      - id: System.UI/DashboardWidget.Row
+        value: 14
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 6
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 6
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: systemQuery
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: 6a4b4000000000000000e204
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"chartType": "line", "categoryField": "timestamp", "seriesGroupField": "name", "valueField": "SourceOutletTemp", "showLegend": true, "legendPosition": "bottom", "showMarkers": false, "showDataBadge": true, "queryName": "Wärmepumpe (Archiv)", "queryRtId": "6a4b4000000000000000e204", "queryFamily": "streamData", "resolutionAware": true, "requiredAggregation": "AVG"}
+
+  - rtId: 6a4b4000000000000000e309
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4b4000000000000000e100
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Warmwasserspeicher
+      - id: System.UI/DashboardWidget.Type
+        value: lineChart
+      - id: System.UI/DashboardWidget.Col
+        value: 1
+      - id: System.UI/DashboardWidget.Row
+        value: 20
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 6
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 6
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: systemQuery
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: 6a4b4000000000000000e205
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"chartType": "line", "categoryField": "timestamp", "seriesGroupField": "name", "valueField": "StorageTempTop", "showLegend": true, "legendPosition": "bottom", "showMarkers": false, "showDataBadge": true, "queryName": "Warmwasserspeicher (Archiv)", "queryRtId": "6a4b4000000000000000e205", "queryFamily": "streamData", "resolutionAware": true, "requiredAggregation": "AVG"}
+
+  - rtId: 6a4b4000000000000000e30a
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4b4000000000000000e100
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: WP Leistungsaufnahme
+      - id: System.UI/DashboardWidget.Type
+        value: lineChart
+      - id: System.UI/DashboardWidget.Col
+        value: 7
+      - id: System.UI/DashboardWidget.Row
+        value: 20
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 6
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 6
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: systemQuery
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: 6a4b4000000000000000e206
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"chartType": "line", "categoryField": "timestamp", "seriesGroupField": "name", "valueField": "ActivePower", "showLegend": true, "legendPosition": "bottom", "showMarkers": false, "showDataBadge": true, "queryName": "Stromzähler Wärmepumpe (Archiv)", "queryRtId": "6a4b4000000000000000e206", "queryFamily": "streamData", "resolutionAware": true, "requiredAggregation": "AVG"}
+
+  - rtId: 6a4b4000000000000000e30b
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4b4000000000000000e100
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: WP Energie kumuliert (Zählerstand)
+      - id: System.UI/DashboardWidget.Type
+        value: lineChart
+      - id: System.UI/DashboardWidget.Col
+        value: 1
+      - id: System.UI/DashboardWidget.Row
+        value: 26
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 12
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 6
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: systemQuery
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: 6a4b4000000000000000e20a
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"chartType": "line", "categoryField": "timestamp", "seriesGroupField": "name", "valueField": "ImportedEnergy", "showLegend": true, "legendPosition": "bottom", "showMarkers": false, "showDataBadge": true, "queryName": "Stromzähler Wärmepumpe – Energie (Archiv)", "queryRtId": "6a4b4000000000000000e20a", "queryFamily": "streamData", "resolutionAware": true, "requiredAggregation": "MAX"}
+
+  - rtId: 6a4b4000000000000000e30c
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4b4000000000000000e100
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Speicher – aktuell
+      - id: System.UI/DashboardWidget.Type
+        value: table
+      - id: System.UI/DashboardWidget.Col
+        value: 1
+      - id: System.UI/DashboardWidget.Row
+        value: 32
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 6
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 4
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: systemQuery
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: 6a4b4000000000000000e202
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"columns": [{"field": "name", "title": "Speicher"}, {"field": "storageTempTop", "title": "Temperatur oben (°C)"}], "pageSize": 10, "sortable": true, "queryName": "Speicher – aktuelle Werte", "queryRtId": "6a4b4000000000000000e202", "queryFamily": "runtime"}
+
+  - rtId: 6a4b4000000000000000e30d
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4b4000000000000000e100
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Heizkreispumpe – aktuell
+      - id: System.UI/DashboardWidget.Type
+        value: table
+      - id: System.UI/DashboardWidget.Col
+        value: 7
+      - id: System.UI/DashboardWidget.Row
+        value: 32
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 6
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 4
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: systemQuery
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: 6a4b4000000000000000e203
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"columns": [{"field": "name", "title": "Pumpe"}, {"field": "speed", "title": "Drehzahl (%)"}, {"field": "flowRate", "title": "Volumenstrom (m³/h)"}], "pageSize": 10, "sortable": true, "queryName": "Heizkreispumpe – aktuelle Werte", "queryRtId": "6a4b4000000000000000e203", "queryFamily": "runtime"}
+
+
+  - rtId: 6a4b4000000000000000e201
+    ckTypeId: System/SimpleRtQuery
+    attributes:
+      - id: System/Name
+        value: Wärmepumpe – aktuelle Werte
+      - id: System/Description
+        value: >-
+          Current heat pump readings (fed live via Loxone directControlMappings). Used by the Heizung & Kühlung MeshBoard table.
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/HeatPump
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/Query.Columns
+        value:
+          - name
+          - supplyTemp
+          - returnTemp
+          - coolingSupplyTemp
+          - sourceInletTemp
+          - sourceOutletTemp
+          - hotGasTemp
+          - powerConsumption
+          - heatingCurve
+          - heatingCurveOffset
+      - id: System/Query.Sorting
+        value:
+          - ckRecordId: System/SortOrderItem
+            attributes:
+              - id: System/AttributePath
+                value: name
+              - id: System/SortOrder
+                value: 1
+
+  - rtId: 6a4b4000000000000000e202
+    ckTypeId: System/SimpleRtQuery
+    attributes:
+      - id: System/Name
+        value: Speicher – aktuelle Werte
+      - id: System/Description
+        value: >-
+          Current storage-tank temperatures (Heizpuffer + Warmwasserspeicher).
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/ThermalEnergyStorage
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/Query.Columns
+        value:
+          - name
+          - storageTempTop
+      - id: System/Query.Sorting
+        value:
+          - ckRecordId: System/SortOrderItem
+            attributes:
+              - id: System/AttributePath
+                value: name
+              - id: System/SortOrder
+                value: 1
+
+  - rtId: 6a4b4000000000000000e203
+    ckTypeId: System/SimpleRtQuery
+    attributes:
+      - id: System/Name
+        value: Heizkreispumpe – aktuelle Werte
+      - id: System/Description
+        value: >-
+          Current heating-medium pump readings (GP1 speed, BF1 flow).
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/Pump
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/Query.Columns
+        value:
+          - name
+          - speed
+          - flowRate
+      - id: System/Query.Sorting
+        value:
+          - ckRecordId: System/SortOrderItem
+            attributes:
+              - id: System/AttributePath
+                value: name
+              - id: System/SortOrder
+                value: 1
+
+  - rtId: 6a4b4000000000000000e204
+    ckTypeId: System/SimpleSdQuery
+    attributes:
+      - id: System/Name
+        value: Wärmepumpe (Archiv)
+      - id: System/Description
+        value: >-
+          Heat pump time series from the HeatPumpArchive. One query backs all HP line charts (each widget picks its valueField).
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/HeatPump
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/StreamDataQuery.ArchiveRtId
+        value: 6a0e000000000000000a000e
+      - id: System/StreamDataQuery.Columns
+        value:
+          - SupplyTemp
+          - ReturnTemp
+          - CoolingSupplyTemp
+          - SourceInletTemp
+          - SourceOutletTemp
+          - HotGasTemp
+          - PowerConsumption
+      - id: System/Query.Sorting
+        value:
+          - ckRecordId: System/SortOrderItem
+            attributes:
+              - id: System/AttributePath
+                value: timestamp
+              - id: System/SortOrder
+                value: 1
+
+  - rtId: 6a4b4000000000000000e205
+    ckTypeId: System/SimpleSdQuery
+    attributes:
+      - id: System/Name
+        value: Warmwasserspeicher (Archiv)
+      - id: System/Description
+        value: >-
+          DHW tank temperature time series, pinned via RtIds to the Warmwasserspeicher (the Heizpuffer has no live feed — ghost-series trap).
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/ThermalEnergyStorage
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/StreamDataQuery.ArchiveRtId
+        value: 6a0e000000000000000a000f
+      - id: System/StreamDataQuery.RtIds
+        value:
+          - 6789a00000000000000064f5
+      - id: System/StreamDataQuery.Columns
+        value:
+          - StorageTempTop
+      - id: System/Query.Sorting
+        value:
+          - ckRecordId: System/SortOrderItem
+            attributes:
+              - id: System/AttributePath
+                value: timestamp
+              - id: System/SortOrder
+                value: 1
+
+  - rtId: 6a4b4000000000000000e206
+    ckTypeId: System/SimpleSdQuery
+    attributes:
+      - id: System/Name
+        value: Stromzähler Wärmepumpe (Archiv)
+      - id: System/Description
+        value: >-
+          WP electricity meter time series from the MeterArchive, pinned via RtIds to the Stromzähler Wärmepumpe.
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/Meter
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/StreamDataQuery.ArchiveRtId
+        value: 6a0e000000000000000a0006
+      - id: System/StreamDataQuery.RtIds
+        value:
+          - 6789a00000000000003007a8
+      - id: System/StreamDataQuery.Columns
+        value:
+          - ActivePower
+      - id: System/Query.Sorting
+        value:
+          - ckRecordId: System/SortOrderItem
+            attributes:
+              - id: System/AttributePath
+                value: timestamp
+              - id: System/SortOrder
+                value: 1
+
+  - rtId: 6a4b4000000000000000e207
+    ckTypeId: System/AggregationSdQuery
+    attributes:
+      - id: System/Name
+        value: WP Ø-Leistung
+      - id: System/Description
+        value: >-
+          AVG of the event-based ActivePower samples of the WP meter over the query window (sample-weighted approximation, Loxone ticks on change).
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/Meter
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/StreamDataQuery.ArchiveRtId
+        value: '6a0e000000000000000a0006'
+      - id: System/StreamDataQuery.RtIds
+        value:
+          - 6789a00000000000003007a8
+      - id: System/AggregationQueryColumns
+        value:
+          - ckRecordId: System/AggregationQueryColumn
+            attributes:
+              - id: System/AttributePath
+                value: ActivePower
+              - id: System/AggregationType
+                value: 3
+
+  - rtId: 6a4b4000000000000000e208
+    ckTypeId: System/AggregationSdQuery
+    attributes:
+      - id: System/Name
+        value: WP Zählerstand Fensterbeginn
+      - id: System/Description
+        value: >-
+          MIN ImportedEnergy (kWh counter) in the window = counter reading at window start.
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/Meter
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/StreamDataQuery.ArchiveRtId
+        value: '6a0e000000000000000a0011'
+      - id: System/StreamDataQuery.RtIds
+        value:
+          - 6789a00000000000003007a8
+      - id: System/AggregationQueryColumns
+        value:
+          - ckRecordId: System/AggregationQueryColumn
+            attributes:
+              - id: System/AttributePath
+                value: ImportedEnergy
+              - id: System/AggregationType
+                value: 1
+
+  - rtId: 6a4b4000000000000000e209
+    ckTypeId: System/AggregationSdQuery
+    attributes:
+      - id: System/Name
+        value: WP Zählerstand Fensterende
+      - id: System/Description
+        value: >-
+          MAX ImportedEnergy (kWh counter) in the window = counter reading at window end; Differenz zu Fensterbeginn = Verbrauch im Zeitraum.
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/Meter
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/StreamDataQuery.ArchiveRtId
+        value: '6a0e000000000000000a0011'
+      - id: System/StreamDataQuery.RtIds
+        value:
+          - 6789a00000000000003007a8
+      - id: System/AggregationQueryColumns
+        value:
+          - ckRecordId: System/AggregationQueryColumn
+            attributes:
+              - id: System/AttributePath
+                value: ImportedEnergy
+              - id: System/AggregationType
+                value: 2
+
+  - rtId: 6a4b4000000000000000e20a
+    ckTypeId: System/SimpleSdQuery
+    attributes:
+      - id: System/Name
+        value: Stromzähler Wärmepumpe – Energie (Archiv)
+      - id: System/Description
+        value: >-
+          WP kWh counter time series from the MeterEnergyArchive, pinned via RtIds. Used by the cumulative-energy chart.
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/Meter
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/StreamDataQuery.ArchiveRtId
+        value: 6a0e000000000000000a0011
+      - id: System/StreamDataQuery.RtIds
+        value:
+          - 6789a00000000000003007a8
+      - id: System/StreamDataQuery.Columns
+        value:
+          - ImportedEnergy
+      - id: System/Query.Sorting
+        value:
+          - ckRecordId: System/SortOrderItem
+            attributes:
+              - id: System/AttributePath
+                value: timestamp
+              - id: System/SortOrder
+                value: 1

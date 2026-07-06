@@ -48,28 +48,3 @@ types:
   - id: ${this}/OperatingModeValue
     name: OperatingMode
     isOptional: true
-  associations:
-  # Parent (BuildingStorey) via inherited System/ParentChild
-  # Passive/fabric elements contained in this space (Wall, Door, Window, Luminaire, ShadingDevice).
-  # Targets PassiveBuildingElement (not the abstract BuildingElement) so it no longer overlaps
-  # SpaceSensors/SpaceActuators/SpaceTerminals.
-  - id: ${this}/SpaceElements
-    targetCkTypeId: ${this}/PassiveBuildingElement
-  # Meters located in this space (Meter and its subtypes Appliance/ChargingStation/GridConnection)
-  - id: ${this}/SpaceElements
-    targetCkTypeId: ${this}/Meter
-  # Sensors located in this space (TemperatureSensor, HumiditySensor, CO2Sensor, ...)
-  - id: ${this}/SpaceSensors
-    targetCkTypeId: ${this}/Sensor
-  # Actuators located in this space (e.g. room-level changeover valves)
-  - id: ${this}/SpaceActuators
-    targetCkTypeId: ${this}/Actuator
-  # Room terminals serving this space (Radiator, RadiantSurface, FanCoilUnit, AirTerminal, ...)
-  - id: ${this}/SpaceTerminals
-    targetCkTypeId: ${this}/RoomTerminal
-  # Technical systems serving this space (kept for high-level system assignment)
-  - id: ${this}/SystemSpaces
-    targetCkTypeId: ${this}/TechnicalSystem
-  # Schedules applied to this space (M:N)
-  - id: ${this}/SpaceSchedules
-    targetCkTypeId: ${this}/Schedule

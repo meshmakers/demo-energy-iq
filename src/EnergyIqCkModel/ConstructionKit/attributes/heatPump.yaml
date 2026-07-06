@@ -45,3 +45,23 @@ attributes:
 - id: IsReversibleAggregate
   valueType: Boolean
   description: "True if the unit can switch between heating and cooling"
+
+- id: HotGasTemp
+  valueType: Double
+  description: "Refrigerant hot-gas (compressor discharge) temperature (°C, TimeSeries)"
+
+- id: CoolingSupplyTemp
+  valueType: Double
+  description: "Cooling-mode supply temperature (°C, TimeSeries; separate sensor from the heating supply)"
+
+- id: CoolingSupplyTempSetpoint
+  valueType: Double
+  description: "Cooling-mode supply temperature setpoint (°C)"
+
+- id: HeatingCurve
+  valueType: Double
+  description: "Heating curve number/slope as configured on the unit"
+
+- id: HeatingCurveOffset
+  valueType: Double
+  description: "Heating curve parallel offset / room temperature shift (K)"

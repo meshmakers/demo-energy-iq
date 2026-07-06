@@ -317,6 +317,8 @@ Each terminal is normally linked to:
 
 Plant equipment carries its own `SupplyTemp`/`ReturnTemp`/`ModulationLevel` etc. directly as attributes (one main reading per equipment), and additionally supports attached `EquipmentSensors` / `EquipmentActuators` for richer modeling (e.g. dedicated supply/return temp sensors, changeover valves).
 
+2.9.0 extended the plant live readouts to cover the full NIBE/Loxone sensor set: `HeatPump.HotGasTemp` (refrigerant discharge), `HeatPump.CoolingSupplyTemp`/`CoolingSupplyTempSetpoint` (cooling-mode hydraulics — a reversible unit has separate heating and cooling supply sensors, so the single `SupplyTemp` keeps the heating reading), `HeatPump.HeatingCurve`/`HeatingCurveOffset` (curve number and parallel shift as configured on the unit), `AirHandlingUnit.ExhaustAirTemp` (Fortluft after heat recovery) and `Pump.Speed` (actual speed in % — `SpeedSetpoint` remains the setpoint).
+
 `SystemSpaces` (2.5.0) is the IFC `IfcRelServicesBuildings` analog at the **system** level: a `DistributionSystem` (heating / passive-cooling / ventilation circuit) declares the `Space`/`BuildingStorey` it serves via outbound `ServesSpaces`; a storey/space sees the systems serving it via inbound `ServedBySystem`. (It was lifted in 2.5.0 from a legacy equipment-level plant→Space assignment.) For fine-grained "this terminal is served by this plant" use `TerminalServedBy`.
 
 ## Schedules (v2)

@@ -13,6 +13,9 @@ types:
   - id: ${this}/OutdoorAirTemp
     name: OutdoorAirTemp
     isOptional: true
+  - id: ${this}/ExhaustAirTemp
+    name: ExhaustAirTemp
+    isOptional: true
   - id: ${this}/SupplyAirTempSetpoint
     name: SupplyAirTempSetpoint
     isOptional: true
@@ -37,12 +40,3 @@ types:
   - id: ${this}/CoolingCoilPosition
     name: CoolingCoilPosition
     isOptional: true
-  associations:
-  - id: ${this}/SystemSpaces
-    targetCkTypeId: ${this}/Space
-  - id: ${this}/EquipmentSensors
-    targetCkTypeId: ${this}/Sensor
-  - id: ${this}/EquipmentActuators
-    targetCkTypeId: ${this}/Actuator
-  - id: ${this}/TerminalServedBy
-    targetCkTypeId: ${this}/AirTerminal

@@ -46,3 +46,6 @@ types:
   # SpaceElements -> BuildingElement side; this completes the Meter (source) side.
   - id: ${this}/SpaceElements
     targetCkTypeId: ${this}/ExternalSpace
+  # Whole-floor sub-meters anchor to their storey instead of a single room
+  - id: ${this}/StoreyElements
+    targetCkTypeId: ${this}/BuildingStorey

@@ -15,12 +15,8 @@ types:
   # Located in a space
   - id: ${this}/SpaceTerminals
     targetCkTypeId: ${this}/Space
-  # Actuators attached to the terminal (valves, dampers)
-  - id: ${this}/TerminalActuators
-    targetCkTypeId: ${this}/Actuator
-  # Local sensors at the terminal (e.g. local supply/return temp sensors)
-  - id: ${this}/EquipmentSensors
-    targetCkTypeId: ${this}/Sensor
-  # Served by plant equipment
+  # Served by plant equipment. TerminalActuators/EquipmentSensors are declared on
+  # their ORIGIN side (Actuator/Sensor) only — reversed duplicates produce phantom
+  # outbound navigations (see 2.8.0 note in CLAUDE.md).
   - id: ${this}/TerminalServedBy
     targetCkTypeId: ${this}/TechnicalSystem

@@ -25,11 +25,3 @@ types:
   - id: ${this}/RoomIdentifier
     name: RoomIdentifier
     isOptional: true
-  associations:
-  # Parent is Site or Building or BuildingStorey via inherited System/ParentChild
-  # External spaces can still host outdoor sensors (weather, irradiance)
-  - id: ${this}/SpaceSensors
-    targetCkTypeId: ${this}/Sensor
-  # And building elements (e.g. luminaires for outdoor lighting, shading)
-  - id: ${this}/SpaceElements
-    targetCkTypeId: ${this}/BuildingElement

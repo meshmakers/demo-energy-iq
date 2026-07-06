@@ -38,6 +38,10 @@ octo-cli -c ActivateArchive -id 6a0e000000000000000a000a  # PVString
 octo-cli -c ActivateArchive -id 6a0e000000000000000a000b  # Inverter
 octo-cli -c ActivateArchive -id 6a0e000000000000000a000c  # PhotovoltaicSystem
 octo-cli -c ActivateArchive -id 6a0e000000000000000a000d  # BatteryStorage
+octo-cli -c ActivateArchive -id 6a0e000000000000000a000e  # HeatPump
+octo-cli -c ActivateArchive -id 6a0e000000000000000a000f  # ThermalEnergyStorage
+octo-cli -c ActivateArchive -id 6a0e000000000000000a0010  # Pump
+octo-cli -c ActivateArchive -id 6a0e000000000000000a0011  # Meter kWh counters
 
 # --- Pipelines --------------------------------------------------------------
 octo-cli -c ImportRt -f (Join-Path $dataPath "_pipelines/rt-simulation-adapters.yaml") -w
@@ -58,6 +62,11 @@ octo-cli -c ActivateArchive -id 6a4aa4cc22664f2b26c67e66  # PhotovoltaicSystemRo
 octo-cli -c ActivateArchive -id 6a4aa4cc22664f2b26c67e67  # ChargingStationRollup5m
 octo-cli -c ActivateArchive -id 6a4aa4cc22664f2b26c67e68  # ApplianceRollup5m
 octo-cli -c ActivateArchive -id 6a4aa4cc22664f2b26c67e69  # BatteryStorageRollup5m
+octo-cli -c ActivateArchive -id 6a4b4000000000000000e001  # HeatPumpRollup5m
+octo-cli -c ActivateArchive -id 6a4b4000000000000000e002  # ThermalEnergyStorageRollup5m
+octo-cli -c ActivateArchive -id 6a4b4000000000000000e003  # PumpRollup5m
+octo-cli -c ActivateArchive -id 6a4b4000000000000000e004  # MeterRollup5m
+octo-cli -c ActivateArchive -id 6a4b4000000000000000e005  # MeterEnergyRollup5m
 
 # --- UI: Runtime Browser tree navigation ------------------------------------
 # Per-tenant tree config (System.UI/TreeNavigationConfiguration): role labels/visibility

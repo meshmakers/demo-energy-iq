@@ -19,7 +19,3 @@ types:
   - id: ${this}/DimmingLevelSetpoint
     name: DimmingLevelSetpoint
     isOptional: true
-  associations:
-  # SpaceElements (located-in-space) inherited from PassiveBuildingElement
-  - id: ${this}/EquipmentActuators
-    targetCkTypeId: ${this}/Actuator

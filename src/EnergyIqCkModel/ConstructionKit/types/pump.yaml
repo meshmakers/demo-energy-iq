@@ -13,13 +13,9 @@ types:
   - id: ${this}/SpeedSetpoint
     name: SpeedSetpoint
     isOptional: true
+  - id: ${this}/Speed
+    name: Speed
+    isOptional: true
   - id: ${this}/PowerConsumption
     name: PowerConsumption
     isOptional: true
-  associations:
-  - id: ${this}/SystemSpaces
-    targetCkTypeId: ${this}/Space
-  - id: ${this}/EquipmentSensors
-    targetCkTypeId: ${this}/Sensor
-  - id: ${this}/EquipmentActuators
-    targetCkTypeId: ${this}/Actuator
