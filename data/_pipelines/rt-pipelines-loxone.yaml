@@ -1331,6 +1331,21 @@ entities:
                   childTargetCkTypeId: EnergyIQ/ShadingDevice
                   childTargetAssociationRoleId: EnergyIQ/SpaceElements
 
+              # ── Lighting status (room level) ──
+              # LightControllerV2 exposes NO controller-level dimming value; the active
+              # scene arrives as activeMoodsNum (mood id, 778 = the fixed Loxone "Off"
+              # mood) → IsOn = activeMoodsNum <> 778 (mXparser inequality is <>, not !=).
+              # Per-circuit switches/dimmers are SubControls, which neither the rules
+              # walker nor pipeline 6008 (GetRtEntitiesByType Loxone/Control) resolves —
+              # per-circuit DimmingLevel needs SubControl support in the engine first.
+              - id: lightcontroller-ison
+                when: { controlType: LightControllerV2, stateName: activeMoodsNum }
+                map:
+                  targetAttribute: IsOn
+                  expression: "value <> 778"
+                  childTargetCkTypeId: EnergyIQ/Luminaire
+                  childTargetAssociationRoleId: EnergyIQ/SpaceElements
+
               # ── Energy meters → see directControlMappings below ──
               # Energy data points (grid, PV, battery, sub-meters, wallboxes) are building-/area-
               # level, not room-scoped, so they are NOT room-matched here. They use the direct

@@ -2010,6 +2010,352 @@ entities:
         targetCkTypeId: EnergyIQ/Space
 
   # ============================================================
+  # SHADING + LIGHTING STATUS TARGETS (AB#4327, 2026-07-07)
+  # One ShadingDevice per space with Loxone Raffstores (rule jalousie-shading:
+  # position*100 -> Position; rooms with several Raffstores share one device,
+  # last-write-wins - same pattern as Wohnbereich). One Luminaire per space with
+  # a Loxone LightControllerV2 (rule lightcontroller-ison: activeMoodsNum -> IsOn).
+  # Kueche-Raffstore + the 10 light controllers in spaces without a BIM Space
+  # (Flure, Stiegenhaus, Speis, Dachboden, ...) are intentionally NOT covered.
+  # ============================================================
+
+  - rtId: 6789a0000000000000007401
+    ckTypeId: EnergyIQ/ShadingDevice
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: shading-buero-eg
+      - id: System/Name
+        value: Raffstore Büro EG
+      - id: EnergyIQ/ShadingTypeValue
+        value: 0  # Blind
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6789a00000000000000012d2
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a0000000000000007402
+    ckTypeId: EnergyIQ/ShadingDevice
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: shading-buero-dg1
+      - id: System/Name
+        value: Raffstore Büro DG 1
+      - id: EnergyIQ/ShadingTypeValue
+        value: 0  # Blind
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6789a00000000000000032df
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a0000000000000007403
+    ckTypeId: EnergyIQ/ShadingDevice
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: shading-buero-dg2
+      - id: System/Name
+        value: Raffstore Büro DG 2
+      - id: EnergyIQ/ShadingTypeValue
+        value: 0  # Blind
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6789a00000000000000033e0
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a0000000000000007404
+    ckTypeId: EnergyIQ/ShadingDevice
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: shading-aufenthaltsraum
+      - id: System/Name
+        value: Raffstore Aufenthaltsraum
+      - id: EnergyIQ/ShadingTypeValue
+        value: 0  # Blind
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6789a00000000000000031de
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a0000000000000007405
+    ckTypeId: EnergyIQ/ShadingDevice
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: shading-kinderzimmer
+      - id: System/Name
+        value: Raffstore Kinderzimmer
+      - id: EnergyIQ/ShadingTypeValue
+        value: 0  # Blind
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6789a00000000000000023da
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a0000000000000007406
+    ckTypeId: EnergyIQ/ShadingDevice
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: shading-schlafzimmer
+      - id: System/Name
+        value: Raffstore Schlafzimmer
+      - id: EnergyIQ/ShadingTypeValue
+        value: 0  # Blind
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6789a00000000000000021d8
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a0000000000000007407
+    ckTypeId: EnergyIQ/ShadingDevice
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: shading-gaestezimmer
+      - id: System/Name
+        value: Raffstore Gästezimmer
+      - id: EnergyIQ/ShadingTypeValue
+        value: 0  # Blind
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6789a00000000000000022d9
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a0000000000000007501
+    ckTypeId: EnergyIQ/Luminaire
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: luminaire-wohnbereich
+      - id: System/Name
+        value: Deckenleuchte Wohnbereich
+      - id: EnergyIQ/LuminaireTypeValue
+        value: 2  # Recessed
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6789a00000000000000011d1
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a0000000000000007502
+    ckTypeId: EnergyIQ/Luminaire
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: luminaire-buero-eg
+      - id: System/Name
+        value: Deckenleuchte Büro EG
+      - id: EnergyIQ/LuminaireTypeValue
+        value: 2  # Recessed
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6789a00000000000000012d2
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a0000000000000007503
+    ckTypeId: EnergyIQ/Luminaire
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: luminaire-wc-eg
+      - id: System/Name
+        value: Deckenleuchte WC EG
+      - id: EnergyIQ/LuminaireTypeValue
+        value: 2  # Recessed
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6789a00000000000000013d3
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a0000000000000007504
+    ckTypeId: EnergyIQ/Luminaire
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: luminaire-bad-eg
+      - id: System/Name
+        value: Deckenleuchte Bad EG
+      - id: EnergyIQ/LuminaireTypeValue
+        value: 2  # Recessed
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6789a00000000000000014d4
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a0000000000000007505
+    ckTypeId: EnergyIQ/Luminaire
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: luminaire-technikraum
+      - id: System/Name
+        value: Deckenleuchte Technikraum
+      - id: EnergyIQ/LuminaireTypeValue
+        value: 2  # Recessed
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6789a00000000000000015d5
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a0000000000000007506
+    ckTypeId: EnergyIQ/Luminaire
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: luminaire-vorraum
+      - id: System/Name
+        value: Deckenleuchte Vorraum
+      - id: EnergyIQ/LuminaireTypeValue
+        value: 2  # Recessed
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6789a00000000000000016d6
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a0000000000000007507
+    ckTypeId: EnergyIQ/Luminaire
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: luminaire-schlafzimmer
+      - id: System/Name
+        value: Deckenleuchte Schlafzimmer
+      - id: EnergyIQ/LuminaireTypeValue
+        value: 2  # Recessed
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6789a00000000000000021d8
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a0000000000000007508
+    ckTypeId: EnergyIQ/Luminaire
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: luminaire-gaestezimmer
+      - id: System/Name
+        value: Deckenleuchte Gästezimmer
+      - id: EnergyIQ/LuminaireTypeValue
+        value: 2  # Recessed
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6789a00000000000000022d9
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a0000000000000007509
+    ckTypeId: EnergyIQ/Luminaire
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: luminaire-kinderzimmer
+      - id: System/Name
+        value: Deckenleuchte Kinderzimmer
+      - id: EnergyIQ/LuminaireTypeValue
+        value: 2  # Recessed
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6789a00000000000000023da
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a000000000000000750a
+    ckTypeId: EnergyIQ/Luminaire
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: luminaire-bad-og
+      - id: System/Name
+        value: Deckenleuchte Bad OG
+      - id: EnergyIQ/LuminaireTypeValue
+        value: 2  # Recessed
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6789a00000000000000024db
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a000000000000000750b
+    ckTypeId: EnergyIQ/Luminaire
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: luminaire-wc-og
+      - id: System/Name
+        value: Deckenleuchte WC OG
+      - id: EnergyIQ/LuminaireTypeValue
+        value: 2  # Recessed
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6789a00000000000000025dc
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a000000000000000750c
+    ckTypeId: EnergyIQ/Luminaire
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: luminaire-aufenthaltsraum
+      - id: System/Name
+        value: Deckenleuchte Aufenthaltsraum
+      - id: EnergyIQ/LuminaireTypeValue
+        value: 2  # Recessed
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6789a00000000000000031de
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a000000000000000750d
+    ckTypeId: EnergyIQ/Luminaire
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: luminaire-buero-dg-2
+      - id: System/Name
+        value: Deckenleuchte Büro DG 2
+      - id: EnergyIQ/LuminaireTypeValue
+        value: 2  # Recessed
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6789a00000000000000033e0
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a000000000000000750e
+    ckTypeId: EnergyIQ/Luminaire
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: luminaire-bad-dg
+      - id: System/Name
+        value: Deckenleuchte Bad DG
+      - id: EnergyIQ/LuminaireTypeValue
+        value: 2  # Recessed
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6789a00000000000000034e1
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a000000000000000750f
+    ckTypeId: EnergyIQ/Luminaire
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: luminaire-garage
+      - id: System/Name
+        value: Deckenleuchte Garage
+      - id: EnergyIQ/LuminaireTypeValue
+        value: 2  # Recessed
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6789a00000000000000041e3
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a0000000000000007510
+    ckTypeId: EnergyIQ/Luminaire
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: luminaire-werkstatt
+      - id: System/Name
+        value: Deckenleuchte Werkstatt
+      - id: EnergyIQ/LuminaireTypeValue
+        value: 2  # Recessed
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6789a00000000000000042e4
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6789a0000000000000007511
+    ckTypeId: EnergyIQ/Luminaire
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: luminaire-waschkueche
+      - id: System/Name
+        value: Deckenleuchte Waschküche
+      - id: EnergyIQ/LuminaireTypeValue
+        value: 2  # Recessed
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6789a00000000000000043e5
+        targetCkTypeId: EnergyIQ/Space
+
+  # ============================================================
   # PHOTOVOLTAIC SYSTEM (unverändert)
   # ============================================================
   - rtId: 6789a00000000000000080a1
