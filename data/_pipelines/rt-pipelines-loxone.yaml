@@ -1188,13 +1188,26 @@ entities:
                 targetAttribute: RoomNumber
                 pattern: "^([A-Za-z]{1,3}\\.\\d+)"
                 captureGroup: 1
-              # 4) Manual overrides — fill in by hand for anything none of the above can resolve.
-              #    Example shape (currently empty):
-              # - kind: Manual
-              #   sourceAttribute: Name
-              #   overrides:
-              #     - source: "Foyer Süd"
-              #       targetRtId: "67f0b00ec4ff02221e0b6011"
+              # 4) Manual overrides — Loxone room names that no name-based strategy can
+              #    resolve onto a BIM Space (occupant-based room names vs. functional space
+              #    names). Space rtIds are the fixed seed ids from data/bim/rt-firmianstrasse.yaml,
+              #    so these overrides are valid on every tenant initialised from this repo.
+              #    DG 1 (12 m²) is the two-person office (Gerry/Reimar), DG 2 (10 m²) Sebastian's.
+              - kind: Manual
+                sourceAttribute: Name
+                overrides:
+                  - source: "Büro Marlene"
+                    targetRtId: "6789a00000000000000012d2" # Büro EG
+                  - source: "Büro Gerry/Reimar DG"
+                    targetRtId: "6789a00000000000000032df" # Büro DG 1
+                  - source: "Büro Sebastian DG"
+                    targetRtId: "6789a00000000000000033e0" # Büro DG 2
+                  - source: "Aufenthaltsraum DG"
+                    targetRtId: "6789a00000000000000031de" # Aufenthaltsraum
+                  - source: "Schlafzimmer Patrick"
+                    targetRtId: "6789a00000000000000023da" # Kinderzimmer
+                  - source: "Flur EG"
+                    targetRtId: "6789a00000000000000016d6" # Vorraum
             controlMappingRules:
               # ── IRoomControllerV2 — multi-state Loxone room controller ──
               # Each state targets the matching sensor entity inside the Space.
