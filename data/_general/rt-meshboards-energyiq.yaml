@@ -2028,3 +2028,473 @@ entities:
                 value: timestamp
               - id: System/SortOrder
                 value: 1
+
+  # ============================================================
+  # Dashboard: Beschattung & Beleuchtung (AB#4327)
+  #
+  # Current status (tables) + history. The comparison question ("wo brennt am
+  # laengsten Licht") is answered by bar charts over GroupingAggregationSdQuerys
+  # on the status archives (a0012/a0013, GROUP BY the Name column). Honest
+  # limitation: archive rows are event-based (a row per state change + one per
+  # initial snapshot), so AVG is sample-weighted, not time-weighted - the
+  # Einschaltquote ranks rooms but is not an exact duty cycle. The line charts
+  # are per-room via the two entity selectors (static RtIds pins do NOT fan out
+  # per entity - selector childScope is the only per-entity mechanism).
+  # ============================================================
+  - rtId: 6a4d5000000000000000b100
+    ckTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Beschattung & Beleuchtung
+      - id: System/Description
+        value: |-
+          Aktueller Licht- und Beschattungsstatus, Einschaltquote/Schaltvorgänge je Leuchte und Verlauf je Raum.
+          ---MESHBOARD_VARIABLES---
+          {"timeFilter": {"enabled": true, "selection": {"type": "relative", "relativeValue": 24, "relativeUnit": "hours"}}, "entitySelectors": [{"id": "lichtraum", "label": "Raum (Licht)", "ckTypeId": "EnergyIQ/Space", "attributeMappings": [{"attributePath": "name", "variableName": "lichtraumName"}], "showInToolbar": true, "defaultRtId": "6789a00000000000000011d1", "childScope": {"targetCkTypeId": "EnergyIQ/Luminaire", "roleId": "EnergyIQ/SpaceElements", "direction": "in"}}, {"id": "beschattungsraum", "label": "Raum (Beschattung)", "ckTypeId": "EnergyIQ/Space", "attributeMappings": [{"attributePath": "name", "variableName": "beschattungsraumName"}], "showInToolbar": true, "defaultRtId": "6789a00000000000000011d1", "childScope": {"targetCkTypeId": "EnergyIQ/ShadingDevice", "roleId": "EnergyIQ/SpaceElements", "direction": "in"}}], "autoRefreshSeconds": 300}
+      - id: System.UI/Dashboard.Columns
+        value: 12
+      - id: System.UI/Dashboard.RowHeight
+        value: 50
+      - id: System.UI/Dashboard.Gap
+        value: 8
+
+  - rtId: 6a4d5000000000000000b101
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4d5000000000000000b100
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Aktueller Lichtstatus
+      - id: System.UI/DashboardWidget.Type
+        value: table
+      - id: System.UI/DashboardWidget.Col
+        value: 1
+      - id: System.UI/DashboardWidget.Row
+        value: 1
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 4
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 7
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: systemQuery
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: 6a4d5000000000000000b110
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"columns": [{"field": "name", "title": "Leuchte"}, {"field": "isOn", "title": "An"}], "pageSize": 20, "sortable": true, "queryName": "Aktueller Lichtstatus", "queryRtId": "6a4d5000000000000000b110", "queryFamily": "runtime"}
+
+  - rtId: 6a4d5000000000000000b102
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4d5000000000000000b100
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Aktuelle Beschattung
+      - id: System.UI/DashboardWidget.Type
+        value: table
+      - id: System.UI/DashboardWidget.Col
+        value: 5
+      - id: System.UI/DashboardWidget.Row
+        value: 1
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 4
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 7
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: systemQuery
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: 6a4d5000000000000000b111
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"columns": [{"field": "name", "title": "Raffstore"}, {"field": "position", "title": "Position (%)"}], "pageSize": 20, "sortable": true, "queryName": "Aktuelle Beschattung", "queryRtId": "6a4d5000000000000000b111", "queryFamily": "runtime"}
+
+  - rtId: 6a4d5000000000000000b103
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4d5000000000000000b100
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Licht-Einschaltquote (Ø % der Messpunkte)
+      - id: System.UI/DashboardWidget.Type
+        value: barChart
+      - id: System.UI/DashboardWidget.Col
+        value: 9
+      - id: System.UI/DashboardWidget.Row
+        value: 1
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 4
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 7
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: systemQuery
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: 6a4d5000000000000000b112
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"chartType": "bar", "categoryField": "name", "valueField": "dimminglevel_avg", "showLegend": false, "showDataLabels": true, "dataLabelSuffix": " %", "queryName": "Licht-Einschaltquote je Leuchte", "queryRtId": "6a4d5000000000000000b112", "queryFamily": "streamData"}
+
+  - rtId: 6a4d5000000000000000b104
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4d5000000000000000b100
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Licht – Einschaltgrad Verlauf (%)
+      - id: System.UI/DashboardWidget.Type
+        value: lineChart
+      - id: System.UI/DashboardWidget.Col
+        value: 1
+      - id: System.UI/DashboardWidget.Row
+        value: 8
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 8
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 6
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: systemQuery
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: 6a4d5000000000000000b113
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"chartType": "line", "categoryField": "timestamp", "seriesGroupField": "name", "valueField": "DimmingLevel", "showLegend": true, "legendPosition": "bottom", "showMarkers": false, "showDataBadge": true, "queryName": "Lichtstatus (Archiv)", "queryRtId": "6a4d5000000000000000b113", "queryFamily": "streamData", "entitySelectorId": "lichtraum", "resolutionAware": true, "requiredAggregation": "MAX"}
+
+  - rtId: 6a4d5000000000000000b105
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4d5000000000000000b100
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Licht-Schaltvorgänge (Anzahl)
+      - id: System.UI/DashboardWidget.Type
+        value: barChart
+      - id: System.UI/DashboardWidget.Col
+        value: 9
+      - id: System.UI/DashboardWidget.Row
+        value: 8
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 4
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 6
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: systemQuery
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: 6a4d5000000000000000b115
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"chartType": "bar", "categoryField": "name", "valueField": "dimminglevel_count", "showLegend": false, "showDataLabels": true, "queryName": "Licht-Schaltvorgänge je Leuchte", "queryRtId": "6a4d5000000000000000b115", "queryFamily": "streamData"}
+
+  - rtId: 6a4d5000000000000000b106
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4d5000000000000000b100
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Beschattung – Position Verlauf (%)
+      - id: System.UI/DashboardWidget.Type
+        value: lineChart
+      - id: System.UI/DashboardWidget.Col
+        value: 1
+      - id: System.UI/DashboardWidget.Row
+        value: 14
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 8
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 6
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: systemQuery
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: 6a4d5000000000000000b114
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"chartType": "line", "categoryField": "timestamp", "seriesGroupField": "name", "valueField": "Position", "showLegend": true, "legendPosition": "bottom", "showMarkers": false, "showDataBadge": true, "queryName": "Beschattung (Archiv)", "queryRtId": "6a4d5000000000000000b114", "queryFamily": "streamData", "entitySelectorId": "beschattungsraum", "resolutionAware": true, "requiredAggregation": "AVG"}
+
+  - rtId: 6a4d5000000000000000b107
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4d5000000000000000b100
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Ø Beschattung je Raffstore (%)
+      - id: System.UI/DashboardWidget.Type
+        value: barChart
+      - id: System.UI/DashboardWidget.Col
+        value: 9
+      - id: System.UI/DashboardWidget.Row
+        value: 14
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 4
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 6
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: systemQuery
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: 6a4d5000000000000000b116
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"chartType": "bar", "categoryField": "name", "valueField": "position_avg", "showLegend": false, "showDataLabels": true, "dataLabelSuffix": " %", "queryName": "Ø Beschattung je Raffstore", "queryRtId": "6a4d5000000000000000b116", "queryFamily": "streamData"}
+
+  - rtId: 6a4d5000000000000000b110
+    ckTypeId: System/SimpleRtQuery
+    attributes:
+      - id: System/Name
+        value: Aktueller Lichtstatus
+      - id: System/Description
+        value: >-
+          Current IsOn per Luminaire (live entity values). Used by the Beschattung & Beleuchtung MeshBoard table.
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/Luminaire
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/Query.Columns
+        value:
+          - name
+          - isOn
+      - id: System/Query.Sorting
+        value:
+          - ckRecordId: System/SortOrderItem
+            attributes:
+              - id: System/AttributePath
+                value: name
+              - id: System/SortOrder
+                value: 1
+
+  - rtId: 6a4d5000000000000000b111
+    ckTypeId: System/SimpleRtQuery
+    attributes:
+      - id: System/Name
+        value: Aktuelle Beschattung
+      - id: System/Description
+        value: >-
+          Current Position per ShadingDevice (live entity values). Used by the Beschattung & Beleuchtung MeshBoard table.
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/ShadingDevice
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/Query.Columns
+        value:
+          - name
+          - position
+      - id: System/Query.Sorting
+        value:
+          - ckRecordId: System/SortOrderItem
+            attributes:
+              - id: System/AttributePath
+                value: name
+              - id: System/SortOrder
+                value: 1
+
+  - rtId: 6a4d5000000000000000b112
+    ckTypeId: System/GroupingAggregationSdQuery
+    attributes:
+      - id: System/Name
+        value: Licht-Einschaltquote je Leuchte
+      - id: System/Description
+        value: >-
+          AVG of the 0/100 DimmingLevel rows per luminaire Name over the board window (sample-weighted - rows are event-based). Answers 'wo brennt am laengsten Licht'.
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/Luminaire
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/StreamDataQuery.ArchiveRtId
+        value: '6a0e000000000000000a0012'
+      - id: System/Query.GroupByColumns
+        value:
+          - Name
+      - id: System/AggregationQueryColumns
+        value:
+          - ckRecordId: System/AggregationQueryColumn
+            attributes:
+              - id: System/AttributePath
+                value: DimmingLevel
+              - id: System/AggregationType
+                value: 3
+
+  - rtId: 6a4d5000000000000000b115
+    ckTypeId: System/GroupingAggregationSdQuery
+    attributes:
+      - id: System/Name
+        value: Licht-Schaltvorgänge je Leuchte
+      - id: System/Description
+        value: >-
+          COUNT of status rows per luminaire Name over the board window - how often each light toggled.
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/Luminaire
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/StreamDataQuery.ArchiveRtId
+        value: '6a0e000000000000000a0012'
+      - id: System/Query.GroupByColumns
+        value:
+          - Name
+      - id: System/AggregationQueryColumns
+        value:
+          - ckRecordId: System/AggregationQueryColumn
+            attributes:
+              - id: System/AttributePath
+                value: DimmingLevel
+              - id: System/AggregationType
+                value: 0
+
+  - rtId: 6a4d5000000000000000b116
+    ckTypeId: System/GroupingAggregationSdQuery
+    attributes:
+      - id: System/Name
+        value: Ø Beschattung je Raffstore
+      - id: System/Description
+        value: >-
+          AVG Position per ShadingDevice Name over the board window (sample-weighted).
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/ShadingDevice
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/StreamDataQuery.ArchiveRtId
+        value: '6a0e000000000000000a0013'
+      - id: System/Query.GroupByColumns
+        value:
+          - Name
+      - id: System/AggregationQueryColumns
+        value:
+          - ckRecordId: System/AggregationQueryColumn
+            attributes:
+              - id: System/AttributePath
+                value: Position
+              - id: System/AggregationType
+                value: 3
+
+  - rtId: 6a4d5000000000000000b113
+    ckTypeId: System/SimpleSdQuery
+    attributes:
+      - id: System/Name
+        value: Lichtstatus (Archiv)
+      - id: System/Description
+        value: >-
+          0/100 DimmingLevel time series from the LuminaireArchive; per-room scope via the lichtraum selector.
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/Luminaire
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/StreamDataQuery.ArchiveRtId
+        value: '6a0e000000000000000a0004'
+      - id: System/StreamDataQuery.Columns
+        value:
+          - DimmingLevel
+      - id: System/Query.Sorting
+        value:
+          - ckRecordId: System/SortOrderItem
+            attributes:
+              - id: System/AttributePath
+                value: timestamp
+              - id: System/SortOrder
+                value: 1
+
+  - rtId: 6a4d5000000000000000b114
+    ckTypeId: System/SimpleSdQuery
+    attributes:
+      - id: System/Name
+        value: Beschattung (Archiv)
+      - id: System/Description
+        value: >-
+          Position time series from the ShadingDeviceArchive; per-room scope via the beschattungsraum selector.
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/ShadingDevice
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/StreamDataQuery.ArchiveRtId
+        value: '6a0e000000000000000a0005'
+      - id: System/StreamDataQuery.Columns
+        value:
+          - Position
+      - id: System/Query.Sorting
+        value:
+          - ckRecordId: System/SortOrderItem
+            attributes:
+              - id: System/AttributePath
+                value: timestamp
+              - id: System/SortOrder
+                value: 1
+
+  - rtId: 6a4b4000000000000000e006
+    ckTypeId: System.StreamData/RollupArchive
+    rtWellKnownName: LuminaireRollup5m
+    attributes:
+      - id: System.StreamData/Archive.TargetCkTypeId
+        value: EnergyIQ/Luminaire
+      - id: System.StreamData/Archive.Status
+        value: 0
+      - id: System.StreamData/RollupArchive.SourceArchiveRtId
+        value: '6a0e000000000000000a0004'
+      - id: System.StreamData/RollupArchive.BucketSizeMs
+        value: 300000
+      - id: System.StreamData/RollupArchive.WatermarkLagMs
+        value: 120000
+      - id: System.StreamData/RollupArchive.Aggregations
+        value:
+          - ckRecordId: System.StreamData/CkRollupAggregation
+            attributes:
+              - id: System.StreamData/CkRollupAggregation.SourcePath
+                value: DimmingLevel
+              - id: System.StreamData/CkRollupAggregation.Function
+                value: 0
+          - ckRecordId: System.StreamData/CkRollupAggregation
+            attributes:
+              - id: System.StreamData/CkRollupAggregation.SourcePath
+                value: DimmingLevel
+              - id: System.StreamData/CkRollupAggregation.Function
+                value: 2
+
+  - rtId: 6a4b4000000000000000e007
+    ckTypeId: System.StreamData/RollupArchive
+    rtWellKnownName: ShadingDeviceRollup5m
+    attributes:
+      - id: System.StreamData/Archive.TargetCkTypeId
+        value: EnergyIQ/ShadingDevice
+      - id: System.StreamData/Archive.Status
+        value: 0
+      - id: System.StreamData/RollupArchive.SourceArchiveRtId
+        value: '6a0e000000000000000a0005'
+      - id: System.StreamData/RollupArchive.BucketSizeMs
+        value: 300000
+      - id: System.StreamData/RollupArchive.WatermarkLagMs
+        value: 120000
+      - id: System.StreamData/RollupArchive.Aggregations
+        value:
+          - ckRecordId: System.StreamData/CkRollupAggregation
+            attributes:
+              - id: System.StreamData/CkRollupAggregation.SourcePath
+                value: Position
+              - id: System.StreamData/CkRollupAggregation.Function
+                value: 0
+          - ckRecordId: System.StreamData/CkRollupAggregation
+            attributes:
+              - id: System.StreamData/CkRollupAggregation.SourcePath
+                value: Position
+              - id: System.StreamData/CkRollupAggregation.Function
+                value: 2

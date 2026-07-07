@@ -681,6 +681,25 @@ entities:
                 description: Save ShadingDevice time-series
                 path: $._updateItems
                 archiveRtId: 6a0e000000000000000a0005
+              # Status archives with a Name column - grouped aggregation queries
+              # ("Einschaltquote je Leuchte") can only GROUP BY archive columns,
+              # and rtid alone would surface raw hex ids as bar labels.
+              - type: BackfillFromRtEntity@1
+                description: Backfill Luminaire status archive
+                path: $._updateItems
+                archiveRtId: 6a0e000000000000000a0012
+              - type: SaveStreamDataInArchive@1
+                description: Save Luminaire status time-series
+                path: $._updateItems
+                archiveRtId: 6a0e000000000000000a0012
+              - type: BackfillFromRtEntity@1
+                description: Backfill ShadingDevice status archive
+                path: $._updateItems
+                archiveRtId: 6a0e000000000000000a0013
+              - type: SaveStreamDataInArchive@1
+                description: Save ShadingDevice status time-series
+                path: $._updateItems
+                archiveRtId: 6a0e000000000000000a0013
               # ── Energy consumption (AB#3442) ──
               - type: BackfillFromRtEntity@1
                 description: Backfill Meter archive
@@ -1343,6 +1362,18 @@ entities:
                 map:
                   targetAttribute: IsOn
                   expression: "value <> 778"
+                  childTargetCkTypeId: EnergyIQ/Luminaire
+                  childTargetAssociationRoleId: EnergyIQ/SpaceElements
+
+              # Numeric on/off level for archive aggregation - CrateDB cannot AVG a
+              # boolean column, so the status archives aggregate DimmingLevel instead.
+              # 100 when any scene is active, 0 when the Off mood (778) is; for the
+              # non-dimmed circuits here that doubles as a plausible DimmingLevel.
+              - id: lightcontroller-level
+                when: { controlType: LightControllerV2, stateName: activeMoodsNum }
+                map:
+                  targetAttribute: DimmingLevel
+                  expression: "if(value <> 778, 100, 0)"
                   childTargetCkTypeId: EnergyIQ/Luminaire
                   childTargetAssociationRoleId: EnergyIQ/SpaceElements
 

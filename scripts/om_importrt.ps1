@@ -42,6 +42,8 @@ octo-cli -c ActivateArchive -id 6a0e000000000000000a000e  # HeatPump
 octo-cli -c ActivateArchive -id 6a0e000000000000000a000f  # ThermalEnergyStorage
 octo-cli -c ActivateArchive -id 6a0e000000000000000a0010  # Pump
 octo-cli -c ActivateArchive -id 6a0e000000000000000a0011  # Meter kWh counters
+octo-cli -c ActivateArchive -id 6a0e000000000000000a0012  # LuminaireStatusArchive (Name column)
+octo-cli -c ActivateArchive -id 6a0e000000000000000a0013  # ShadingDeviceStatusArchive (Name column)
 
 # --- Pipelines --------------------------------------------------------------
 octo-cli -c ImportRt -f (Join-Path $dataPath "_pipelines/rt-simulation-adapters.yaml") -w
@@ -67,6 +69,8 @@ octo-cli -c ActivateArchive -id 6a4b4000000000000000e002  # ThermalEnergyStorage
 octo-cli -c ActivateArchive -id 6a4b4000000000000000e003  # PumpRollup5m
 octo-cli -c ActivateArchive -id 6a4b4000000000000000e004  # MeterRollup5m
 octo-cli -c ActivateArchive -id 6a4b4000000000000000e005  # MeterEnergyRollup5m
+octo-cli -c ActivateArchive -id 6a4b4000000000000000e006  # LuminaireRollup5m
+octo-cli -c ActivateArchive -id 6a4b4000000000000000e007  # ShadingDeviceRollup5m
 
 # --- UI: Runtime Browser tree navigation ------------------------------------
 # Per-tenant tree config (System.UI/TreeNavigationConfiguration): role labels/visibility

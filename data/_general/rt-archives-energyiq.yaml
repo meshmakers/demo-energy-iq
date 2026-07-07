@@ -490,3 +490,71 @@ entities:
                 value: false
               - id: System.StreamData/CkArchiveColumn.Indexed
                 value: false
+
+  # Status archives for the Beschattung & Beleuchtung MeshBoard (AB#4327):
+  # carry the entity Name as an archive column so GroupingAggregationSdQuery
+  # can GROUP BY name (grouping is restricted to archive columns; rtid-only
+  # grouping would label the bars with raw hex ids). DimmingLevel (0/100 via
+  # rule lightcontroller-level) is the numeric on/off signal - CrateDB cannot
+  # AVG the boolean IsOn column.
+  - rtId: 6a0e000000000000000a0012
+    ckTypeId: System.StreamData/RawArchive
+    rtWellKnownName: LuminaireStatusArchive
+    attributes:
+      - id: System.StreamData/Archive.TargetCkTypeId
+        value: EnergyIQ/Luminaire
+      - id: System.StreamData/Archive.Status
+        value: 0
+      - id: System.StreamData/Archive.Columns
+        value:
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: Name
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: IsOn
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: false
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: DimmingLevel
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+
+  - rtId: 6a0e000000000000000a0013
+    ckTypeId: System.StreamData/RawArchive
+    rtWellKnownName: ShadingDeviceStatusArchive
+    attributes:
+      - id: System.StreamData/Archive.TargetCkTypeId
+        value: EnergyIQ/ShadingDevice
+      - id: System.StreamData/Archive.Status
+        value: 0
+      - id: System.StreamData/Archive.Columns
+        value:
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: Name
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: Position
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
