@@ -2172,7 +2172,7 @@ entities:
         value: 6a4d5000000000000000b113
       - id: System.UI/DashboardWidget.Config
         value: |-
-          {"chartType": "line", "categoryField": "timestamp", "seriesGroupField": "name", "valueField": "DimmingLevel", "showLegend": true, "legendPosition": "bottom", "showMarkers": false, "showDataBadge": true, "queryName": "Lichtstatus (Archiv)", "queryRtId": "6a4d5000000000000000b113", "queryFamily": "streamData", "entitySelectorId": "lichtraum", "resolutionAware": true, "requiredAggregation": "MAX"}
+          {"chartType": "line", "categoryField": "timestamp", "seriesGroupField": "name", "valueField": "DimmingLevel", "showLegend": true, "legendPosition": "bottom", "showMarkers": false, "showDataBadge": true, "queryName": "Lichtstatus (Archiv)", "queryRtId": "6a4d5000000000000000b113", "queryFamily": "streamData", "entitySelectorId": "lichtraum", "resolutionAware": true, "requiredAggregation": "AVG"}
 
   - rtId: 6a4d5000000000000000b105
     ckTypeId: System.UI/DashboardWidget
