@@ -2124,7 +2124,7 @@ entities:
         targetCkTypeId: System.UI/Dashboard
     attributes:
       - id: System/Name
-        value: Licht-Einschaltquote (Ø % der Messpunkte)
+        value: Licht-Einschaltquote (zeitgewichtet, % der Zeit)
       - id: System.UI/DashboardWidget.Type
         value: barChart
       - id: System.UI/DashboardWidget.Col
@@ -2143,7 +2143,7 @@ entities:
         value: 6a4d5000000000000000b112
       - id: System.UI/DashboardWidget.Config
         value: |-
-          {"chartType": "bar", "categoryField": "name", "valueField": "dimminglevel_avg", "showLegend": false, "showDataLabels": true, "dataLabelSuffix": " %", "queryName": "Licht-Einschaltquote je Leuchte", "queryRtId": "6a4d5000000000000000b112", "queryFamily": "streamData"}
+          {"chartType": "bar", "categoryField": "name", "valueField": "dimminglevel_twavg", "showLegend": false, "showDataLabels": true, "dataLabelSuffix": " %", "queryName": "Licht-Einschaltquote je Leuchte", "queryRtId": "6a4d5000000000000000b112", "queryFamily": "streamData"}
 
   - rtId: 6a4d5000000000000000b104
     ckTypeId: System.UI/DashboardWidget
@@ -2318,7 +2318,7 @@ entities:
         value: Licht-Einschaltquote je Leuchte
       - id: System/Description
         value: >-
-          AVG of the 0/100 DimmingLevel rows per luminaire Name over the board window (sample-weighted - rows are event-based). Answers 'wo brennt am laengsten Licht'.
+          Time-weighted average (LOCF interval weighting, AB#4336) of the 0/100 DimmingLevel rows per luminaire Name over the board window - the real duty cycle. Replaces the sample-weighted AVG approximation from AB#4327; a light that is on for 3 hours no longer weighs the same as one that toggles twice in a minute. Answers 'wo brennt am laengsten Licht'.
       - id: System/Query.CkTypeId
         value: EnergyIQ/Luminaire
       - id: System/Query.NavigationFilterMode
@@ -2335,7 +2335,9 @@ entities:
               - id: System/AttributePath
                 value: DimmingLevel
               - id: System/AggregationType
-                value: 3
+                # 5 = TimeWeightedAverage (AB#4336) - real duty cycle via LOCF over the
+                # event-based status rows; 3 (Average) was sample-weighted and wrong for duration.
+                value: 5
 
   - rtId: 6a4d5000000000000000b115
     ckTypeId: System/GroupingAggregationSdQuery
