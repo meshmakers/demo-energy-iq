@@ -2261,6 +2261,38 @@ entities:
         value: |-
           {"chartType": "bar", "categoryField": "name", "valueField": "position_avg", "showLegend": false, "showDataLabels": true, "dataLabelSuffix": " %", "queryName": "Ø Beschattung je Raffstore", "queryRtId": "6a4d5000000000000000b116", "queryFamily": "streamData"}
 
+  # Burn-time bar chart (AB#4341): absolute operating hours per luminaire via the StateDuration
+  # aggregation (IsOn = true) over the event-based status archive. valueScale 1/3600000 turns the
+  # engine's millisecond duration into hours; complements the duty-cycle chart (b103).
+  - rtId: 6a4d5000000000000000b108
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4d5000000000000000b100
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Brenndauer je Leuchte (h)
+      - id: System.UI/DashboardWidget.Type
+        value: barChart
+      - id: System.UI/DashboardWidget.Col
+        value: 1
+      - id: System.UI/DashboardWidget.Row
+        value: 20
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 8
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 6
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: systemQuery
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: 6a4d5000000000000000b117
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"chartType": "bar", "categoryField": "name", "valueField": "ison_stateduration", "valueScale": 2.7777777777777776e-7, "showLegend": false, "showDataLabels": true, "dataLabelSuffix": " h", "queryName": "Brenndauer je Leuchte", "queryRtId": "6a4d5000000000000000b117", "queryFamily": "streamData"}
+
   - rtId: 6a4d5000000000000000b110
     ckTypeId: System/SimpleRtQuery
     attributes:
@@ -2364,6 +2396,35 @@ entities:
                 value: DimmingLevel
               - id: System/AggregationType
                 value: 0
+
+  - rtId: 6a4d5000000000000000b117
+    ckTypeId: System/GroupingAggregationSdQuery
+    attributes:
+      - id: System/Name
+        value: Brenndauer je Leuchte
+      - id: System/Description
+        value: >-
+          Absolute time each luminaire was ON per Name over the board window - StateDuration (AB#4336) with LOCF carry over the event-based IsOn rows, in milliseconds (the widget scales to hours). The real operating-hours answer to 'wo brennt am laengsten Licht'.
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/Luminaire
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/StreamDataQuery.ArchiveRtId
+        value: '6a0e000000000000000a0012'
+      - id: System/Query.GroupByColumns
+        value:
+          - Name
+      - id: System/AggregationQueryColumns
+        value:
+          - ckRecordId: System/AggregationQueryColumn
+            attributes:
+              - id: System/AttributePath
+                value: IsOn
+              # 6 = StateDuration (AB#4336/AB#4341); ComparisonValue selects the "on" state.
+              - id: System/AggregationType
+                value: 6
+              - id: System/ComparisonValue
+                value: 'true'
 
   - rtId: 6a4d5000000000000000b116
     ckTypeId: System/GroupingAggregationSdQuery
