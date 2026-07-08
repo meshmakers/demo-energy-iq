@@ -248,6 +248,7 @@ Detailed specifications are in `docs/`:
 - `developer-guide.md` - English developer guide explaining design philosophy and standards integration
 - `construction-kit.md` - Complete CK specification with all types, attributes, and associations
 - `standards-reference.md` - IFC 4.3 and VDI 3814 mapping reference
+- `data-access-fh-salzburg.md` - German partner-facing guide (FH Salzburg): solution overview, data inventory, GraphQL/CLI/Power BI/MCP access paths for the prod-1 `energyiq` tenant
 - `haystack-integration-concept.md` - Architecture decision: Haystack as projection (not parallel CK)
 - `haystack-adapter-concept.md` - Haystack REST API server concept (consumes the projection)
 - `space-restructuring-concept.md` - Architecture decision: full IFC/VDI restructure (this refactoring)
