@@ -203,6 +203,39 @@ demo-energy-iq/
 - [ ] **Energy Aggregation** - Consumption calculation per room/building
 - [ ] **AI Optimization** - AI-powered optimization
 
+## CI/CD (Azure DevOps)
+
+`devops-build/azure-pipelines.yml` runs on the self-hosted `meshmakers-ci-agents`:
+version → restore → test → **CK model publish** → artifacts.
+
+### CK model publishing (AB#4697)
+
+`OctoPublishCkModel=true` is set in `EnergyIqCkModel.csproj`, so the two
+`Publish CK model to ...Catalog` tasks only need to pass `OctoPublishCatalog` plus the
+GitHub PAT — the MsBuild tasks compile *and* publish the `EnergyIQ` model in one step.
+
+| Branch | CK catalog |
+|---|---|
+| `refs/tags/r*` (release) | `PrivateGitHubCatalog` **and** `PublicGitHubCatalog` |
+| `main` | `PrivateGitHubCatalog` only |
+| `test/*`, `dev/*` | none |
+
+prod-1 reads **only** `PublicGitHubCatalog` — the private catalog is not configured there.
+
+Without this the model is reachable only through a manual `ImportCk`: `LibraryStatus`
+shows `CATALOG -` and `FixAll` cannot repair a broken tenant. That is exactly what
+happened on the `energyiq` tenant on 2026-08-04, when `EnergyIQ-2.9.0` went
+`ResolveFailed` the moment `Basic.Energy` was updated 1.1.4 → 1.3.0.
+
+> **Publishing alone is not enough.** `CkCompile` resolves the dependency *range* in
+> `ckModel.yaml` (`Basic.Energy-[1.0,2.0)`) to a concrete pinned version at build time.
+> A published `EnergyIQ-2.9.0` therefore stays pinned to whichever `Basic.Energy` version
+> was current when it was built, and goes `ResolveFailed` on the next bump. The model
+> must be rebuilt and republished whenever `Basic` or `Basic.Energy` changes.
+
+Package versions in `EnergyIqCkModel.csproj` use `$(OctoVersion)` — never hardcode
+`999.0.0.0`, which is the DebugL-local version and makes the project unbuildable in CI.
+
 ## License
 
 See [LICENSE](LICENSE)

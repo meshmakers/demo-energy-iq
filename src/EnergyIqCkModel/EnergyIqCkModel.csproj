@@ -4,12 +4,17 @@
         <Company>meshmakers GmbH</Company>
         <Configurations>Debug;Release;DebugL</Configurations>
         <Platforms>AnyCPU</Platforms>
+        <OctoPublishCkModel>true</OctoPublishCkModel>
+        <OctoGenerateCkDocumentation>true</OctoGenerateCkDocumentation>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="Meshmakers.Octo.Runtime.Contracts" Version="999.0.0.0"/>
-        <PackageReference Include="Meshmakers.Octo.ConstructionKit.SourceGeneration" OutputItemType="Analyzer" ReferenceOutputAssembly="false" Version="999.0.0.0"/>
-        <PackageReference Include="Meshmakers.Octo.ConstructionKit.MsBuildTasks" Version="999.0.0.0" PrivateAssets="all"/>
-        <PackageReference Include="Meshmakers.Octo.Sdk.Packages.Basic" Version="999.0.0"/>
+        <!-- $(OctoVersion) resolves to 999.0.0 in DebugL and to the feed version
+             in Debug/Release. The previous hardcoded 999.0.0.0 pin made the
+             project buildable ONLY in DebugL, so CI could never restore it. -->
+        <PackageReference Include="Meshmakers.Octo.Runtime.Contracts" Version="$(OctoVersion)"/>
+        <PackageReference Include="Meshmakers.Octo.ConstructionKit.SourceGeneration" OutputItemType="Analyzer" ReferenceOutputAssembly="false" Version="$(OctoVersion)"/>
+        <PackageReference Include="Meshmakers.Octo.ConstructionKit.MsBuildTasks" Version="$(OctoVersion)" PrivateAssets="all"/>
+        <PackageReference Include="Meshmakers.Octo.Sdk.Packages.Basic" Version="$(OctoVersion)"/>
     </ItemGroup>
     <ItemGroup>
         <ConstructionKitFolder Visible="false" Include="$(MSBuildProjectDirectory)\ConstructionKit"/>
