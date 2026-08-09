@@ -220,8 +220,8 @@ entities:
               - id: System/SortOrder
                 value: 1
 
-  # 5-minute AVG/MIN/MAX rollup on CurrentValue — activation generates the storage
-  # columns from Aggregations[] (function: 0=AVG, 1=MIN, 2=MAX).
+  # 5-minute AVG/MIN/MAX rollup on CurrentValue (function: 0=AVG, 1=MIN, 2=MAX). Columns below
+  # mirrors the RollupColumnGenerator derivation and MUST be kept in sync with Aggregations[].
   - rtId: 6a4a9fe67e487162fbe3860f
     ckTypeId: System.StreamData/RollupArchive
     rtWellKnownName: TemperatureSensorRollup5m
@@ -230,6 +230,45 @@ entities:
         value: EnergyIQ/TemperatureSensor
       - id: System.StreamData/Archive.Status
         value: 0
+      # Columns is MANDATORY on Archive: persist the RollupColumnGenerator output
+      # ({sourcepath}_{fn}; AVG expands to _avg_sum + _avg_count) here — ActivateArchive
+      # derives columns only in-memory and never writes them back, so a seeded rollup
+      # without this block breaks the archives GraphQL (non-null columns) for the whole
+      # list page (prod-1 energyiq incident 2026-08-09).
+      - id: System.StreamData/Archive.Columns
+        value:
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: currentvalue_avg_sum
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: currentvalue_avg_count
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: currentvalue_min
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: currentvalue_max
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
       - id: System.StreamData/RollupArchive.SourceArchiveRtId
         value: '6a0e000000000000000a0001'
       - id: System.StreamData/RollupArchive.BucketSizeMs
@@ -606,8 +645,8 @@ entities:
               - id: System/SortOrder
                 value: 1
 
-  # 5-minute AVG/MIN/MAX rollup on ActivePower — activation generates the storage
-  # columns from Aggregations[] (function: 0=AVG, 1=MIN, 2=MAX).
+  # 5-minute AVG/MIN/MAX rollup on ActivePower (function: 0=AVG, 1=MIN, 2=MAX). Columns below
+  # mirrors the RollupColumnGenerator derivation and MUST be kept in sync with Aggregations[].
   - rtId: 6a4aa4cc22664f2b26c67e65
     ckTypeId: System.StreamData/RollupArchive
     rtWellKnownName: GridConnectionRollup5m
@@ -616,6 +655,45 @@ entities:
         value: EnergyIQ/GridConnection
       - id: System.StreamData/Archive.Status
         value: 0
+      # Columns is MANDATORY on Archive: persist the RollupColumnGenerator output
+      # ({sourcepath}_{fn}; AVG expands to _avg_sum + _avg_count) here — ActivateArchive
+      # derives columns only in-memory and never writes them back, so a seeded rollup
+      # without this block breaks the archives GraphQL (non-null columns) for the whole
+      # list page (prod-1 energyiq incident 2026-08-09).
+      - id: System.StreamData/Archive.Columns
+        value:
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: activepower_avg_sum
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: activepower_avg_count
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: activepower_min
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: activepower_max
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
       - id: System.StreamData/RollupArchive.SourceArchiveRtId
         value: '6a0e000000000000000a0007'
       - id: System.StreamData/RollupArchive.BucketSizeMs
@@ -643,8 +721,8 @@ entities:
               - id: System.StreamData/CkRollupAggregation.Function
                 value: 2
 
-  # 5-minute AVG/MIN/MAX rollup on TotalCurrentPower — activation generates the storage
-  # columns from Aggregations[] (function: 0=AVG, 1=MIN, 2=MAX).
+  # 5-minute AVG/MIN/MAX rollup on TotalCurrentPower (function: 0=AVG, 1=MIN, 2=MAX). Columns below
+  # mirrors the RollupColumnGenerator derivation and MUST be kept in sync with Aggregations[].
   - rtId: 6a4aa4cc22664f2b26c67e66
     ckTypeId: System.StreamData/RollupArchive
     rtWellKnownName: PhotovoltaicSystemRollup5m
@@ -653,6 +731,45 @@ entities:
         value: EnergyIQ/PhotovoltaicSystem
       - id: System.StreamData/Archive.Status
         value: 0
+      # Columns is MANDATORY on Archive: persist the RollupColumnGenerator output
+      # ({sourcepath}_{fn}; AVG expands to _avg_sum + _avg_count) here — ActivateArchive
+      # derives columns only in-memory and never writes them back, so a seeded rollup
+      # without this block breaks the archives GraphQL (non-null columns) for the whole
+      # list page (prod-1 energyiq incident 2026-08-09).
+      - id: System.StreamData/Archive.Columns
+        value:
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: totalcurrentpower_avg_sum
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: totalcurrentpower_avg_count
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: totalcurrentpower_min
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: totalcurrentpower_max
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
       - id: System.StreamData/RollupArchive.SourceArchiveRtId
         value: '6a0e000000000000000a000c'
       - id: System.StreamData/RollupArchive.BucketSizeMs
@@ -680,8 +797,8 @@ entities:
               - id: System.StreamData/CkRollupAggregation.Function
                 value: 2
 
-  # 5-minute AVG/MIN/MAX rollup on ActivePower — activation generates the storage
-  # columns from Aggregations[] (function: 0=AVG, 1=MIN, 2=MAX).
+  # 5-minute AVG/MIN/MAX rollup on ActivePower (function: 0=AVG, 1=MIN, 2=MAX). Columns below
+  # mirrors the RollupColumnGenerator derivation and MUST be kept in sync with Aggregations[].
   - rtId: 6a4aa4cc22664f2b26c67e67
     ckTypeId: System.StreamData/RollupArchive
     rtWellKnownName: ChargingStationRollup5m
@@ -690,6 +807,45 @@ entities:
         value: EnergyIQ/ChargingStation
       - id: System.StreamData/Archive.Status
         value: 0
+      # Columns is MANDATORY on Archive: persist the RollupColumnGenerator output
+      # ({sourcepath}_{fn}; AVG expands to _avg_sum + _avg_count) here — ActivateArchive
+      # derives columns only in-memory and never writes them back, so a seeded rollup
+      # without this block breaks the archives GraphQL (non-null columns) for the whole
+      # list page (prod-1 energyiq incident 2026-08-09).
+      - id: System.StreamData/Archive.Columns
+        value:
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: activepower_avg_sum
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: activepower_avg_count
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: activepower_min
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: activepower_max
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
       - id: System.StreamData/RollupArchive.SourceArchiveRtId
         value: '6a0e000000000000000a0008'
       - id: System.StreamData/RollupArchive.BucketSizeMs
@@ -717,8 +873,8 @@ entities:
               - id: System.StreamData/CkRollupAggregation.Function
                 value: 2
 
-  # 5-minute AVG/MIN/MAX rollup on ActivePower — activation generates the storage
-  # columns from Aggregations[] (function: 0=AVG, 1=MIN, 2=MAX).
+  # 5-minute AVG/MIN/MAX rollup on ActivePower (function: 0=AVG, 1=MIN, 2=MAX). Columns below
+  # mirrors the RollupColumnGenerator derivation and MUST be kept in sync with Aggregations[].
   - rtId: 6a4aa4cc22664f2b26c67e68
     ckTypeId: System.StreamData/RollupArchive
     rtWellKnownName: ApplianceRollup5m
@@ -727,6 +883,45 @@ entities:
         value: EnergyIQ/Appliance
       - id: System.StreamData/Archive.Status
         value: 0
+      # Columns is MANDATORY on Archive: persist the RollupColumnGenerator output
+      # ({sourcepath}_{fn}; AVG expands to _avg_sum + _avg_count) here — ActivateArchive
+      # derives columns only in-memory and never writes them back, so a seeded rollup
+      # without this block breaks the archives GraphQL (non-null columns) for the whole
+      # list page (prod-1 energyiq incident 2026-08-09).
+      - id: System.StreamData/Archive.Columns
+        value:
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: activepower_avg_sum
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: activepower_avg_count
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: activepower_min
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: activepower_max
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
       - id: System.StreamData/RollupArchive.SourceArchiveRtId
         value: '6a0e000000000000000a0009'
       - id: System.StreamData/RollupArchive.BucketSizeMs
@@ -754,8 +949,8 @@ entities:
               - id: System.StreamData/CkRollupAggregation.Function
                 value: 2
 
-  # 5-minute AVG/MIN/MAX rollup on ChargingPower — activation generates the storage
-  # columns from Aggregations[] (function: 0=AVG, 1=MIN, 2=MAX).
+  # 5-minute AVG/MIN/MAX rollup on ChargingPower (function: 0=AVG, 1=MIN, 2=MAX). Columns below
+  # mirrors the RollupColumnGenerator derivation and MUST be kept in sync with Aggregations[].
   - rtId: 6a4aa4cc22664f2b26c67e69
     ckTypeId: System.StreamData/RollupArchive
     rtWellKnownName: BatteryStorageRollup5m
@@ -764,6 +959,45 @@ entities:
         value: EnergyIQ/BatteryStorage
       - id: System.StreamData/Archive.Status
         value: 0
+      # Columns is MANDATORY on Archive: persist the RollupColumnGenerator output
+      # ({sourcepath}_{fn}; AVG expands to _avg_sum + _avg_count) here — ActivateArchive
+      # derives columns only in-memory and never writes them back, so a seeded rollup
+      # without this block breaks the archives GraphQL (non-null columns) for the whole
+      # list page (prod-1 energyiq incident 2026-08-09).
+      - id: System.StreamData/Archive.Columns
+        value:
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: chargingpower_avg_sum
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: chargingpower_avg_count
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: chargingpower_min
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: chargingpower_max
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
       - id: System.StreamData/RollupArchive.SourceArchiveRtId
         value: '6a0e000000000000000a000d'
       - id: System.StreamData/RollupArchive.BucketSizeMs
@@ -1182,6 +1416,125 @@ entities:
         value: EnergyIQ/HeatPump
       - id: System.StreamData/Archive.Status
         value: 0
+      # Columns is MANDATORY on Archive: persist the RollupColumnGenerator output
+      # ({sourcepath}_{fn}; AVG expands to _avg_sum + _avg_count) here — ActivateArchive
+      # derives columns only in-memory and never writes them back, so a seeded rollup
+      # without this block breaks the archives GraphQL (non-null columns) for the whole
+      # list page (prod-1 energyiq incident 2026-08-09).
+      - id: System.StreamData/Archive.Columns
+        value:
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: supplytemp_avg_sum
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: supplytemp_avg_count
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: returntemp_avg_sum
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: returntemp_avg_count
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: coolingsupplytemp_avg_sum
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: coolingsupplytemp_avg_count
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: sourceinlettemp_avg_sum
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: sourceinlettemp_avg_count
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: sourceoutlettemp_avg_sum
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: sourceoutlettemp_avg_count
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: hotgastemp_avg_sum
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: hotgastemp_avg_count
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: powerconsumption_avg_sum
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: powerconsumption_avg_count
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
       - id: System.StreamData/RollupArchive.SourceArchiveRtId
         value: '6a0e000000000000000a000e'
       - id: System.StreamData/RollupArchive.BucketSizeMs
@@ -1241,6 +1594,45 @@ entities:
         value: EnergyIQ/ThermalEnergyStorage
       - id: System.StreamData/Archive.Status
         value: 0
+      # Columns is MANDATORY on Archive: persist the RollupColumnGenerator output
+      # ({sourcepath}_{fn}; AVG expands to _avg_sum + _avg_count) here — ActivateArchive
+      # derives columns only in-memory and never writes them back, so a seeded rollup
+      # without this block breaks the archives GraphQL (non-null columns) for the whole
+      # list page (prod-1 energyiq incident 2026-08-09).
+      - id: System.StreamData/Archive.Columns
+        value:
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: storagetemptop_avg_sum
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: storagetemptop_avg_count
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: storagetemptop_min
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: storagetemptop_max
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
       - id: System.StreamData/RollupArchive.SourceArchiveRtId
         value: '6a0e000000000000000a000f'
       - id: System.StreamData/RollupArchive.BucketSizeMs
@@ -1276,6 +1668,45 @@ entities:
         value: EnergyIQ/Pump
       - id: System.StreamData/Archive.Status
         value: 0
+      # Columns is MANDATORY on Archive: persist the RollupColumnGenerator output
+      # ({sourcepath}_{fn}; AVG expands to _avg_sum + _avg_count) here — ActivateArchive
+      # derives columns only in-memory and never writes them back, so a seeded rollup
+      # without this block breaks the archives GraphQL (non-null columns) for the whole
+      # list page (prod-1 energyiq incident 2026-08-09).
+      - id: System.StreamData/Archive.Columns
+        value:
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: speed_avg_sum
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: speed_avg_count
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: flowrate_avg_sum
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: flowrate_avg_count
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
       - id: System.StreamData/RollupArchive.SourceArchiveRtId
         value: '6a0e000000000000000a0010'
       - id: System.StreamData/RollupArchive.BucketSizeMs
@@ -1306,6 +1737,29 @@ entities:
         value: EnergyIQ/Meter
       - id: System.StreamData/Archive.Status
         value: 0
+      # Columns is MANDATORY on Archive: persist the RollupColumnGenerator output
+      # ({sourcepath}_{fn}; AVG expands to _avg_sum + _avg_count) here — ActivateArchive
+      # derives columns only in-memory and never writes them back, so a seeded rollup
+      # without this block breaks the archives GraphQL (non-null columns) for the whole
+      # list page (prod-1 energyiq incident 2026-08-09).
+      - id: System.StreamData/Archive.Columns
+        value:
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: activepower_avg_sum
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: activepower_avg_count
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
       - id: System.StreamData/RollupArchive.SourceArchiveRtId
         value: '6a0e000000000000000a0006'
       - id: System.StreamData/RollupArchive.BucketSizeMs
@@ -1331,6 +1785,21 @@ entities:
         value: EnergyIQ/Meter
       - id: System.StreamData/Archive.Status
         value: 0
+      # Columns is MANDATORY on Archive: persist the RollupColumnGenerator output
+      # ({sourcepath}_{fn}; AVG expands to _avg_sum + _avg_count) here — ActivateArchive
+      # derives columns only in-memory and never writes them back, so a seeded rollup
+      # without this block breaks the archives GraphQL (non-null columns) for the whole
+      # list page (prod-1 energyiq incident 2026-08-09).
+      - id: System.StreamData/Archive.Columns
+        value:
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: importedenergy_max
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
       - id: System.StreamData/RollupArchive.SourceArchiveRtId
         value: '6a0e000000000000000a0011'
       - id: System.StreamData/RollupArchive.BucketSizeMs
@@ -2512,6 +2981,37 @@ entities:
         value: EnergyIQ/Luminaire
       - id: System.StreamData/Archive.Status
         value: 0
+      # Columns is MANDATORY on Archive: persist the RollupColumnGenerator output
+      # ({sourcepath}_{fn}; AVG expands to _avg_sum + _avg_count) here — ActivateArchive
+      # derives columns only in-memory and never writes them back, so a seeded rollup
+      # without this block breaks the archives GraphQL (non-null columns) for the whole
+      # list page (prod-1 energyiq incident 2026-08-09).
+      - id: System.StreamData/Archive.Columns
+        value:
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: dimminglevel_avg_sum
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: dimminglevel_avg_count
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: dimminglevel_max
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
       - id: System.StreamData/RollupArchive.SourceArchiveRtId
         value: '6a0e000000000000000a0004'
       - id: System.StreamData/RollupArchive.BucketSizeMs
@@ -2541,6 +3041,37 @@ entities:
         value: EnergyIQ/ShadingDevice
       - id: System.StreamData/Archive.Status
         value: 0
+      # Columns is MANDATORY on Archive: persist the RollupColumnGenerator output
+      # ({sourcepath}_{fn}; AVG expands to _avg_sum + _avg_count) here — ActivateArchive
+      # derives columns only in-memory and never writes them back, so a seeded rollup
+      # without this block breaks the archives GraphQL (non-null columns) for the whole
+      # list page (prod-1 energyiq incident 2026-08-09).
+      - id: System.StreamData/Archive.Columns
+        value:
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: position_avg_sum
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: position_avg_count
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: position_max
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
       - id: System.StreamData/RollupArchive.SourceArchiveRtId
         value: '6a0e000000000000000a0005'
       - id: System.StreamData/RollupArchive.BucketSizeMs
