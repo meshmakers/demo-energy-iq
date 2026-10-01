@@ -210,15 +210,18 @@ version → restore → test → **CK model publish** → artifacts.
 
 ### CK model publishing (AB#4697)
 
-`OctoPublishCkModel=true` is set in `EnergyIqCkModel.csproj`, so the two
-`Publish CK model to ...Catalog` tasks only need to pass `OctoPublishCatalog` plus the
-GitHub PAT — the MsBuild tasks compile *and* publish the `EnergyIQ` model in one step.
+The `EnergyIQ` model is validated and published by the shared
+`validate-and-publish-ck-versions` step of `octo-pipeline-templates`, after the tests:
+a version and schema gate on every push, then the catalogs below, never replacing a
+published version — a content change needs a version bump in `ckModel.yaml`. The build
+only compiles the model (`/p:OctoPublishCkModel=false` overrides the csproj, which keeps
+the flag for local development).
 
 | Branch | CK catalog |
 |---|---|
 | `refs/tags/r*` (release) | `PrivateGitHubCatalog` **and** `PublicGitHubCatalog` |
 | `main` | `PrivateGitHubCatalog` only |
-| `test/*`, `dev/*` | none |
+| `test/*`, `dev/*` | none (validate only) |
 
 prod-1 reads **only** `PublicGitHubCatalog` — the private catalog is not configured there.
 
@@ -227,7 +230,7 @@ shows `CATALOG -` and `FixAll` cannot repair a broken tenant. That is exactly wh
 happened on the `energyiq` tenant on 2026-08-04, when `EnergyIQ-2.9.0` went
 `ResolveFailed` the moment `Basic.Energy` was updated 1.1.4 → 1.3.0.
 
-> **Publishing alone is not enough.** `CkCompile` resolves the dependency *range* in
+> **Publishing alone is not enough.** Compiling resolves the dependency *range* in
 > `ckModel.yaml` (`Basic.Energy-[1.0,2.0)`) to a concrete pinned version at build time.
 > A published `EnergyIQ-2.9.0` therefore stays pinned to whichever `Basic.Energy` version
 > was current when it was built, and goes `ResolveFailed` on the next bump. The model
