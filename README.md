@@ -212,7 +212,7 @@ version → restore → test → **CK model publish** → artifacts.
 
 The `EnergyIQ` model is validated and published by the shared
 `validate-and-publish-ck-versions` step of `octo-pipeline-templates`, after the tests:
-a version and schema gate on every push, then the catalogs below, never replacing a
+a version and schema gate on every build, then the catalogs below, never replacing a
 published version — a content change needs a version bump in `ckModel.yaml`. The build
 only compiles the model (`/p:OctoPublishCkModel=false` overrides the csproj, which keeps
 the flag for local development).

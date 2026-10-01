@@ -83,7 +83,7 @@ stages:
                 !'**/*SystemTests.csproj'
               testRunTitle: 'CI'
           # ---- CK model: validate + publish through the shared step (AB#5121) ----
-          # Version and schema gate on every push, then main -> PrivateGitHubCatalog
+          # Version and schema gate on every build, then main -> PrivateGitHubCatalog
           # (test-2), r* tags -> private AND PublicGitHubCatalog (prod-1 reads ONLY the
           # public catalog), never replacing a published version; every other branch
           # validates only. It runs after Test, so a run whose build or tests fail has
