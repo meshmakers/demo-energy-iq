@@ -35,8 +35,6 @@ variables:
     value: ${{ startsWith(variables['Build.SourceBranch'], 'refs/tags/r') }}
   - name: isMain
     value: ${{ eq(variables['Build.SourceBranch'], 'refs/heads/main') }}
-  - name: isTest
-    value: ${{ startsWith(variables['Build.SourceBranch'], 'refs/heads/test') }}
 
 stages:
   - stage: Build
