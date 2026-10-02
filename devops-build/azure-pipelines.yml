@@ -65,10 +65,8 @@ stages:
               noCache: true
           # Test builds the solution, the CK model included. It compiles EnergyIQ and
           # publishes it nowhere (/p:OctoPublishCkModel=false overrides the csproj):
-          # the shared CK step below owns publishing, and the exported
-          # OctoPublishCatalog (PrivateGitHubCatalog on every branch) would otherwise
-          # reach MSBuild from the environment. The GitHub API keys keep CkCompile's
-          # catalog refresh clear of GitHub's unauthenticated rate limit.
+          # the shared CK step below owns publishing. The GitHub API keys keep
+          # CkCompile's catalog refresh clear of GitHub's unauthenticated rate limit.
           - task: DotNetCoreCLI@2
             displayName: 'Test'
             inputs:
