@@ -11,6 +11,14 @@ trigger:
     exclude:
       - '*'
 
+resources:
+  repositories:
+    - repository: pipelineTemplates
+      type: github
+      name: meshmakers/octo-pipeline-templates
+      endpoint: meshmakers-access-token
+      ref: refs/tags/tpl-v1.0.0
+
 variables:
   - group: GitSSHGroup
   - group: ApiKeys-mm-cloud
@@ -27,9 +35,7 @@ variables:
     value: ${{ startsWith(variables['Build.SourceBranch'], 'refs/tags/r') }}
   - name: isMain
     value: ${{ eq(variables['Build.SourceBranch'], 'refs/heads/main') }}
-  - name: isTest
-    value: ${{ startsWith(variables['Build.SourceBranch'], 'refs/heads/test') }}
-    
+
 stages:
   - stage: Build
     jobs:
@@ -38,7 +44,7 @@ stages:
         pool:
           name: meshmakers-ci-agents
         steps:
-          - template: update-build-number.yml
+          - template: templates/steps/update-build-number.yml@pipelineTemplates
           - checkout: self
             clean: true
             submodules: recursive
@@ -57,67 +63,45 @@ stages:
               projects: '$(SolutionFile)'
               restoreArguments: '--force /p:OctoNugetPrivateServer=$(nugetPrivateServer)'
               noCache: true
+          # Test builds the solution, the CK model included. It compiles EnergyIQ and
+          # publishes it nowhere (/p:OctoPublishCkModel=false overrides the csproj):
+          # the shared CK step below owns publishing. The GitHub API keys keep
+          # CkCompile's catalog refresh clear of GitHub's unauthenticated rate limit.
           - task: DotNetCoreCLI@2
             displayName: 'Test'
             inputs:
               command: 'test'
+              arguments: >-
+                /p:OctoNugetPrivateServer=$(nugetPrivateServer)
+                /p:OctoPublishCkModel=false
+                /p:OctoPrivateGitHubApiKey=$(GitHubPAT)
+                /p:OctoPublicGitHubApiKey=$(GitHubPAT)
               projects: |
                 '**/*Tests.csproj'
                 !'**/*SystemTests.csproj'
               testRunTitle: 'CI'
-          # ---- CK model: compile + publish to the shared CK catalogs ----
-          # OctoPublishCkModel=true is already set in the .csproj, so passing
-          # OctoPublishCatalog + the GitHub API keys makes the MsBuildTasks
-          # compile AND publish EnergyIQ (version from ckModel.yaml) during the
-          # build — same pattern as meshmakers-app and octo-construction-kit.
-          # Gated to main / r-tag so unreleased models never leak.
+          # ---- CK model: validate + publish through the shared step (AB#5121) ----
+          # Version and schema gate on every build, then main -> PrivateGitHubCatalog
+          # (test-2), r* tags -> private AND PublicGitHubCatalog (prod-1 reads ONLY the
+          # public catalog), never replacing a published version; every other branch
+          # validates only. It runs after Test, so a run whose build or tests fail has
+          # published nothing. It compiles the model itself with the octo-ckc of the
+          # build's version line and needs nothing from the build.
           #
-          # Without this the model is only ever reachable via a manual ImportCk:
-          # LibraryStatus shows CATALOG '-' and FixAll cannot repair the tenant.
-          # That is what left EnergyIQ ResolveFailed on energyiq/prod-1 the
-          # moment Basic.Energy was updated 1.1.4 -> 1.3.0.
+          # Without the publish the model is only ever reachable via a manual ImportCk:
+          # LibraryStatus shows CATALOG '-' and FixAll cannot repair the tenant. That is
+          # what left EnergyIQ ResolveFailed on energyiq/prod-1 the moment Basic.Energy
+          # was updated 1.1.4 -> 1.3.0.
           #
-          # Catalog split mirrors the platform repos: main -> private only
-          # (test-2), release -> private AND public (prod-1 reads ONLY the
-          # PublicGitHubCatalog; the private catalog is not configured there).
-          #
-          # NOTE: CkCompile pins the ckModel.yaml dependency RANGE to a concrete
-          # version resolved from the catalog at build time. Publishing alone
-          # therefore does not keep the model healthy across dependency bumps —
-          # this repo must also be rebuilt+republished whenever Basic.Energy or
-          # Basic changes.
-          - task: DotNetCoreCLI@2
-            displayName: 'Publish CK model to PrivateGitHubCatalog'
-            condition: and(succeeded(), or(eq(variables.isMain, true), eq(variables.isRelease, true)))
-            inputs:
-              command: 'build'
-              projects: 'src/**/*CkModel.csproj'
-              arguments: >-
-                --configuration $(buildConfiguration)
-                -p:OctoNugetPrivateServer=$(nugetPrivateServer)
-                /p:OctoPublishCkModel=true
-                /p:OctoPublishCatalog="PrivateGitHubCatalog"
-                /p:OctoPrivateGitHubApiKey=$(GitHubPAT)
-                /p:OctoPublicGitHubApiKey=$(GitHubPAT)
-              publishWebProjects: false
-              zipAfterPublish: false
-              modifyOutputPath: false
-          - task: DotNetCoreCLI@2
-            displayName: 'Publish CK model to PublicGitHubCatalog (release)'
-            condition: and(succeeded(), eq(variables.isRelease, true))
-            inputs:
-              command: 'build'
-              projects: 'src/**/*CkModel.csproj'
-              arguments: >-
-                --configuration $(buildConfiguration)
-                -p:OctoNugetPrivateServer=$(nugetPrivateServer)
-                /p:OctoPublishCkModel=true
-                /p:OctoPublishCatalog="PublicGitHubCatalog"
-                /p:OctoPrivateGitHubApiKey=$(GitHubPAT)
-                /p:OctoPublicGitHubApiKey=$(GitHubPAT)
-              publishWebProjects: false
-              zipAfterPublish: false
-              modifyOutputPath: false
+          # NOTE: compiling pins the ckModel.yaml dependency RANGE to a concrete version
+          # resolved from the catalog at build time. Publishing alone therefore does not
+          # keep the model healthy across dependency bumps — this repo must also be
+          # rebuilt and republished, with a version bump, whenever Basic.Energy or Basic
+          # changes.
+          - template: templates/steps/validate-and-publish-ck-versions.yml@pipelineTemplates
+            parameters:
+              constructionKitPaths:
+                - 'src/EnergyIqCkModel/ConstructionKit'
 #          - template: build-and-push-docker-image.yml
 #            parameters:
 #              PublicRegistryServiceConnection: $(DockerRegistryPublicAcrConnection)
