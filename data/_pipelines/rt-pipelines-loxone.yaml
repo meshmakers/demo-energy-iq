@@ -547,24 +547,29 @@ entities:
         triggers:
           - type: FromPipelineDataEvent@1
         transformations:
-          # For each state update, find matching control, store the state on the control
-          # and apply data point mappings.
-          #
-          # maxDegreeOfParallelism: 1 (AB#7436) - the states of one batch are processed ONE AFTER
-          # THE OTHER. Every iteration re-reads the Control from the database, changes only its
-          # own State record in the RecordArray and writes the whole array back with its own
-          # ApplyChanges (see "Persist the control update" below). With the default parallelism
-          # all reads happen before any write, every update carries the DB baseline plus only
-          # ITS state, and a batch with several states of one Control lost all but the last
-          # CurrentValue (ApplyChanges merges updates of one entity "later wins").
+          # One read and one write per Loxone Control per message (AB#7437, replaces the
+          # sequential per-state loop of AB#7436):
+          #   1. GroupBy@1 groups the changed states of the batch by Control UUID.
+          #   2. Per group: read the matching Control(s) once, apply ALL states of the group to
+          #      the States RecordArray in one pass (UpdateRecordArrayItem@2; several changes of
+          #      one state in the batch are applied in order, the last one wins).
+          #   3. After the loop ONE ApplyChanges@2 writes exactly one update per Control, so
+          #      ApplyChanges has nothing to merge (no lost CurrentValue, no "conflicting values").
+          # Groups address different Controls, so they may run in parallel (default parallelism).
+          # Known limit (AB#7442): two pipeline executions that change the same Control at the
+          # same time can still overwrite each other (last write wins between executions).
+          - type: GroupBy@1
+            description: Group the state changes by Control UUID
+            path: $.states
+            keyPath: $.controlUuid
+            targetPath: $.stateGroups
           - type: ForEach@1
-            description: Process state updates and apply data point mappings
-            iterationPath: $.states
+            description: Process the state changes of one Control at a time
+            iterationPath: $.stateGroups
             targetPath: $.updateResults
             mergePath: $.updates
-            maxDegreeOfParallelism: 1
             transformations:
-              # Find ALL Loxone Controls matching this state's UUID (handles duplicates)
+              # Find ALL Loxone Controls matching this UUID (handles duplicates) - one read per group
               - type: GetRtEntitiesByType@1
                 description: Find all controls by Loxone UUID
                 ckTypeId: Loxone/Control
@@ -572,8 +577,8 @@ entities:
                 fieldFilters:
                   - attributePath: LoxoneUuid
                     operator: Equals
-                    comparisonValuePath: $.key.controlUuid
-              # For each matching control, update its state and apply its mappings
+                    comparisonValuePath: $.key.key
+              # For each matching control, apply all its state changes and its mappings
               - type: ForEach@1
                 description: Process each matching control
                 path: $
@@ -582,16 +587,17 @@ entities:
                 targetPath: $.updates._controlResults
                 mergePath: $.updates
                 transformations:
-                  # Update the matching DataPoint record in the States RecordArray
-                  - type: UpdateRecordArrayItem@1
-                    description: Update CurrentValue and LastUpdate in States record
+                  # All state changes of this Control in one pass ($.full.key.items = the group)
+                  - type: UpdateRecordArrayItem@2
+                    description: Update CurrentValue and LastUpdate of all changed States records
                     path: $.key.Attributes.States
+                    updatesPath: $.full.key.items
                     matchAttributeName: ExternalId
-                    matchValuePath: $.full.key.pollUuid
+                    itemMatchValuePath: $.pollUuid
                     targetPath: $.updates._updatedStates
                     attributeUpdates:
                       - attributeName: CurrentValue
-                        valuePath: $.full.key.value
+                        valuePath: $.value
                       - attributeName: LastUpdate
                         value: =now()
                   - type: CreateUpdateInfo@1
@@ -608,29 +614,45 @@ entities:
                       - attributeName: LastStateUpdate
                         attributeValueType: DateTime
                         value: =now()
-                  # Persist the control update (AB#7436): exactly ONE update of this Control per
-                  # ApplyChanges call, committed before the next state is processed. The next
-                  # iteration therefore reads the States array including this state's
-                  # CurrentValue, so after the batch the Control holds ALL new values and
-                  # ApplyChanges has nothing to merge ("attribute 'States' has conflicting values").
-                  - type: ApplyChanges@2
-                    description: Persist the control update
-                    entityUpdatesPath: $.updates._controlUpdate
-                  # Evaluate DataPointMappings for this specific control and state.
+                  # Evaluate DataPointMappings per state of this Control.
+                  # Inside: $.key = state change, $.full.key = Control.
                   # sourceStateNamePath filters mappings: only those matching the state name apply.
-                  - type: ApplyDataPointMappings@1
-                    description: Apply data point mappings to target entities
-                    sourceRtIdPath: $.key.RtId
-                    sourceCkTypeIdPath: $.key.CkTypeId.SemanticVersionedFullName
-                    sourceValuePath: $.full.key.value
-                    sourceStateNamePath: $.full.key.stateName
-                    targetPath: $.updates._mappingUpdates
-                    targetValueKind: Array
-                    targetValueWriteMode: Overwrite
-          # Flatten mapping updates (double wildcard - mappingUpdates is array-of-arrays).
-          # The control updates are no longer collected here: they are persisted per state above.
+                  - type: ForEach@1
+                    description: Apply data point mappings per state change
+                    path: $
+                    fullDocumentPath: $.full
+                    iterationPath: $.full.key.items
+                    targetPath: $.updates._stateResults
+                    mergePath: $.updates
+                    transformations:
+                      - type: ApplyDataPointMappings@1
+                        description: Apply data point mappings to target entities
+                        sourceRtIdPath: $.full.key.RtId
+                        sourceCkTypeIdPath: $.full.key.CkTypeId.SemanticVersionedFullName
+                        sourceValuePath: $.key.value
+                        sourceStateNamePath: $.key.stateName
+                        targetPath: $.updates._mappingUpdates
+                        targetValueKind: Array
+                        targetValueWriteMode: Overwrite
+          # Collect exactly one update per Control and persist them in ONE ApplyChanges.
           - type: Flatten@1
-            path: $.updateResults[*]._controlResults[*]._mappingUpdates[*][*]
+            path: $.updateResults[*]._controlResults[*]._controlUpdate[*]
+            targetPath: $._controlUpdates
+            targetValueKind: Simple
+            targetValueWriteMode: Overwrite
+          - type: If@1
+            description: Only persist if there are control updates
+            path: $._controlUpdates[0].RtId
+            operator: NotEquals
+            value: null
+            valueType: String
+            transformations:
+              - type: ApplyChanges@2
+                description: Persist the control updates (one per Control)
+                entityUpdatesPath: $._controlUpdates
+          # Flatten mapping updates (double wildcard - mappingUpdates is array-of-arrays).
+          - type: Flatten@1
+            path: $.updateResults[*]._controlResults[*]._stateResults[*]._mappingUpdates[*][*]
             targetPath: $._updateItems
             targetValueKind: Simple
             targetValueWriteMode: Overwrite
