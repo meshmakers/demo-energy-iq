@@ -547,17 +547,24 @@ entities:
         triggers:
           - type: FromPipelineDataEvent@1
         transformations:
-          # One read and one write per Loxone Control per message (AB#7437, replaces the
-          # sequential per-state loop of AB#7436):
+          # One read and one atomic write per Loxone Control per message (AB#7437, AB#7447):
           #   1. GroupBy@1 groups the changed states of the batch by Control UUID.
-          #   2. Per group: read the matching Control(s) once, apply ALL states of the group to
-          #      the States RecordArray in one pass (UpdateRecordArrayItem@2; several changes of
-          #      one state in the batch are applied in order, the last one wins).
-          #   3. After the loop ONE ApplyChanges@2 writes exactly one update per Control, so
-          #      ApplyChanges has nothing to merge (no lost CurrentValue, no "conflicting values").
+          #   2. Per group: look up the matching Control(s) once (RtId for the write and the
+          #      DataPointMappings) and build ONE update per Control whose States items are
+          #      changed by CreateUpdateInfo@1 recordArrayItemUpdates (match ExternalId = pollUuid,
+          #      AB#7442/AB#7445). MongoDB writes it as one updateOne with arrayFilters: the
+          #      States array is not read back or written as a whole and there is no version
+          #      check, so parallel executions that change other states of the same Control no
+          #      longer overwrite each other. Several changes of one state in the batch are
+          #      applied in order, the last one wins.
+          #   3. After the loop ONE ApplyChanges@2 writes exactly one update per Control.
           # Groups address different Controls, so they may run in parallel (default parallelism).
-          # Known limit (AB#7442): two pipeline executions that change the same Control at the
-          # same time can still overwrite each other (last write wins between executions).
+          # Only EXISTING States items are updated, nothing is inserted (as with the former
+          # UpdateRecordArrayItem@2). The items are created by the Loxone discovery (pipeline
+          # 67f0b00ec4ff02221e0b6005, MapToRecordArray of the Loxone states map), and the
+          # pollUuids come from LoxoneConfiguration.MappingTargets, which "Configure State Sync"
+          # resolves from Control.States. ApplyChanges@2 logs warning 27 only when no item of a
+          # Control matched; a partial miss is skipped silently.
           - type: GroupBy@1
             description: Group the state changes by Control UUID
             path: $.states
@@ -587,33 +594,30 @@ entities:
                 targetPath: $.updates._controlResults
                 mergePath: $.updates
                 transformations:
-                  # All state changes of this Control in one pass ($.full.key.items = the group)
-                  - type: UpdateRecordArrayItem@2
-                    description: Update CurrentValue and LastUpdate of all changed States records
-                    path: $.key.Attributes.States
-                    updatesPath: $.full.key.items
-                    matchAttributeName: ExternalId
-                    itemMatchValuePath: $.pollUuid
-                    targetPath: $.updates._updatedStates
-                    attributeUpdates:
-                      - attributeName: CurrentValue
-                        valuePath: $.value
-                      - attributeName: LastUpdate
-                        value: =now()
+                  # All state changes of this Control as atomic States item updates
+                  # ($.full.key.items = the group; paths inside the entry are relative to one
+                  # state change). LastStateUpdate is written in the same statement.
                   - type: CreateUpdateInfo@1
-                    description: Update Control's States and LastStateUpdate
+                    description: Update the changed States items and LastStateUpdate atomically
                     targetPath: $.updates._controlUpdate
                     targetValueKind: Array
                     updateKind: UPDATE
                     ckTypeIdPath: $.key.CkTypeId.SemanticVersionedFullName
                     rtIdPath: $.key.RtId
                     attributeUpdates:
-                      - attributeName: States
-                        attributeValueType: RecordArray
-                        valuePath: $.updates._updatedStates
                       - attributeName: LastStateUpdate
                         attributeValueType: DateTime
                         value: =now()
+                    recordArrayItemUpdates:
+                      - attributeName: States
+                        matchAttributeName: ExternalId
+                        updatesPath: $.full.key.items
+                        matchValuePath: $.pollUuid
+                        attributeUpdates:
+                          - attributeName: CurrentValue
+                            valuePath: $.value
+                          - attributeName: LastUpdate
+                            value: =now()
                   # Evaluate DataPointMappings per state of this Control.
                   # Inside: $.key = state change, $.full.key = Control.
                   # sourceStateNamePath filters mappings: only those matching the state name apply.
