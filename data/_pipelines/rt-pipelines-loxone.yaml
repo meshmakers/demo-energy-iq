@@ -560,8 +560,8 @@ entities:
           #   3. After the loop ONE ApplyChanges@2 writes exactly one update per Control.
           # Groups address different Controls, so they may run in parallel (default parallelism).
           # Only EXISTING States items are updated, nothing is inserted (as with the former
-          # UpdateRecordArrayItem@2). The items are created by the Loxone discovery (pipeline
-          # 67f0b00ec4ff02221e0b6005, MapToRecordArray of the Loxone states map), and the
+          # UpdateRecordArrayItem@2). The items are created by "Loxone Sync Structure" (pipeline
+          # "Store Structure" 67f0b00ec4ff02221e0b6005, MapToRecordArray of the Loxone states map), and the
           # pollUuids come from LoxoneConfiguration.MappingTargets, which "Configure State Sync"
           # resolves from Control.States. ApplyChanges@2 logs warning 27 only when no item of a
           # Control matched; a partial miss is skipped silently.
