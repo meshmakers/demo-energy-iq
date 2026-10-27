@@ -11,9 +11,9 @@ entities:
     ckTypeId: System.Communication/Pool
     attributes:
       - id: System/Name
-        value: Loxone Edge
+        value: Firmianstraße Edge
       - id: System/Description
-        value: Edge pool hosting the on-premise Loxone adapter (Firmianstraße Miniserver).
+        value: Edge deployment site at Firmianstraße (device mm-octo-mesh-edge-0001); hosts the on-premise Loxone adapter (Miniserver).
       - id: System.Communication/Environment
         value: 0
   - rtId: 67f0a01ec4ff02221e0b5001
