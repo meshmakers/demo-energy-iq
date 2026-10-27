@@ -1,19 +1,20 @@
 $schema: https://schemas.meshmakers.cloud/runtime-model.schema.json
 dependencies:
-  - System.Communication-[3.6,)
+  - System.Communication-[4.0,5.0)
 entities:
   # The mesh adapter is auto-provisioned by the System.Communication blueprint
   # (rtId 670000000000000000000002); only the on-premise edge adapter is defined here.
-  # Edge pool for the on-premise Loxone adapter. Edge pools (Environment = 0) are NOT
+  # Edge deployment site for the on-premise Loxone adapter (called Pool before System.Communication
+  # 4.0.0; Manages was renamed Hosts). Edge sites (Environment = 0) are NOT
   # deployed by the central Communication Operator — the adapter process runs outside
   # the cluster (here: the local edge worker started via Start-Octo).
   - rtId: 67f0a01ec4ff02221e0b5000
-    ckTypeId: System.Communication/Pool
+    ckTypeId: System.Communication/DeploymentSite
     attributes:
       - id: System/Name
-        value: Loxone Edge
+        value: Firmianstraße Edge
       - id: System/Description
-        value: Edge pool hosting the on-premise Loxone adapter (Firmianstraße Miniserver).
+        value: Edge deployment site at Firmianstraße (device mm-octo-mesh-edge-0001); hosts the on-premise Loxone adapter (Miniserver).
       - id: System.Communication/Environment
         value: 0
   - rtId: 67f0a01ec4ff02221e0b5001
@@ -22,6 +23,6 @@ entities:
       - id: System/Name
         value: Loxone Edge Adapter
     associations:
-      - roleId: System.Communication/Manages
+      - roleId: System.Communication/Hosts
         targetRtId: 67f0a01ec4ff02221e0b5000
-        targetCkTypeId: System.Communication/Pool
+        targetCkTypeId: System.Communication/DeploymentSite
