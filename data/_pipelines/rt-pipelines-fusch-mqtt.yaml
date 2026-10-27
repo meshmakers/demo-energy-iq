@@ -1,0 +1,263 @@
+$schema: https://schemas.meshmakers.cloud/runtime-model.schema.json
+dependencies:
+  - System.Communication-[4.13,5.0)
+
+# DataFlow "Fusch smart meter" (AB#7575): the SHRDZM smart meter at the Fusch site writes ActivePower,
+# ImportedEnergy and ExportedEnergy onto its EnergyIQ/GridConnection (data/bim/rt-fusch.yaml) and ActivePower
+# into the existing GridConnectionArchive. Documentation: README.md, section "Fusch MQTT site".
+#
+#   Edge pipeline  (Fusch MQTT edge adapter, Uses MqttConfiguration FuschShrdzmBroker)
+#     MqttTrigger@1 -> MqttMessageTransform@1 -> ConvertDataType@1 (strings to Double, on the EDGE)
+#     -> BufferData@1 -> ToPipelineDataEvent@1
+#   Mesh pipeline  (mesh adapter 670000000000000000000002)
+#     FromPipelineDataEvent@1 -> GetRtEntitiesByWellKnownName@1 (meter id, no insert) -> unit mapping (Math@1)
+#     -> CreateUpdateInfo@1 -> BackfillFromRtEntity@1 + SaveStreamDataInArchive@1 -> FilterLatestUpdateInfo@1
+#     -> ApplyChanges@2
+#
+# Referenced, not defined here: adapter 6a10f05c0000000000000b02 and MqttConfiguration
+# 6a10f05c0000000000000b01 (other files of this site), mesh adapter 670000000000000000000002,
+# archive 6a0e000000000000000a0007 (rt-archives-energyiq.yaml).
+entities:
+  - rtId: 6a10f05c0000000000000c01
+    ckTypeId: System.Communication/DataFlow
+    attributes:
+      - id: System/Name
+        value: Fusch smart meter
+      - id: System/Description
+        value: SHRDZM smart meter (1KFM0200601435) at the Fusch site via MQTT to the EnergyIQ grid connection
+
+  # Pipeline 1: edge adapter, subscribes to the broker, converts, buffers, forwards to the mesh pipeline
+  - rtId: 6a10f05c0000000000000c02
+    ckTypeId: System.Communication/Pipeline
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a10f05c0000000000000c01
+        targetCkTypeId: System.Communication/DataFlow
+      - roleId: System.Communication/Executes
+        targetRtId: 6a10f05c0000000000000b02
+        targetCkTypeId: System.Communication/Adapter
+      - roleId: System.Communication/Uses
+        targetRtId: 6a10f05c0000000000000b01
+        targetCkTypeId: System.Communication/MqttConfiguration
+    attributes:
+      - id: System/Name
+        value: Fusch smart meter edge
+      - id: System/Description
+        value: Subscribes to SHRDZM/+/+/sensor, converts the OBIS string values to numbers and sends them buffered to the mesh pipeline
+      - id: System/Enabled
+        value: true
+      - id: System.Communication/PipelineDefinition
+        value: |-
+          triggers:
+            - type: MqttTrigger@1
+              configurationName: FuschShrdzmBroker
+              topicFilter: SHRDZM/+/+/sensor
+              qualityOfServiceLevel: 1
+              clientId: fusch-shrdzm-edge
+          transformations:
+            # 1. Topic parts -> $.message.topicParts.deviceId / .moduleId, payload -> $.message.value.
+            #    $.message.timestamp is the UTC time at which the edge received the message.
+            - type: MqttMessageTransform@1
+              path: $
+              targetPath: $.message
+              topicPattern: ^SHRDZM/(?<deviceId>[^/]+)/(?<moduleId>[^/]+)/sensor$
+              payloadPath: ''
+            # 2. The SHRDZM module sends every value as a STRING. Convert to Double (invariant culture).
+            #    A value that is not a number fails the execution (ValueNotConvertible, names the path).
+            #    A register that is absent from the payload becomes 0 and logs a warning that names the path
+            #    (the default of ConvertDataType@1). onMissing: Skip (AB#7540, PR 36 of octo-communication-sdk,
+            #    not released yet) would leave it unwritten instead: switch to it once it is released (README).
+            - type: ConvertDataType@1
+              description: OBIS 1.7.0 active power import [W]
+              path: $.message.value['1.7.0']
+              targetPath: $.reading.powerImportW
+              valueType: Double
+            - type: ConvertDataType@1
+              description: OBIS 2.7.0 active power export [W]
+              path: $.message.value['2.7.0']
+              targetPath: $.reading.powerExportW
+              valueType: Double
+            - type: ConvertDataType@1
+              description: OBIS 1.8.0 active energy import [Wh, see README]
+              path: $.message.value['1.8.0']
+              targetPath: $.reading.energyImportWh
+              valueType: Double
+            - type: ConvertDataType@1
+              description: OBIS 2.8.0 active energy export [Wh, see README]
+              path: $.message.value['2.8.0']
+              targetPath: $.reading.energyExportWh
+              valueType: Double
+            # 3. Identity and time. meterId (payload "id") is what the mesh pipeline resolves the
+            #    GridConnection by; if the live payload carries the meter id in the topic instead, change
+            #    the path of this node to $.message.topicParts.deviceId (README, "Meter id").
+            - type: ConvertDataType@1
+              description: Meter id from the payload
+              path: $.message.value.id
+              targetPath: $.reading.meterId
+              valueType: String
+            - type: ConvertDataType@1
+              path: $.message.topicParts.deviceId
+              targetPath: $.reading.deviceId
+              valueType: String
+            - type: ConvertDataType@1
+              path: $.message.topicParts.moduleId
+              targetPath: $.reading.moduleId
+              valueType: String
+            # The UTC receive time stamps the reading (and the archive row). It is taken BEFORE the buffer,
+            # so readings that are sent late after a mesh outage keep their own time.
+            - type: ConvertDataType@1
+              description: UTC time of reception on the edge
+              path: $.message.timestamp
+              targetPath: $.reading.timestamp
+              valueType: String
+            # The device's own timestamp has no time zone designator; kept for reference only.
+            - type: ConvertDataType@1
+              path: $.message.value.timestamp
+              targetPath: $.reading.deviceTimestamp
+              valueType: String
+            # 4. Buffer (LiteDB in the adapter's application-data folder) and send every 30 s, in order, as ONE
+            #    array to the mesh pipeline. When the mesh is unreachable the readings stay buffered
+            #    (at-least-once; a retry can resend readings of a partly delivered batch).
+            - type: BufferData@1
+              path: $.reading
+              bufferTime: 00:00:30
+              transformations:
+                - type: ToPipelineDataEvent@1
+                  path: $
+                  targetPath: $.readings
+                  targetPipelineRtId: 6a10f05c0000000000000c03
+
+  # Pipeline 2: mesh adapter, maps the readings to the grid connection and the archive
+  - rtId: 6a10f05c0000000000000c03
+    ckTypeId: System.Communication/Pipeline
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a10f05c0000000000000c01
+        targetCkTypeId: System.Communication/DataFlow
+      - roleId: System.Communication/Executes
+        targetRtId: '670000000000000000000002'
+        targetCkTypeId: System.Communication/Adapter
+    attributes:
+      - id: System/Name
+        value: Fusch smart meter mesh
+      - id: System/Description
+        value: Writes ActivePower, ImportedEnergy and ExportedEnergy onto the grid connection found by meter id and ActivePower into GridConnectionArchive
+      - id: System/Enabled
+        value: true
+      - id: System.Communication/PipelineDefinition
+        value: |-
+          triggers:
+            - type: FromPipelineDataEvent@1
+          transformations:
+            # Find the GridConnection of every reading by its well-known name (= meter id). No insert is
+            # generated: a reading of an unknown meter id gets no modOperation and is dropped below.
+            - type: GetRtEntitiesByWellKnownName@1
+              ckTypeId: EnergyIQ/GridConnection
+              path: $.readings[*]
+              wellKnownNamePath: $.meterId
+              rtIdTargetPath: $.rtId
+              ckTypeIdTargetPath: $.ckTypeId
+              modOperationPath: $.modOperation
+            - type: ForEach@1
+              iterationPath: $.readings
+              targetPath: $.readings
+              fullDocumentPath: $.full
+              keyPath: $.key
+              mergePath: $.key
+              transformations:
+                # modOperation 1 = the entity exists (Update)
+                - type: If@1
+                  path: $.key.modOperation
+                  operator: Equal
+                  value: 1
+                  valueType: Int
+                  transformations:
+                    # ActivePower [kW] = (1.7.0 - 2.7.0) / 1000, signed (+ import / - export)
+                    - type: Math@1
+                      path: $.key
+                      itemPath: $.powerImportW
+                      operation: Subtract
+                      valuePath: $.key.powerExportW
+                      itemTargetPath: $.activePowerW
+                    - type: Math@1
+                      path: $.key
+                      itemPath: $.activePowerW
+                      operation: Divide
+                      value: 1000
+                      itemTargetPath: $.activePowerKw
+                    # Energy [kWh] = register [Wh] / 1000. Remove these two nodes and point the attribute
+                    # updates below at energyImportWh / energyExportWh if the live meter delivers kWh (README).
+                    - type: Math@1
+                      path: $.key
+                      itemPath: $.energyImportWh
+                      operation: Divide
+                      value: 1000
+                      itemTargetPath: $.importedEnergyKwh
+                    - type: Math@1
+                      path: $.key
+                      itemPath: $.energyExportWh
+                      operation: Divide
+                      value: 1000
+                      itemTargetPath: $.exportedEnergyKwh
+                    # Round away floating point noise (98.76589999999999 -> 98.7659)
+                    - type: Math@1
+                      path: $.key
+                      itemPath: $.activePowerKw
+                      operation: Round
+                      decimalPlaces: 6
+                      itemTargetPath: $.activePowerKw
+                    - type: Math@1
+                      path: $.key
+                      itemPath: $.importedEnergyKwh
+                      operation: Round
+                      decimalPlaces: 6
+                      itemTargetPath: $.importedEnergyKwh
+                    - type: Math@1
+                      path: $.key
+                      itemPath: $.exportedEnergyKwh
+                      operation: Round
+                      decimalPlaces: 6
+                      itemTargetPath: $.exportedEnergyKwh
+                    # One update per reading; the reading's own timestamp stamps the archive row.
+                    - type: CreateUpdateInfo@1
+                      updateKindPath: $.key.modOperation
+                      rtIdPath: $.key.rtId
+                      ckTypeIdPath: $.key.ckTypeId
+                      timestampPath: $.key.timestamp
+                      attributeUpdates:
+                        - attributeName: activePower
+                          attributeValueType: Double
+                          valuePath: $.key.activePowerKw
+                        - attributeName: importedEnergy
+                          attributeValueType: Double
+                          valuePath: $.key.importedEnergyKwh
+                        - attributeName: exportedEnergy
+                          attributeValueType: Double
+                          valuePath: $.key.exportedEnergyKwh
+                      targetPath: $.key._entityUpdates
+                      targetValueWriteMode: Append
+                      targetValueKind: Array
+                - type: If@1
+                  path: $.key.modOperation
+                  operator: NotEqual
+                  value: 1
+                  valueType: Int
+                  transformations:
+                    - type: Logger@1
+                      message: Reading dropped - no GridConnection with the meter id of the reading (a reading never creates an entity)
+            - type: Flatten@1
+              path: $.readings[*]._entityUpdates[*]
+              targetPath: $._entityUpdates
+            # Stream data: every reading is a row of the archive (existing column ActivePower only).
+            - type: BackfillFromRtEntity@1
+              path: $._entityUpdates
+              archiveRtId: 6a0e000000000000000a0007
+            - type: SaveStreamDataInArchive@1
+              path: $._entityUpdates
+              archiveRtId: 6a0e000000000000000a0007
+            # CK attributes: only the newest reading per meter is written onto the entity.
+            - type: FilterLatestUpdateInfo@1
+              path: $._entityUpdates
+              targetPath: $._entityUpdates
+            - type: ApplyChanges@2
+              entityUpdatesPath: $._entityUpdates

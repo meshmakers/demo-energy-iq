@@ -1,0 +1,32 @@
+$schema: https://schemas.meshmakers.cloud/runtime-model.schema.json
+dependencies:
+  - System.Communication-[4.13,5.0)
+
+# MQTT broker connection of the Fusch site (AB#7575). The pipeline refers to it by name
+# (configurationName: FuschShrdzmBroker) and attaches it with a Uses association.
+#
+# ALL VALUES BELOW ARE PLACEHOLDERS. The real broker host, port and user name live in Vault
+# (secret/meshmakers/edge/sites/fusch/mqtt) and are never part of this repository.
+#
+# The password is intentionally NOT part of this file: System.Communication/MqttConfiguration.Password is
+# a Secret attribute, which is never seeded (a seeded placeholder would also make the trigger try to log in
+# with it). Set it after the import with the Secret-aware update (Refinery Studio form or MCP set_entity_secrets).
+#
+# Import this file ONCE and WITHOUT -r (insert only): a second run then fails ("already exists") instead of
+# writing. Verified on test-2 (Ariadne, AB#7575): ImportRt -r is an upsert that keeps runtime-state, tenant-owned
+# and Secret attributes of the live entity (host and user name survived a re-import with placeholders, the password
+# stayed set), so a re-import would not wipe real values; the insert-only import is the cautious rule on top of
+# that. The pipelines and the site model are in other files and can be imported again with -r at any time.
+entities:
+  - rtId: 6a10f05c0000000000000b01
+    ckTypeId: System.Communication/MqttConfiguration
+    rtWellKnownName: FuschShrdzmBroker
+    attributes:
+      - id: System.Communication/Host
+        value: "<broker host here>"
+      - id: System.Communication/Port
+        value: 8883
+      - id: System.Communication/Username
+        value: "<broker user here>"
+      - id: System.Communication/IsSslEnabled
+        value: true

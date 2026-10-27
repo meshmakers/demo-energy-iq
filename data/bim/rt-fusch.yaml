@@ -1,0 +1,64 @@
+$schema: https://schemas.meshmakers.cloud/runtime-model.schema.json
+dependencies:
+  - EnergyIQ-[2.13,3.0)
+
+# Site Fusch: the smart meter (SHRDZM module) at the Fusch site, modelled like the Firmianstrasse
+# grid connection (AB#7575, Feature AB#7574). No CK change: EnergyIQ 2.13.0 as is.
+#
+#   Site "Fusch"
+#   '- ExternalSpace "Netzanschluss Fusch"      (System/ParentChild -> Site)
+#      '- GridConnection "Hauptzaehler Fusch"    (EnergyIQ/SpaceElements -> ExternalSpace)
+#
+# A Meter has no association to a Site, so the grid connection is anchored through an ExternalSpace
+# (the same pattern as the outdoor wallbox of Firmianstrasse).
+# The readings arrive through the Fusch MQTT DataFlow (rt-pipelines-fusch-mqtt.yaml); the mesh pipeline
+# finds the GridConnection by its rtWellKnownName = meter id.
+entities:
+  - rtId: 6a10f05c0000000000000a01
+    ckTypeId: EnergyIQ/Site
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: site-fusch
+      - id: System/Name
+        value: Fusch
+      - id: System/Description
+        value: Standort Fusch mit Smart Meter (SHRDZM-Modul, MQTT)
+
+  - rtId: 6a10f05c0000000000000a02
+    ckTypeId: EnergyIQ/ExternalSpace
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: ext-fusch-netzanschluss
+      - id: System/Name
+        value: Netzanschluss Fusch
+      - id: System/Description
+        value: Netzanschlusspunkt am Standort Fusch, Anker des Hauptzaehlers
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a10f05c0000000000000a01
+        targetCkTypeId: EnergyIQ/Site
+
+  # Main meter, bidirectional. rtWellKnownName is the meter id of the SHRDZM payload: the mesh pipeline
+  # resolves the entity by it, and a reading of an unknown meter id never creates an entity.
+  - rtId: 6a10f05c0000000000000a03
+    ckTypeId: EnergyIQ/GridConnection
+    rtWellKnownName: 1KFM0200601435
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: grid-fusch
+      - id: System/Name
+        value: Hauptzähler Fusch
+      - id: System/Description
+        value: Hauptzählpunkt Fusch, bidirektional (Bezug + Einspeisung), Werte über MQTT (SHRDZM)
+      - id: EnergyIQ/MeterIdentifier
+        value: 1KFM0200601435
+      - id: EnergyIQ/MeterCarrierTypeValue
+        value: 0  # Electricity
+      - id: EnergyIQ/GridConnectionDirectionValue
+        value: 2  # Bidirectional
+      - id: EnergyIQ/IsMainConnection
+        value: true
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6a10f05c0000000000000a02
+        targetCkTypeId: EnergyIQ/ExternalSpace

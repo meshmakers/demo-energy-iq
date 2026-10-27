@@ -1,0 +1,29 @@
+{
+  "_note": "CONSTRUCTED sample in the SHRDZM payload format (all values are strings), NOT a recording of the live Fusch broker: the real broker credentials are only in Vault and were not used. Only the meter readings used by the Fusch pipelines are included. Replace with a recorded message in AB#7511 and re-check the unit table in README.md.",
+  "messages": [
+    {
+      "description": "Import: 512 W drawn from the grid -> ActivePower 0.512 kW",
+      "topic": "SHRDZM/1KFM0200601435/1KFM0200601435/sensor",
+      "payload": {
+        "timestamp": "2026-10-27T07:15:00",
+        "id": "1KFM0200601435",
+        "1.7.0": "512",
+        "2.7.0": "0",
+        "1.8.0": "1234567.8",
+        "2.8.0": "98765.4"
+      }
+    },
+    {
+      "description": "Export: 1830 W fed into the grid -> ActivePower -1.83 kW",
+      "topic": "SHRDZM/1KFM0200601435/1KFM0200601435/sensor",
+      "payload": {
+        "timestamp": "2026-10-27T07:15:30",
+        "id": "1KFM0200601435",
+        "1.7.0": "0",
+        "2.7.0": "1830",
+        "1.8.0": "1234567.8",
+        "2.8.0": "98765.9"
+      }
+    }
+  ]
+}

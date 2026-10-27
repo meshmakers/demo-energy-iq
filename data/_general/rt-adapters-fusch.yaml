@@ -1,0 +1,51 @@
+$schema: https://schemas.meshmakers.cloud/runtime-model.schema.json
+dependencies:
+  - System.Communication-[4.13,5.0)
+
+# Edge deployment site and MQTT edge adapter of the Fusch site (AB#7575).
+#
+# The mesh adapter (rtId 670000000000000000000002) and the public Helm repository
+# (rtId 670000000000000000000004, "meshmakers-public") are provisioned by the System.Communication
+# blueprint and are only referenced here.
+#
+# Deployment site rtId: the deployment site "Fusch Edge" ALREADY EXISTS on prod-1/energyiq (AB#7470)
+# with rtId 6addb8ec0c28d87762b0ad5e; the Communication Operator of edge device mm-octo-mesh-edge-0003
+# registers against exactly that rtId. This file therefore uses the same rtId (ImportRt upserts by rtId,
+# so it does not create a second "Fusch Edge"), the live name and the live description. Do not change the
+# rtId, name or description here without changing the live entity.
+# Runtime state (DeploymentState, CommunicationState, ConfigurationState) is deliberately not set: it is
+# owned by the controller and operator and has CK defaults.
+#
+# Not part of this file: the broker connection (rt-mqtt-configuration-fusch.yaml).
+entities:
+  - rtId: 6addb8ec0c28d87762b0ad5e
+    ckTypeId: System.Communication/DeploymentSite
+    attributes:
+      - id: System/Name
+        value: Fusch Edge
+      - id: System/Description
+        value: Edge deployment site in Fusch (device mm-octo-mesh-edge-0003).
+      - id: System.Communication/Environment
+        value: 0  # Edge: not deployed by the central operator
+
+  # MQTT edge adapter, rolled out by the edge operator with the Helm chart octo-mqtt-adapter.
+  # ChartVersion is not set: newest published chart; pin it with UpdateWorkloadChartVersion when needed.
+  - rtId: 6a10f05c0000000000000b02
+    ckTypeId: System.Communication/Adapter
+    rtWellKnownName: FuschMqttAdapter
+    associations:
+      - roleId: System.Communication/Hosts
+        targetRtId: 6addb8ec0c28d87762b0ad5e
+        targetCkTypeId: System.Communication/DeploymentSite
+      - roleId: System.Communication/HelmRepository
+        targetRtId: '670000000000000000000004'
+        targetCkTypeId: System.Communication/HelmRepositoryConfiguration
+    attributes:
+      - id: System/Name
+        value: Fusch MQTT Edge Adapter
+      - id: System/Description
+        value: MQTT edge adapter at the Fusch site; subscribes to the SHRDZM smart meter topic and forwards the readings to the mesh adapter.
+      - id: System.Communication/ChartName
+        value: octo-mqtt-adapter
+      - id: System.Communication/ReceivesClusterSecrets
+        value: false
