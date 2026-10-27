@@ -203,6 +203,12 @@ demo-energy-iq/
 - [ ] **Energy Aggregation** - Consumption calculation per room/building
 - [ ] **AI Optimization** - AI-powered optimization
 
+## Fusch MQTT site
+
+The smart meter at the Fusch site (SHRDZM module, MQTT) is modelled as a `GridConnection` with its own edge and mesh
+pipelines, see [docs/fusch-mqtt-site.md](docs/fusch-mqtt-site.md) (files, OBIS to attribute to unit table, activation
+steps). The Fusch files are not part of the local demo import scripts.
+
 ## CI/CD (Azure DevOps)
 
 `devops-build/azure-pipelines.yml` runs on the self-hosted `meshmakers-ci-agents`:
