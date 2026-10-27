@@ -12,9 +12,11 @@ dependencies:
 # a Secret attribute, which is never seeded (a seeded placeholder would also make the trigger try to log in
 # with it). Set it after the import with the Secret-aware update (Refinery Studio form or MCP set_entity_secrets).
 #
-# Import this file ONCE and then set host, port, user name and the secret; a second import would write the
-# placeholders over the real values again. The pipelines and the site model are in other files and can be
-# imported again at any time.
+# Import this file ONCE and WITHOUT -r (insert only): a second run then fails ("already exists") instead of
+# writing. Verified on test-2 (Ariadne, AB#7575): ImportRt -r is an upsert that keeps runtime-state, tenant-owned
+# and Secret attributes of the live entity (host and user name survived a re-import with placeholders, the password
+# stayed set), so a re-import would not wipe real values; the insert-only import is the cautious rule on top of
+# that. The pipelines and the site model are in other files and can be imported again with -r at any time.
 entities:
   - rtId: 6a10f05c0000000000000b01
     ckTypeId: System.Communication/MqttConfiguration

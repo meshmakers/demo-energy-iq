@@ -83,24 +83,48 @@ is the one in `rt-adapters-loxone.yaml`. `rt-adapters-fusch.yaml` therefore defi
 description; ImportRt upserts by rtId, so a re-import neither creates a second "Fusch Edge" nor renames it. The runtime
 state of the site and the adapter (`DeploymentState`, `CommunicationState`, `ConfigurationState`) is not set in the files.
 
+## ImportRt semantics (verified by Ariadne, AB#7575)
+
+`ImportRt -r` is an **upsert**: the document is replaced by rtId, but a preserve pass keeps the runtime-state,
+tenant-owned and Secret attributes of the live entity (also when the file omits them) and never empties a non-empty live
+value with an empty seed value. Associations that are not in the file are never deleted. Without `-r` the import is
+insert-only and fails on an existing rtId. Consequences for these files (evidence: [Ariadne] comment on AB#7575, test-2
+throw-away tenant, nothing on prod-1):
+
+* Kept on re-import: `communicationState`, `deploymentState`, `statusMessage`, the adapter `chartVersion`, the
+  MqttConfiguration password (still set) and, in the test, host and user name.
+* Written from the file: name, description and the other seed values (identical to live for "Fusch Edge" by design).
+* **Lost**: the entity-level `rtWellKnownName` (taken from the file) and the creation date. The live "Fusch Edge" and
+  "Firmianstraße Edge" sites have `rtWellKnownName` null (read-only GraphQL on prod-1, 2026-10-27), so nothing is lost;
+  step 1 below checks it again.
+* An entity must not change its CK type under the same rtId: the old state would be gone. Both live sites are
+  `DeploymentSite` already.
+
 ## Import and activation (AB#7511)
 
-Prerequisites: release 3.5.46 on prod-1, Gerald's go for prod-1. Context `prod-1_energyiq`, from
-`data/` of this repository. All imports use `-r` (upsert) so that they can be repeated.
+Prerequisites: release 3.5.46 on prod-1, Gerald's go for prod-1. Context `prod-1_energyiq`, from `data/` of this
+repository.
 
-1. `LibraryStatus`: System.Communication >= 4.13.0, EnergyIQ 2.13.0. Check that the archive `6a0e000000000000000a0007`
-   exists and is Activated; `GetDeploymentSites`: note name, description and states of "Fusch Edge".
-2. `octo-cli -c ImportRt -f _general/rt-adapters-fusch.yaml -w -r` (site + adapter). `GetDeploymentSites` again: still one
-   "Fusch Edge", same rtId, name, description.
-3. `octo-cli -c ImportRt -f _general/rt-mqtt-configuration-fusch.yaml -w -r` **once**.
-4. Set host, port, user name and `IsSslEnabled` of `FuschShrdzmBroker` and its password from Vault
+1. **Read-only check** on prod-1/energyiq: `GetDeploymentSites` (or GraphQL `systemCommunicationDeploymentSite`): "Fusch
+   Edge" (`6addb8ec0c28d87762b0ad5e`) and "Firmianstraße Edge" are both `DeploymentSite`, the `Hosts` edge of the Loxone
+   adapter exists, and any live `rtWellKnownName` is noted and carried into the YAML before the import. Also
+   `LibraryStatus` (System.Communication >= 4.13.0, EnergyIQ 2.13.0) and the archive `6a0e000000000000000a0007`
+   exists and is Activated. Write down `communicationState`, `deploymentState` and `chartVersion` of the sites and
+   adapters (snapshot).
+2. **Rollback copy**: dump the tenant (`Dump`), or export the two sites and the Loxone adapter (`ExportRtByQuery` /
+   `ExportRtByDeepGraph`).
+3. `octo-cli -c ImportRt -f _general/rt-adapters-fusch.yaml -w -r` (site + adapter).
+4. `octo-cli -c ImportRt -f _general/rt-mqtt-configuration-fusch.yaml -w` **once and without `-r`** (placeholders).
+5. Set host, port, user name and `IsSslEnabled` of `FuschShrdzmBroker` and its password from Vault
    (`secret/meshmakers/edge/sites/fusch/mqtt`) through the Secret-aware update (Refinery Studio form, or MCP
-   `set_entity_secrets`; never through a file, a command line or a comment). Do not import step 3 again afterwards.
-5. `octo-cli -c ImportRt -f bim/rt-fusch.yaml -w -r` (Site, ExternalSpace, GridConnection).
-6. `octo-cli -c ImportRt -f _pipelines/rt-pipelines-fusch-mqtt.yaml -w -r` (DataFlow and both pipelines).
-7. `octo-cli -c DeployWorkload -id 6a10f05c0000000000000b02` (adapter `FuschMqttAdapter`); wait for Online/Healthy, the pod
+   `set_entity_secrets`; never through a file, a command line or a comment).
+6. `octo-cli -c ImportRt -f bim/rt-fusch.yaml -w -r` (Site, ExternalSpace, GridConnection), then
+   `octo-cli -c ImportRt -f _pipelines/rt-pipelines-fusch-mqtt.yaml -w -r` (DataFlow and both pipelines).
+7. **Compare with the snapshot** of step 1: still exactly one "Fusch Edge", same rtId, name and description;
+   `communicationState`, `deploymentState`, `chartVersion` unchanged; the MqttConfiguration password `isSet`.
+8. `octo-cli -c DeployWorkload -id 6a10f05c0000000000000b02` (adapter `FuschMqttAdapter`); wait for Online/Healthy, the pod
    runs on mm-octo-mesh-edge-0003.
-8. `octo-cli -c DeployDataFlow --identifier 6a10f05c0000000000000c01`.
-9. Check: `GetLatestPipelineExecution --identifier 6a10f05c0000000000000c02` (edge) and `...c03` (mesh) show executions;
-   the GridConnection with `rtWellKnownName 1KFM0200601435` carries `activePower`, `importedEnergy`, `exportedEnergy`
-   (GraphQL `energyIQGridConnection`), and `GridConnectionArchive` gets rows; then confirm the three assumptions above.
+9. `octo-cli -c DeployDataFlow --identifier 6a10f05c0000000000000c01`.
+10. Check: `GetLatestPipelineExecution --identifier 6a10f05c0000000000000c02` (edge) and `...c03` (mesh) show executions;
+    the GridConnection with `rtWellKnownName 1KFM0200601435` carries `activePower`, `importedEnergy`, `exportedEnergy`
+    (GraphQL `energyIQGridConnection`), and `GridConnectionArchive` gets rows; then confirm the three assumptions above.
