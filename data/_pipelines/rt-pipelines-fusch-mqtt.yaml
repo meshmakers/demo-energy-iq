@@ -151,9 +151,11 @@ entities:
           transformations:
             # Find the GridConnection of every reading by its well-known name (= meter id). No insert is
             # generated: a reading of an unknown meter id gets no modOperation and is dropped below.
+            # path is the ARRAY ($.readings), not its items: with $.readings[*] the node sees no array and
+            # resolves nothing (found live on prod-1, AB#7511).
             - type: GetRtEntitiesByWellKnownName@1
               ckTypeId: EnergyIQ/GridConnection
-              path: $.readings[*]
+              path: $.readings
               wellKnownNamePath: $.meterId
               rtIdTargetPath: $.rtId
               ckTypeIdTargetPath: $.ckTypeId
