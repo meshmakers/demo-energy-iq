@@ -209,6 +209,17 @@ The smart meter at the Fusch site (SHRDZM module, MQTT) is modelled as a `GridCo
 pipelines, see [docs/fusch-mqtt-site.md](docs/fusch-mqtt-site.md) (files, OBIS to attribute to unit table, activation
 steps). The Fusch files are not part of the local demo import scripts.
 
+## Fusch Loxone site (AB#7695)
+
+The Loxone Miniserver Gen 2 at the Fusch site (`192.168.20.10`, Fusch LAN) is reached **only** through the Fusch Loxone
+edge adapter on edge device `mm-octo-mesh-edge-0003` (`data/_general/rt-adapters-fusch.yaml`). The connection is the
+LoxoneConfiguration `FuschLoxoneMiniserverConfig` (`data/_general/rt-loxone-configuration-fusch.yaml`): host and port
+only; the user and the password (a Secret attribute) are set after the import and come from the site operator and
+Vault, never from this repository. The read-only discovery pipeline (`data/_pipelines/rt-pipelines-loxone-fusch.yaml`)
+returns rooms, categories and controls of the Miniserver. Exact prod-1 steps, checks and rollback:
+[docs/fusch-loxone-runbook.md](docs/fusch-loxone-runbook.md). The Fusch Loxone files are not part of the local demo
+import scripts.
+
 ## CI/CD (Azure DevOps)
 
 `devops-build/azure-pipelines.yml` runs on the self-hosted `meshmakers-ci-agents`:

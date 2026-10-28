@@ -1,0 +1,33 @@
+$schema: https://schemas.meshmakers.cloud/runtime-model.schema.json
+dependencies:
+  - System.Communication-[4.13,5.0)
+
+# Connection to the Loxone Miniserver Gen 2 of the Fusch site (AB#7695). The pipelines refer to it by name
+# (GetPipelineConfigByWellKnownName FuschLoxoneMiniserverConfig) and attach it with a Uses association.
+#
+# ALL VALUES BELOW ARE PLACEHOLDERS. The Miniserver LAN address is the only real value (a private address,
+# reachable only from the Fusch LAN behind edge device mm-octo-mesh-edge-0003). The user name is a
+# placeholder (a plain String attribute, runtime state: a re-import keeps the live value); the real user and
+# the password are NOT stored in this repository (it is public) and are not in Vault yet: they are entered at
+# rollout (docs/fusch-loxone-runbook.md).
+#
+# The password is intentionally NOT part of this file: System.Communication/LoxoneConfiguration.Password is a
+# Secret attribute (optional in the CK), which is never seeded. Set it after the import with the Secret-aware
+# update (Refinery Studio form or MCP set_entity_secrets); it is revealed to the adapter at deploy time.
+#
+# Import this file ONCE and WITHOUT -r (insert only), like rt-mqtt-configuration-fusch.yaml: a second run then
+# fails ("already exists") instead of writing. A re-import with -r keeps runtime-state and Secret attributes
+# of the live entity, but the insert-only import is the cautious rule on top of that.
+entities:
+  - rtId: 6a10f05c0000000000000b03
+    ckTypeId: System.Communication/LoxoneConfiguration
+    rtWellKnownName: FuschLoxoneMiniserverConfig
+    attributes:
+      - id: System.Communication/Host
+        value: "192.168.20.10"
+      - id: System.Communication/Port
+        value: 80
+      - id: System.Communication/Username
+        value: "<miniserver user here>"
+      - id: System.Communication/IsSslEnabled
+        value: false
