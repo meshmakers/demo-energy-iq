@@ -49,3 +49,28 @@ entities:
         value: octo-mqtt-adapter
       - id: System.Communication/ReceivesClusterSecrets
         value: false
+
+  # Loxone edge adapter (AB#7695), rolled out by the edge operator with the Helm chart octo-loxone-adapter
+  # (octo-adapter-loxone/src/charts). It is the ONLY path to the Fusch Miniserver Gen 2 (192.168.20.10):
+  # the Miniserver is never reached from outside the Fusch LAN. The connection (host, user, password) is the
+  # LoxoneConfiguration FuschLoxoneMiniserverConfig (rt-loxone-configuration-fusch.yaml).
+  # ChartVersion is not set: newest published chart; pin it with UpdateWorkloadChartVersion when needed.
+  - rtId: 6a10f05c0000000000000b04
+    ckTypeId: System.Communication/Adapter
+    rtWellKnownName: FuschLoxoneAdapter
+    associations:
+      - roleId: System.Communication/Hosts
+        targetRtId: 6addb8ec0c28d87762b0ad5e
+        targetCkTypeId: System.Communication/DeploymentSite
+      - roleId: System.Communication/HelmRepository
+        targetRtId: '670000000000000000000004'
+        targetCkTypeId: System.Communication/HelmRepositoryConfiguration
+    attributes:
+      - id: System/Name
+        value: Fusch Loxone Edge Adapter
+      - id: System/Description
+        value: Loxone edge adapter at the Fusch site; the only path to the Loxone Miniserver Gen 2 (read-only discovery and, later, live states).
+      - id: System.Communication/ChartName
+        value: octo-loxone-adapter
+      - id: System.Communication/ReceivesClusterSecrets
+        value: false

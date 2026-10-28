@@ -1,0 +1,92 @@
+$schema: https://schemas.meshmakers.cloud/runtime-model.schema.json
+dependencies:
+  - System.Communication-[4.13,5.0)
+
+# DataFlow "Fusch Loxone discovery" (AB#7695): READ-ONLY discovery of the Fusch Loxone Miniserver Gen 2.
+# The Fusch Loxone edge adapter (6a10f05c0000000000000b04, on edge device mm-octo-mesh-edge-0003) fetches the
+# structure file LoxAPP3.json (one HTTP GET, via the LoxoneBrowse@1 node) and returns rooms, categories and
+# controls (uuid, name, type, room, category, state names with their state UUIDs, sub-controls) as the
+# execution result. The inventory of AB#7695 (docs/fusch-loxone-inventory.md) is produced from that result.
+#
+#   Edge pipeline (Fusch Loxone edge adapter, Uses LoxoneConfiguration FuschLoxoneMiniserverConfig)
+#     FromExecutePipelineCommand@1 -> GetPipelineConfigByWellKnownName@1 -> LoxoneBrowse@1
+#     -> Project@1 (rooms without the nested copy of the controls) -> Project@1 (drops the "miniserver" block)
+#     -> SetPipelineExecutionResult@1
+#
+# Privacy (the repository is public, the execution result is stored in the tenant): the "miniserver" block of
+# LoxoneBrowse (serial number, MAC address, firmware, project name) is removed BEFORE the result is stored.
+#
+# Read-only: the only Loxone node is LoxoneBrowse@1 (GET /data/LoxAPP3.json). No LoxoneStateTransform, no
+# command, no write to the Miniserver, the wall connector or evcc; nothing is written to the tenant model.
+#
+# Referenced, not defined here: adapter 6a10f05c0000000000000b04 (rt-adapters-fusch.yaml) and
+# LoxoneConfiguration 6a10f05c0000000000000b03 (rt-loxone-configuration-fusch.yaml).
+entities:
+  - rtId: 6a10f05c0000000000000d01
+    ckTypeId: System.Communication/DataFlow
+    attributes:
+      - id: System/Name
+        value: Fusch Loxone discovery
+      - id: System/Description
+        value: Read-only discovery of the Fusch Loxone Miniserver structure (rooms, categories, controls) through the Fusch Loxone edge adapter
+
+  - rtId: 6a10f05c0000000000000d02
+    ckTypeId: System.Communication/Pipeline
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a10f05c0000000000000d01
+        targetCkTypeId: System.Communication/DataFlow
+      - roleId: System.Communication/Executes
+        targetRtId: 6a10f05c0000000000000b04
+        targetCkTypeId: System.Communication/Adapter
+      - roleId: System.Communication/Uses
+        targetRtId: 6a10f05c0000000000000b03
+        targetCkTypeId: System.Communication/LoxoneConfiguration
+    attributes:
+      - id: System/Name
+        value: Browse Fusch Miniserver
+      - id: System/Description
+        value: Fetches the Fusch Miniserver structure (read only) and returns rooms, categories and controls as execution result, without the Miniserver identity block
+      - id: System/Enabled
+        value: true
+      - id: System.Communication/PipelineDefinition
+        value: |-
+          triggers:
+            - type: FromExecutePipelineCommand@1
+          transformations:
+            - type: GetPipelineConfigByWellKnownName@1
+              description: Load the Fusch Loxone connection configuration
+              wellKnownName: FuschLoxoneMiniserverConfig
+              targetPath: $.config
+            # One HTTP GET of /data/LoxAPP3.json. Output: miniserver, rooms (with nested categories and controls),
+            # categories (flat), controls (flat, including controls without a room).
+            - type: LoxoneBrowse@1
+              description: Fetch the Miniserver structure (read only)
+              hostPath: $.config.host
+              portPath: $.config.port
+              usernamePath: $.config.username
+              passwordPath: $.config.password
+              useSslPath: $.config.isSslEnabled
+              targetPath: $.structure
+            # The flat controls list is complete; drop the nested copy from every room.
+            - type: Project@1
+              description: Rooms without the nested categories and controls
+              path: $.structure.rooms[*]
+              fields:
+                - path: $.categories
+                  inclusion: false
+            # Keep only rooms, categories and controls: removes the Miniserver identity (serial number, MAC).
+            - type: Project@1
+              description: Drop the Miniserver identity block
+              path: $.structure
+              clear: true
+              fields:
+                - path: $.rooms
+                  inclusion: true
+                - path: $.categories
+                  inclusion: true
+                - path: $.controls
+                  inclusion: true
+            - type: SetPipelineExecutionResult@1
+              description: Store the structure as execution output (read with GetLatestPipelineExecution)
+              path: $.structure
