@@ -3,16 +3,31 @@ dependencies:
   - EnergyIQ-[2.13,3.0)
 
 # Site Fusch: the smart meter (SHRDZM module) at the Fusch site, modelled like the Firmianstrasse
-# grid connection (AB#7575, Feature AB#7574). No CK change: EnergyIQ 2.13.0 as is.
+# grid connection (AB#7575, Feature AB#7574), plus the electrical model of the site (AB#7694, Feature
+# AB#7690): distribution system, PV system with two strings and the Tesla wall connector.
+# No CK change: EnergyIQ 2.13.0 as is.
 #
-#   Site "Fusch"
-#   '- ExternalSpace "Netzanschluss Fusch"      (System/ParentChild -> Site)
-#      '- GridConnection "Hauptzaehler Fusch"    (EnergyIQ/SpaceElements -> ExternalSpace)
+#   Site "Fusch" (a01)
+#   |- Building "Gebaeude Fusch" (a10)                   (System/ParentChild -> Site)
+#   |  '- PVString "PV Dach String Sued" (a13)           (System/ParentChild -> Building)
+#   |  '- PVString "PV Dach String Nord" (a14)           (System/ParentChild -> Building)
+#   |- ExternalSpace "Netzanschluss Fusch" (a02)         (System/ParentChild -> Site)
+#   |  '- GridConnection "Hauptzaehler Fusch" (a03)      (EnergyIQ/SpaceElements -> ExternalSpace)
+#   '- ExternalSpace "Stellplatz Fusch" (a15)            (System/ParentChild -> Site)
+#      '- ChargingStation "Tesla Wall Connector Fusch" (a16)  (EnergyIQ/SpaceElements -> ExternalSpace)
+#
+# Logical grouping (IfcSystem, same pattern as Firmianstrasse), EnergyIQ/SystemMembers:
+#   DistributionSystem "Elektrisch Fusch" (a11) -> PV system (a12), GridConnection (a03), ChargingStation (a16)
+#   PhotovoltaicSystem "PV-Anlage Fusch" (a12)  -> PVString Sued (a13), PVString Nord (a14)
 #
 # A Meter has no association to a Site, so the grid connection is anchored through an ExternalSpace
 # (the same pattern as the outdoor wallbox of Firmianstrasse).
 # The readings arrive through the Fusch MQTT DataFlow (rt-pipelines-fusch-mqtt.yaml); the mesh pipeline
 # finds the GridConnection by its rtWellKnownName = meter id.
+# rtIds a10-a16 are reserved by AB#7694 and used by the Loxone pipelines (AB#7696) and the boards (AB#7692);
+# entity names carry the site ("... Fusch") because pipelines resolve targets by name.
+# No invented numbers: ratings, orientation, tilt, module count, connector type and maximum charging power are
+# left empty until a named source (inventory, data sheet, Gerald) exists.
 entities:
   - rtId: 6a10f05c0000000000000a01
     ckTypeId: EnergyIQ/Site
@@ -61,4 +76,118 @@ entities:
     associations:
       - roleId: EnergyIQ/SpaceElements
         targetRtId: 6a10f05c0000000000000a02
+        targetCkTypeId: EnergyIQ/ExternalSpace
+
+  # ============================================================
+  # Electrical model (AB#7694)
+  # ============================================================
+
+  # Spatial parent of the PV strings (roof of the Fusch building).
+  - rtId: 6a10f05c0000000000000a10
+    ckTypeId: EnergyIQ/Building
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: bldg-fusch
+      - id: System/Name
+        value: Gebäude Fusch
+      - id: System/Description
+        value: Gebäude am Standort Fusch, räumlicher Anker der PV-Strings
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a10f05c0000000000000a01
+        targetCkTypeId: EnergyIQ/Site
+
+  # Parking space of the wall connector. No existing Fusch space fits (a02 is the grid connection point).
+  - rtId: 6a10f05c0000000000000a15
+    ckTypeId: EnergyIQ/ExternalSpace
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: ext-fusch-stellplatz
+      - id: System/Name
+        value: Stellplatz Fusch
+      - id: System/Description
+        value: Stellplatz mit Ladestation am Standort Fusch
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a10f05c0000000000000a01
+        targetCkTypeId: EnergyIQ/Site
+
+  # Whole electrical distribution of the site: generation (PV), grid coupling and the metered load.
+  - rtId: 6a10f05c0000000000000a11
+    ckTypeId: EnergyIQ/DistributionSystem
+    attributes:
+      - id: System/Name
+        value: Elektrisch Fusch
+      - id: EnergyIQ/DistributionSystemTypeValue
+        value: 3  # Electrical
+    associations:
+      - roleId: EnergyIQ/SystemMembers
+        targetRtId: 6a10f05c0000000000000a12
+        targetCkTypeId: EnergyIQ/PhotovoltaicSystem
+      - roleId: EnergyIQ/SystemMembers
+        targetRtId: 6a10f05c0000000000000a03  # Hauptzähler Fusch (existing GridConnection)
+        targetCkTypeId: EnergyIQ/GridConnection
+      - roleId: EnergyIQ/SystemMembers
+        targetRtId: 6a10f05c0000000000000a16
+        targetCkTypeId: EnergyIQ/ChargingStation
+
+  - rtId: 6a10f05c0000000000000a12
+    ckTypeId: EnergyIQ/PhotovoltaicSystem
+    attributes:
+      - id: EnergyIQ/Identifier
+        value: PV-FUSCH
+      - id: System/Name
+        value: PV-Anlage Fusch
+      - id: System/Description
+        value: PV-Anlage Fusch mit zwei Dach-Strings (Süd, Nord); Leistungsdaten noch nicht erfasst
+    associations:
+      - roleId: EnergyIQ/SystemMembers
+        targetRtId: 6a10f05c0000000000000a13
+        targetCkTypeId: EnergyIQ/PVString
+      - roleId: EnergyIQ/SystemMembers
+        targetRtId: 6a10f05c0000000000000a14
+        targetCkTypeId: EnergyIQ/PVString
+
+  - rtId: 6a10f05c0000000000000a13
+    ckTypeId: EnergyIQ/PVString
+    attributes:
+      - id: EnergyIQ/Identifier
+        value: STR-FUSCH-S
+      - id: System/Name
+        value: PV Dach String Süd
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a10f05c0000000000000a10
+        targetCkTypeId: EnergyIQ/Building
+
+  - rtId: 6a10f05c0000000000000a14
+    ckTypeId: EnergyIQ/PVString
+    attributes:
+      - id: EnergyIQ/Identifier
+        value: STR-FUSCH-N
+      - id: System/Name
+        value: PV Dach String Nord
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a10f05c0000000000000a10
+        targetCkTypeId: EnergyIQ/Building
+
+  # Tesla Wall Connector Gen 3. MeterIdentifier is a logical reference for the Loxone mapping (no device serial).
+  # ChargingConnectorTypeValue and MaxChargingPower are not set: no named source yet.
+  - rtId: 6a10f05c0000000000000a16
+    ckTypeId: EnergyIQ/ChargingStation
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: wallbox-fusch
+      - id: System/Name
+        value: Tesla Wall Connector Fusch
+      - id: System/Description
+        value: Tesla Wall Connector Gen 3 am Standort Fusch
+      - id: EnergyIQ/MeterIdentifier
+        value: FUSCH-WALLBOX-1
+      - id: EnergyIQ/MeterCarrierTypeValue
+        value: 0  # Electricity
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6a10f05c0000000000000a15
         targetCkTypeId: EnergyIQ/ExternalSpace
