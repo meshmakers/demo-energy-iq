@@ -164,9 +164,17 @@ The Miniserver itself is never modified by this change, so there is nothing to r
 ## Validation evidence (2026-10-28, before the PR)
 
 - Pipeline definition validated against the pipeline JSON schema of the Loxone adapter
-  (`octo-adapter-loxone/bin/DebugL/net10.0/pipeline-schema.json`): 0 errors. (The mesh adapter on test-2 does not
-  know `LoxoneBrowse@1`, so the Loxone node cannot be validated there.)
-- Temporary tenant on test-2 (`d7695tmp`, deleted afterwards): the three files imported without error; second
-  import with upsert clean; insert-only second import of the configuration fails as designed; `set_entity_secrets`
-  on `LoxoneConfiguration.password` reports `secretIsSet`. Details of the projection test: see the PR.
-- Grep evidence (no write path): see the PR description.
+  (`octo-adapter-loxone/bin/DebugL/net10.0/pipeline-schema.json`, draft 2020-12): 0 errors; the same check reports an
+  error for an unknown node and for a `Project@1` without its required `fields`. `validate_pipeline_definition` on
+  test-2 is not possible for this pipeline: the mesh adapter does not know `LoxoneBrowse@1`, and the Loxone adapter
+  cannot run on test-2 (no edge device for the temporary tenant).
+- Temporary tenant on test-2 (`d7695tmp`, deleted afterwards): the three files import without error; a second import
+  with upsert is clean; the insert-only second import of the configuration fails as designed;
+  `set_entity_secrets` on `LoxoneConfiguration.password` reports `secretIsSet`.
+- Not achieved on test-2: a dry run of the two `Project@1` nodes. The central operator left the mesh adapter of the
+  temporary tenant in `Pending` (about 10 minutes, no error), so no adapter was online. Covered instead by the SDK unit
+  tests of the node (`octo-communication-sdk`, `ProjectNodeTests`: 6 of 6 green, including multi-match
+  `$.items[*]` projection and clear + whitelist). The first real run on edge-0003 is the end-to-end proof; check the
+  result as described in step 4.
+- No write path: the pipeline has exactly the nodes `FromExecutePipelineCommand@1`, `GetPipelineConfigByWellKnownName@1`,
+  `LoxoneBrowse@1` (two HTTP GETs, see above), `Project@1` (2x), `SetPipelineExecutionResult@1`.
