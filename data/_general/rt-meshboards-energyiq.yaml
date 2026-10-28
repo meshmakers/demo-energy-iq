@@ -18,6 +18,13 @@ $schema: https://schemas.meshmakers.cloud/runtime-model.schema.json
 # polymorphic scopes (e.g. EnergyIQ/Meter) would fan out rtIds that have no rows
 # in the queried archive and produce ghost legend entries (gap-filled null bins).
 #
+# Site selection (AB#7692): the boards cannot offer one visible site selector with data configuration
+# alone (one childScope per selector, no selector-to-selector dependency, runtime queries unscoped,
+# empty scope falls back to the whole archive). Analysis and proposed platform capabilities:
+# docs/meshboard-site-selector-fit.md. Interim: the Energiebilanz KPI "Netzbezug" is scoped to the
+# Firmianstraße grid connection through the hidden selector `netz`, so Fusch rows in the shared
+# GridConnectionArchive no longer enter it.
+#
 # Imported as Status=Created; om_importrt.ps1 activates the rollups after import
 # (provisions the CrateDB tables). Backfill of pre-existing history is optional:
 #   octo-cli -c BackfillRollup -id <rollupRtId>
@@ -1044,7 +1051,7 @@ entities:
         value: |-
           Kumulierte Energiebilanz über den gewählten Zeitraum: PV-Produktion, Eigenverbrauch, Netzeinspeisung, Netzbezug sowie geladene/entladene Batterie-Energie. Werte in kWh (SUM der 10-s-kW-Samples × 10/3600).
           ---MESHBOARD_VARIABLES---
-          {"timeFilter": {"enabled": true, "selection": {"type": "relative", "relativeValue": 24, "relativeUnit": "hours"}}, "autoRefreshSeconds": 300}
+          {"timeFilter": {"enabled": true, "selection": {"type": "relative", "relativeValue": 24, "relativeUnit": "hours"}}, "autoRefreshSeconds": 300, "entitySelectors": [{"id": "netz", "label": "Netzanschluss", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "defaultRtId": "6789a00000000000006000d3", "childScope": {"targetCkTypeId": "EnergyIQ/GridConnection", "roleId": "EnergyIQ/SystemMembers", "direction": "out"}}]}
       - id: System.UI/Dashboard.Columns
         value: 12
       - id: System.UI/Dashboard.RowHeight
@@ -1166,7 +1173,7 @@ entities:
         value: 6a4aaddc22664f2b26c67ec7
       - id: System.UI/DashboardWidget.Config
         value: |-
-          {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "activepower_sum", "valueMultiplier": 0.002777777777777778, "suffix": " kWh", "queryName": "Netzbezug kumuliert", "queryRtId": "6a4aaddc22664f2b26c67ec7", "queryFamily": "streamData"}
+          {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "activepower_sum", "valueMultiplier": 0.002777777777777778, "suffix": " kWh", "queryName": "Netzbezug kumuliert", "queryRtId": "6a4aaddc22664f2b26c67ec7", "queryFamily": "streamData", "entitySelectorId": "netz"}
 
   - rtId: 6a4aaf1922664f2b26c67ed1
     ckTypeId: System.UI/DashboardWidget
