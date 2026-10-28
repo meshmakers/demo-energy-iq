@@ -9,7 +9,7 @@ AB#7511; this repository only holds the model.
 
 | File | Content |
 |------|---------|
-| `data/bim/rt-fusch.yaml` | Site `Fusch` -> ExternalSpace `Netzanschluss Fusch` (`System/ParentChild`) -> GridConnection `Hauptzähler Fusch` (`EnergyIQ/SpaceElements`), `rtWellKnownName` = meter id |
+| `data/bim/rt-fusch.yaml` | Site `Fusch` -> ExternalSpace `Netzanschluss Fusch` (`System/ParentChild`) -> GridConnection `Hauptzähler Fusch` (`EnergyIQ/SpaceElements`), `rtWellKnownName` = meter id; plus the electrical model (see below, AB#7694) |
 | `data/_general/rt-adapters-fusch.yaml` | Deployment site `Fusch Edge` (live rtId, see below) and the MQTT edge adapter (Helm chart `octo-mqtt-adapter`, `Hosts` -> the site) |
 | `data/_general/rt-mqtt-configuration-fusch.yaml` | `MqttConfiguration` `FuschShrdzmBroker`, **placeholders only** |
 | `data/_pipelines/rt-pipelines-fusch-mqtt.yaml` | DataFlow `Fusch smart meter` with the edge and the mesh pipeline |
@@ -17,6 +17,31 @@ AB#7511; this repository only holds the model.
 
 Not touched: `rt-archives-energyiq.yaml` (the existing `GridConnectionArchive` `6a0e000000000000000a0007` with its one
 column `ActivePower` is used as is), the Loxone files and the CK.
+
+## Electrical model (AB#7694)
+
+Fusch is modelled electrically like Firmianstraße (`data/bim/rt-firmianstrasse.yaml`), so the site selector of the boards
+and the Loxone pipelines have entities to point at. EnergyIQ stays 2.13.0, no CK change.
+
+```
+Site "Fusch" (a01)
+|- Building "Gebäude Fusch" (a10)                          System/ParentChild -> Site
+|  |- PVString "PV Dach String Süd" (a13)                  System/ParentChild -> Building
+|  '- PVString "PV Dach String Nord" (a14)                 System/ParentChild -> Building
+|- ExternalSpace "Netzanschluss Fusch" (a02)
+|  '- GridConnection "Hauptzähler Fusch" (a03)             EnergyIQ/SpaceElements -> ExternalSpace
+'- ExternalSpace "Stellplatz Fusch" (a15)
+   '- ChargingStation "Tesla Wall Connector Fusch" (a16)  EnergyIQ/SpaceElements -> ExternalSpace
+
+DistributionSystem "Elektrisch Fusch" (a11)  --EnergyIQ/SystemMembers--> PV-Anlage Fusch (a12), Hauptzähler Fusch (a03), Tesla Wall Connector Fusch (a16)
+PhotovoltaicSystem "PV-Anlage Fusch" (a12)   --EnergyIQ/SystemMembers--> PV Dach String Süd (a13), PV Dach String Nord (a14)
+```
+
+rtIds are `6a10f05c0000000000000a10` to `…a16` (a01 to a03 and the archive `6a0e000000000000000a0007` are unchanged).
+Names carry the site because the Loxone mapping pipelines resolve targets by name. Ratings, orientation, tilt, module
+count, connector type and maximum charging power are **not set**: there is no named source yet (inventory, data sheet);
+add them with the source as a YAML comment. `MeterIdentifier` of the wall connector (`FUSCH-WALLBOX-1`) and the
+identifiers of the PV system and strings are logical references, no device serials.
 
 ## Pipelines
 
