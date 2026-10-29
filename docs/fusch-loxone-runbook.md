@@ -137,6 +137,9 @@ octo-cli --context prod-1_energyiq -c GetPipelineDebugPoints --identifier 6a10f0
 octo-cli --context prod-1_energyiq -c SetPipelineDebug --identifier 6a10f05c0000000000000d02 --enabled false
 ```
 
+Switch debug capture off again **also when a step in between fails** (the last command above is the cleanup, run it
+in any case), and check it with `GetPipelineDebug --identifier 6a10f05c0000000000000d02 --json` (`enabled: false`).
+
 The data of one node comes from the communication controller REST API (tenant API, bearer token of the octo-cli
 session; never print the token):
 

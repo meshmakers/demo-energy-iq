@@ -16,13 +16,15 @@ What this inventory contains and what it leaves out (the repository is public):
 - **Security and access controls** (7: alarm system, smoke/water alarm, door locks, NFC keypads) are counted but
   not listed by name or state; they are out of scope and never mapped.
 - **Example values are not part of the structure file** (it holds names and state UUIDs only). The column "example
-  value" of the work item is therefore empty here; the first values come from the live pipelines of AB#7696 (see
-  `data/samples/loxone-fusch-states.json` for the event shape). State UUIDs are not listed here; the live pipelines
+  value" of the work item is therefore empty here. Live values are **pending**: they will come from the live pipelines
+  of AB#7696 once deployed; `data/samples/loxone-fusch-states.json` is a constructed sample of the event shape, not a
+  recording. State UUIDs are not listed here; the live pipelines
   take the ones they need from the structure and name them in their own file.
 - **Units**: the browse result carries no format strings (`actualFormat`, `totalFormat`), so units are those of the
   Loxone structure documentation for the control type (Meter `actual` kW, `total` kWh; Fronius `prodCurr` kW,
   `prodTotal` kWh; room controller temperatures °C). They match the Firmianstraße Miniserver, where the format strings
-  were checked (`actualFormat="%.3fkW"`, `totalFormat="%.1fkWh"`). The first live values confirm them (AB#7696).
+  were checked (`actualFormat="%.3fkW"`, `totalFormat="%.1fkWh"`). Confirmation by live Fusch values is **pending**
+  (first live run of AB#7696).
   `InfoOnlyAnalog` controls have no unit by type; their unit is marked unknown.
 - Configuration states (`jLocked` and the long state lists of room controllers, blinds, lighting, time switches) are
   shortened in the tables; the full state list per control type is in the appendix.
@@ -51,7 +53,7 @@ writer of `…0a03`. "MB-EG-Hausverbrauch" is a different quantity (house consum
 
 ## Summary per section
 
-| Section | Controls | Mapped by AB#7696 |
+| Section | Controls | Proposed for AB#7696 (not deployed) |
 |---------|----------|-------------------|
 | PV | 8 | 2 string meters → PVString `CurrentPower`/`EnergyProduced`; Fronius → PhotovoltaicSystem `TotalCurrentPower`/`TotalEnergyProduced` |
 | Grid / energy manager | 2 | none (grid = SHRDZM; no house-consumption entity) |
