@@ -1,6 +1,6 @@
 # Fusch Loxone adapter: rollout runbook (prod-1, tenant energyiq)
 
-Work items: AB#7695 (adapter, configuration, discovery pipeline), AB#7696 (live pipelines), Feature AB#7690.
+Work items: AB#7695 (adapter, configuration, discovery pipeline), AB#7696 (live PV pipelines, section 7), Feature AB#7690.
 Decision of 2026-10-28: the Fusch Loxone Miniserver Gen 2 (`192.168.20.4`) is reached **only** through a Loxone
 adapter on edge device `mm-octo-mesh-edge-0003`. No tailnet change, no direct HTTP from a developer machine to the
 Miniserver, no manual export.
@@ -24,6 +24,10 @@ so no re-import of `rt-loxone-configuration-fusch.yaml` is needed (it stays inse
 | LoxoneConfiguration `FuschLoxoneMiniserverConfig` (host `192.168.20.4`, port 80, no TLS; user and password set in Refinery Studio) | `6a10f05c0000000000000b03` | `data/_general/rt-loxone-configuration-fusch.yaml` |
 | DataFlow `Fusch Loxone discovery` | `6a10f05c0000000000000d01` | `data/_pipelines/rt-pipelines-loxone-fusch.yaml` |
 | Pipeline `Browse Fusch Miniserver` (edge adapter `…0b04`) | `6a10f05c0000000000000d02` | same |
+| DataFlow `Fusch Loxone PV live` (AB#7696) | `6a10f05c0000000000000d03` | same |
+| Pipeline `Configure Fusch PV State Sync` (mesh adapter) | `6a10f05c0000000000000d04` | same |
+| Pipeline `Receive Fusch PV State Changes` (edge adapter `…0b04`) | `6a10f05c0000000000000d05` | same |
+| Pipeline `Store Fusch PV States` (mesh adapter) | `6a10f05c0000000000000d06` | same |
 
 The Firmianstraße Loxone files, the Fusch MQTT adapter `…0b02` and `data/bim/rt-fusch.yaml` are not touched.
 
@@ -193,6 +197,76 @@ In this order; each step is independent, stop where the damage stops:
 5. If the Miniserver user was created for this: disable it in Loxone Config. (There is no Vault entry to remove.)
 
 The Miniserver itself is never modified by this change, so there is nothing to restore there.
+
+## 7. Live PV pipelines (AB#7696)
+
+Data flow `Fusch Loxone PV live` (`…0d03`): PV string power and energy and the PV system total from the Miniserver
+into PVString `…0a13` (Süd) / `…0a14` (Nord) and PhotovoltaicSystem `…0a12`, power rows into `PVStringArchive`
+(`6a0e000000000000000a000a`) and `PhotovoltaicSystemArchive` (`6a0e000000000000000a000c`). Watched states, units and the
+rule for the total: header of `data/_pipelines/rt-pipelines-loxone-fusch.yaml`; why grid power, battery and the wall
+connector are not written: `docs/fusch-loxone-inventory.md`.
+
+### 7.0 Preconditions
+
+- Gerald's go for prod-1 / `energyiq` in this session; this PR merged.
+- Steps 1-3 done (adapter `…0b04` Deployed/Online, credentials set) — true since 2026-10-29.
+- Fusch PV entities `…0a12`-`…0a14` exist (AB#7694, imported) and the two archives are `Activated`.
+- **Do not run the Firmianstraße pipeline `Configure State Sync` (`67f0b00ec4ff02221e0b6009`) until its bug is fixed:**
+  it updates the *first* `LoxoneConfiguration` of the tenant (filter `Host != null`, `Items[0]`), which can now be
+  `FuschLoxoneMiniserverConfig`; it would overwrite the Fusch watch list with Firmianstraße UUIDs (see the bug linked in
+  the PR). The Fusch pipelines address the Fusch configuration only by rtId.
+
+### 7.1 Import and deploy
+
+```bash
+cd demo-energy-iq/data
+octo-cli --context prod-1_energyiq -c ImportRt -f ./_pipelines/rt-pipelines-loxone-fusch.yaml -w -r   # adds d03-d06, d01/d02 unchanged
+octo-cli --context prod-1_energyiq -c DeployDataFlow -id 6a10f05c0000000000000d03
+octo-cli --context prod-1_energyiq -c GetDataFlowStatus --identifier 6a10f05c0000000000000d03 --json     # d04, d05, d06 Deployed
+```
+
+Right after this deploy the edge trigger has no watch list yet (adapter log: "No MappingTargets configured, trigger will
+not fire") — expected.
+
+### 7.2 Set the watch list (once)
+
+```bash
+octo-cli --context prod-1_energyiq -c ExecutePipeline -id 6a10f05c0000000000000d04
+```
+
+The pipeline writes the 6 watched states as `MappingTargets` onto `FuschLoxoneMiniserverConfig` (`…0b03`, by rtId) and
+redeploys the edge pipeline `…0d05` (`DeployPipeline@1` with the tenant's `ServiceAccountConfig`). Check:
+
+- `get_entity_by_id` `System.Communication/LoxoneConfiguration` `…0b03`: `mappingTargets` has 6 items; host, user and
+  the password state are unchanged.
+- Adapter log of `…0b04` (Dash0 dataset `prod-1`, container of the Loxone adapter): "Loxone state change trigger
+  started, watching 6 UUIDs". When the WebSocket cache is already connected, the trigger sends the current values at
+  once ("Cache already ready, sending 6 initial values").
+
+Run `…0d04` again only when the list in the file changes (then import the file again first).
+
+### 7.3 Verify
+
+- Entities (MCP `get_entity_by_id` or Studio): PVString `…0a13`/`…0a14` `currentPower` [kW] and `energyProduced` [kWh],
+  PhotovoltaicSystem `…0a12` `totalCurrentPower` [kW] and `totalEnergyProduced` [kWh] have values and a recent
+  `rtChangedDateTime`. Plausibility in daylight: `totalCurrentPower` ≈ sum of the two `currentPower` (inverter vs.
+  string measurement, a few percent apart); at night all power values 0. Compare one value with the Loxone app.
+- Archives: rows for `rtid = 6a10f05c0000000000000a13`/`…a14` in `PVStringArchive` and `…a12` in
+  `PhotovoltaicSystemArchive` (Studio query or `query_stream_data_simple`), one row per changed power value.
+- GridConnection `…0a03` keeps receiving only SHRDZM values (no change by this data flow).
+- Units: if a power value looks 1000× too large (W instead of kW) the Miniserver meter is configured in W: stop
+  (step 7.4 item 1) and add a scaling step before going on.
+
+### 7.4 Rollback
+
+1. `octo-cli --context prod-1_energyiq -c UndeployDataFlow -id 6a10f05c0000000000000d03` — stops all three pipelines;
+   the discovery data flow `…0d01` and the adapter stay as they are.
+2. Optional: remove the watch list — `update_entity` on `…0b03` with `mappingTargets: []` (the adapter has nothing else
+   to watch).
+3. Optional: delete `…0d06`, `…0d05`, `…0d04`, `…0d03` (MCP `delete_entity`, in this order).
+4. Values already written stay on `…0a12`-`…0a14` and in the archives (time series rows are not deleted).
+
+Nothing is ever sent to a control of the Miniserver, the wall connector or evcc, so there is nothing to restore there.
 
 ## Validation evidence (2026-10-28, before the PR)
 

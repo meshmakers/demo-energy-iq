@@ -2,25 +2,71 @@ $schema: https://schemas.meshmakers.cloud/runtime-model.schema.json
 dependencies:
   - System.Communication-[4.13,5.0)
 
-# DataFlow "Fusch Loxone discovery" (AB#7695): READ-ONLY discovery of the Fusch Loxone Miniserver Gen 2.
-# The Fusch Loxone edge adapter (6a10f05c0000000000000b04, on edge device mm-octo-mesh-edge-0003) fetches the
-# structure file LoxAPP3.json (one HTTP GET, via the LoxoneBrowse@1 node) and returns rooms, categories and
-# controls (uuid, name, type, room, category, state names with their state UUIDs, sub-controls) as the
-# execution result. The inventory of AB#7695 (docs/fusch-loxone-inventory.md) is produced from that result.
+# Fusch Loxone data flows. Both run on the Fusch Loxone edge adapter (6a10f05c0000000000000b04, edge device
+# mm-octo-mesh-edge-0003, Uses LoxoneConfiguration FuschLoxoneMiniserverConfig 6a10f05c0000000000000b03) and on the
+# mesh adapter 670000000000000000000002. Inventory of the Miniserver: docs/fusch-loxone-inventory.md.
 #
-#   Edge pipeline (Fusch Loxone edge adapter, Uses LoxoneConfiguration FuschLoxoneMiniserverConfig)
-#     FromExecutePipelineCommand@1 -> GetPipelineConfigByWellKnownName@1 -> LoxoneBrowse@1
+# ---------------------------------------------------------------------------------------------------------------
+# DataFlow "Fusch Loxone discovery" (AB#7695, d01/d02): READ-ONLY discovery of the Fusch Loxone Miniserver Gen 2.
+# The edge adapter fetches the structure file LoxAPP3.json (one HTTP GET, via the LoxoneBrowse@1 node) and returns
+# rooms, categories and controls (uuid, name, type, room, category, state names with their state UUIDs,
+# sub-controls) as the execution result.
+#
+#   Edge pipeline: FromExecutePipelineCommand@1 -> GetPipelineConfigByWellKnownName@1 -> LoxoneBrowse@1
 #     -> Project@1 (rooms without the nested copy of the controls) -> Project@1 (drops the "miniserver" block)
 #     -> SetPipelineExecutionResult@1
 #
 # Privacy (the repository is public, the execution result is stored in the tenant): the "miniserver" block of
 # LoxoneBrowse (serial number, MAC address, firmware, project name) is removed BEFORE the result is stored.
 #
-# Read-only: the only Loxone node is LoxoneBrowse@1 (GET /data/LoxAPP3.json). No LoxoneStateTransform, no
-# command, no write to the Miniserver, the wall connector or evcc; nothing is written to the tenant model.
+# ---------------------------------------------------------------------------------------------------------------
+# DataFlow "Fusch Loxone PV live" (AB#7696, d03-d06): PV power and energy of the Fusch Miniserver into the Fusch PV
+# model (data/bim/rt-fusch.yaml) and the PV archives. Same three-step pattern as the Firmianstrasse "Loxone Live
+# States" data flow (rt-pipelines-loxone.yaml), but SITE-SAFE and without Loxone/Control entities or
+# DataPointMappings: the watched states and their targets are fixed here by state UUID and target rtId.
 #
-# Referenced, not defined here: adapter 6a10f05c0000000000000b04 (rt-adapters-fusch.yaml) and
-# LoxoneConfiguration 6a10f05c0000000000000b03 (rt-loxone-configuration-fusch.yaml).
+#   d04 Configure Fusch PV State Sync (mesh, run once / after a change of the list):
+#       WriteJson@1 (the 6 watched states) -> CreateUpdateInfo@1 + ApplyChanges@2 (MappingTargets onto the Fusch
+#       configuration b03, by rtId) -> DeployPipeline@1 (d05, so the edge trigger reads the new list)
+#   d05 Receive Fusch PV State Changes (edge): FromLoxoneStateChange@1 (WebSocket state cache, only the watched
+#       states, only changed values) -> ToPipelineDataEvent@1 -> d06
+#   d06 Store Fusch PV States (mesh): FromPipelineDataEvent@1 -> ForEach state: Switch@1 on the state UUID ->
+#       CreateUpdateInfo@1 (fixed rtId, value as is) -> power rows into PVStringArchive (a000a) and
+#       PhotovoltaicSystemArchive (a000c) -> newest value per entity onto the entities (ApplyChanges@2)
+#
+# Watched states (state UUIDs from LoxAPP3.json of 2026-10-29) and targets. Units: Loxone Meter actual = kW,
+# total = kWh; Fronius prodCurr = kW, prodTotal = kWh (Loxone structure documentation; the same units the EnergyIQ
+# attributes use), so the values are written as they arrive, without scaling:
+#   PV Dach String Sued  (Meter)   actual    20d2659d-02b3-47d7-04ff2d9f59a93257 -> PVString a13 CurrentPower [kW]
+#   PV Dach String Sued  (Meter)   total     20d2659d-02b3-47d8-05ff2d9f59a93257 -> PVString a13 EnergyProduced [kWh]
+#   PV Dach String Nord  (Meter)   actual    20d265ba-02a5-98fa-ffff6a87a326836f -> PVString a14 CurrentPower [kW]
+#   PV Dach String Nord  (Meter)   total     20d265ba-02a5-98fb-ffff6a87a326836f -> PVString a14 EnergyProduced [kWh]
+#   Energiemonitor       (Fronius) prodCurr  20d26d65-0194-433f-0eff14c57935eac2 -> PhotovoltaicSystem a12 TotalCurrentPower [kW]
+#   Energiemonitor       (Fronius) prodTotal 20d26d65-0194-4343-12ff14c57935eac2 -> PhotovoltaicSystem a12 TotalEnergyProduced [kWh]
+# Rule for the PV system total: TotalCurrentPower = Fronius prodCurr (one Loxone total, no sum over two separately
+# arriving string events).
+#
+# NOT written (docs/fusch-loxone-inventory.md): grid power (Fronius gridCurr, EFM Gpwr) - the same quantity as the
+# SHRDZM meter on GridConnection a03, which stays its only writer (AB#7511); battery states (no battery); wall
+# connector (no numeric power in the Miniserver); rooms, heating, shading, lighting (AB#7697).
+#
+# Site safety: no Loxone/Control entity and no DataPointMapping is created, so the Firmianstrasse auto-map,
+# coverage and BuildMappingTargets pipelines never see a Fusch control; every write here addresses a fixed Fusch rtId
+# (a12, a13, a14, b03, d05).
+#
+# Read-only towards the Miniserver: LoxoneBrowse@1 (two HTTP GETs) and FromLoxoneStateChange@1 (the adapter's
+# WebSocket session: authentication and the status subscription "enablebinstatusupdate", then it only receives).
+# No LoxoneStateTransform/command/io node, nothing is ever sent to a control, the wall connector or evcc.
+#
+# Archive sampling: Loxone sends a state only when it changes, so the archive rows are event-based, not every
+# 10 s. The Energiebilanz kWh formula (SUM x 10/3600) assumes 10 s rows and is therefore NOT exact for these rows
+# (the same holds for the Firmianstrasse Loxone rows); kWh views should use the energy counters
+# (EnergyProduced / TotalEnergyProduced) or a time-weighted aggregation (see README, "Fusch Loxone site").
+#
+# Referenced, not defined here: adapter 6a10f05c0000000000000b04 (rt-adapters-fusch.yaml), LoxoneConfiguration
+# 6a10f05c0000000000000b03 (rt-loxone-configuration-fusch.yaml), mesh adapter 670000000000000000000002,
+# ServiceAccountConfiguration "ServiceAccountConfig" (tenant), PV entities a12-a14 (data/bim/rt-fusch.yaml),
+# archives 6a0e000000000000000a000a / ...000c (rt-archives-energyiq.yaml).
 entities:
   - rtId: 6a10f05c0000000000000d01
     ckTypeId: System.Communication/DataFlow
@@ -90,3 +136,296 @@ entities:
             - type: SetPipelineExecutionResult@1
               description: Store the structure as execution output (read with GetLatestPipelineExecution)
               path: $.structure
+
+
+  # =================================================================================================================
+  # DataFlow "Fusch Loxone PV live" (AB#7696)
+  # =================================================================================================================
+  - rtId: 6a10f05c0000000000000d03
+    ckTypeId: System.Communication/DataFlow
+    attributes:
+      - id: System/Name
+        value: Fusch Loxone PV live
+      - id: System/Description
+        value: PV string power and energy and the PV system total from the Fusch Loxone Miniserver into the Fusch PV model and the PV archives
+
+  # Pipeline d04: mesh adapter, writes the fixed list of watched states onto the Fusch configuration and redeploys
+  # the edge pipeline d05. Run once after the data flow is deployed, and again after the list changes.
+  - rtId: 6a10f05c0000000000000d04
+    ckTypeId: System.Communication/Pipeline
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a10f05c0000000000000d03
+        targetCkTypeId: System.Communication/DataFlow
+      - roleId: System.Communication/Executes
+        targetRtId: '670000000000000000000002'
+        targetCkTypeId: System.Communication/Adapter
+    attributes:
+      - id: System/Name
+        value: Configure Fusch PV State Sync
+      - id: System/Description
+        value: Writes the watched Fusch PV state UUIDs as MappingTargets onto FuschLoxoneMiniserverConfig and redeploys the Fusch edge state pipeline
+      - id: System/Enabled
+        value: true
+      - id: System.Communication/PipelineDefinition
+        value: |-
+          triggers:
+            - type: FromExecutePipelineCommand@1
+          transformations:
+            # The watched states in the record shape that BuildMappingTargets@1 produces for Firmianstrasse
+            # (SourceIdentifier = control UUID, Name = state name, ExternalId = state UUID).
+            - type: WriteJson@1
+              description: Fixed list of the watched Fusch PV states
+              targetPath: $.mappingTargets
+              jsonString: |-
+                [
+                  { "CkRecordId": { "SemanticVersionedFullName": "System.Communication/MappingTarget" },
+                    "Attributes": { "SourceIdentifier": "20d2659d-02b3-47e2-ffff77d91626cdc4", "Name": "actual", "ExternalId": "20d2659d-02b3-47d7-04ff2d9f59a93257" } },
+                  { "CkRecordId": { "SemanticVersionedFullName": "System.Communication/MappingTarget" },
+                    "Attributes": { "SourceIdentifier": "20d2659d-02b3-47e2-ffff77d91626cdc4", "Name": "total", "ExternalId": "20d2659d-02b3-47d8-05ff2d9f59a93257" } },
+                  { "CkRecordId": { "SemanticVersionedFullName": "System.Communication/MappingTarget" },
+                    "Attributes": { "SourceIdentifier": "20d265ba-02a5-98f5-ffff6a87a326836f", "Name": "actual", "ExternalId": "20d265ba-02a5-98fa-ffff6a87a326836f" } },
+                  { "CkRecordId": { "SemanticVersionedFullName": "System.Communication/MappingTarget" },
+                    "Attributes": { "SourceIdentifier": "20d265ba-02a5-98f5-ffff6a87a326836f", "Name": "total", "ExternalId": "20d265ba-02a5-98fb-ffff6a87a326836f" } },
+                  { "CkRecordId": { "SemanticVersionedFullName": "System.Communication/MappingTarget" },
+                    "Attributes": { "SourceIdentifier": "20d26d65-0195-435f-ffff77d91626cdc4", "Name": "prodCurr", "ExternalId": "20d26d65-0194-433f-0eff14c57935eac2" } },
+                  { "CkRecordId": { "SemanticVersionedFullName": "System.Communication/MappingTarget" },
+                    "Attributes": { "SourceIdentifier": "20d26d65-0195-435f-ffff77d91626cdc4", "Name": "prodTotal", "ExternalId": "20d26d65-0194-4343-12ff14c57935eac2" } }
+                ]
+            # By rtId: only the Fusch configuration is touched (never the Firmianstrasse LoxoneMiniserverConfig).
+            - type: CreateUpdateInfo@1
+              description: MappingTargets onto FuschLoxoneMiniserverConfig
+              targetPath: $._configUpdate
+              targetValueKind: Array
+              updateKind: UPDATE
+              ckTypeId: System.Communication/LoxoneConfiguration
+              rtId: 6a10f05c0000000000000b03
+              attributeUpdates:
+                - attributeName: MappingTargets
+                  attributeValueType: RecordArray
+                  valuePath: $.mappingTargets
+            - type: ApplyChanges@2
+              entityUpdatesPath: $._configUpdate
+            # The configuration is resolved at deploy time: redeploy the edge pipeline so its trigger watches the list.
+            - type: DeployPipeline@1
+              description: Redeploy the Fusch edge state pipeline
+              pipelineRtId: 6a10f05c0000000000000d05
+              serviceAccountConfigName: ServiceAccountConfig
+            - type: SetPipelineExecutionResult@1
+              description: Store the watched states as execution output
+              path: $.mappingTargets
+
+  # Pipeline d05: Fusch Loxone edge adapter, receives the changed watched states over the adapter's WebSocket session.
+  - rtId: 6a10f05c0000000000000d05
+    ckTypeId: System.Communication/Pipeline
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a10f05c0000000000000d03
+        targetCkTypeId: System.Communication/DataFlow
+      - roleId: System.Communication/Executes
+        targetRtId: 6a10f05c0000000000000b04
+        targetCkTypeId: System.Communication/Adapter
+      - roleId: System.Communication/Uses
+        targetRtId: 6a10f05c0000000000000b03
+        targetCkTypeId: System.Communication/LoxoneConfiguration
+    attributes:
+      - id: System/Name
+        value: Receive Fusch PV State Changes
+      - id: System/Description
+        value: Receives the changed Fusch PV states from the Miniserver WebSocket (read only) and sends them to the mesh pipeline
+      - id: System/Enabled
+        value: true
+      - id: System.Communication/PipelineDefinition
+        value: |-
+          triggers:
+            # Watches exactly the MappingTargets of FuschLoxoneMiniserverConfig (written by d04). Without them the
+            # trigger logs "No MappingTargets configured" and never fires.
+            - type: FromLoxoneStateChange@1
+              configurationName: FuschLoxoneMiniserverConfig
+          transformations:
+            # $.states = [{ controlUuid, stateName, pollUuid, value, code, timestamp }] (changed values only)
+            - type: ToPipelineDataEvent@1
+              description: Send the changed states to the mesh pipeline
+              path: $.states
+              targetPath: $.states
+              targetPipelineRtId: 6a10f05c0000000000000d06
+
+  # Pipeline d06: mesh adapter, writes the states onto the Fusch PV entities and the PV archives.
+  - rtId: 6a10f05c0000000000000d06
+    ckTypeId: System.Communication/Pipeline
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a10f05c0000000000000d03
+        targetCkTypeId: System.Communication/DataFlow
+      - roleId: System.Communication/Executes
+        targetRtId: '670000000000000000000002'
+        targetCkTypeId: System.Communication/Adapter
+    attributes:
+      - id: System/Name
+        value: Store Fusch PV States
+      - id: System/Description
+        value: Writes PV string power and energy and the PV system total onto the Fusch PV entities and the power rows into the PV archives
+      - id: System/Enabled
+        value: true
+      - id: System.Communication/PipelineDefinition
+        value: |-
+          triggers:
+            - type: FromPipelineDataEvent@1
+          transformations:
+            # One update per state; the target is chosen by the state UUID (pollUuid) and addressed by its fixed rtId.
+            # Power updates and energy updates are collected separately: only power goes into the archives, and the
+            # newest value per entity is filtered per group (FilterLatestUpdateInfo keeps ONE update per entity, so a
+            # mixed list would drop the energy or the power update of the same entity).
+            # A state without a case (not in the list) is ignored.
+            - type: ForEach@1
+              description: Map every changed state to its Fusch PV target
+              iterationPath: $.states
+              targetPath: $.states
+              fullDocumentPath: $.full
+              keyPath: $.key
+              mergePath: $.key
+              transformations:
+                - type: Switch@1
+                  path: $.key.pollUuid
+                  valueType: String
+                  cases:
+                    # PV Dach String Sued: actual [kW] -> PVString a13 CurrentPower
+                    - value: 20d2659d-02b3-47d7-04ff2d9f59a93257
+                      transformations:
+                        - type: CreateUpdateInfo@1
+                          updateKind: UPDATE
+                          rtId: 6a10f05c0000000000000a13
+                          ckTypeId: EnergyIQ/PVString
+                          timestampPath: $.key.timestamp
+                          attributeUpdates:
+                            - attributeName: currentPower
+                              attributeValueType: Double
+                              valuePath: $.key.value
+                          targetPath: $.key._powerUpdates
+                          targetValueWriteMode: Append
+                          targetValueKind: Array
+                    # PV Dach String Sued: total [kWh] -> PVString a13 EnergyProduced
+                    - value: 20d2659d-02b3-47d8-05ff2d9f59a93257
+                      transformations:
+                        - type: CreateUpdateInfo@1
+                          updateKind: UPDATE
+                          rtId: 6a10f05c0000000000000a13
+                          ckTypeId: EnergyIQ/PVString
+                          timestampPath: $.key.timestamp
+                          attributeUpdates:
+                            - attributeName: energyProduced
+                              attributeValueType: Double
+                              valuePath: $.key.value
+                          targetPath: $.key._energyUpdates
+                          targetValueWriteMode: Append
+                          targetValueKind: Array
+                    # PV Dach String Nord: actual [kW] -> PVString a14 CurrentPower
+                    - value: 20d265ba-02a5-98fa-ffff6a87a326836f
+                      transformations:
+                        - type: CreateUpdateInfo@1
+                          updateKind: UPDATE
+                          rtId: 6a10f05c0000000000000a14
+                          ckTypeId: EnergyIQ/PVString
+                          timestampPath: $.key.timestamp
+                          attributeUpdates:
+                            - attributeName: currentPower
+                              attributeValueType: Double
+                              valuePath: $.key.value
+                          targetPath: $.key._powerUpdates
+                          targetValueWriteMode: Append
+                          targetValueKind: Array
+                    # PV Dach String Nord: total [kWh] -> PVString a14 EnergyProduced
+                    - value: 20d265ba-02a5-98fb-ffff6a87a326836f
+                      transformations:
+                        - type: CreateUpdateInfo@1
+                          updateKind: UPDATE
+                          rtId: 6a10f05c0000000000000a14
+                          ckTypeId: EnergyIQ/PVString
+                          timestampPath: $.key.timestamp
+                          attributeUpdates:
+                            - attributeName: energyProduced
+                              attributeValueType: Double
+                              valuePath: $.key.value
+                          targetPath: $.key._energyUpdates
+                          targetValueWriteMode: Append
+                          targetValueKind: Array
+                    # Energiemonitor (Fronius): prodCurr [kW] -> PhotovoltaicSystem a12 TotalCurrentPower
+                    - value: 20d26d65-0194-433f-0eff14c57935eac2
+                      transformations:
+                        - type: CreateUpdateInfo@1
+                          updateKind: UPDATE
+                          rtId: 6a10f05c0000000000000a12
+                          ckTypeId: EnergyIQ/PhotovoltaicSystem
+                          timestampPath: $.key.timestamp
+                          attributeUpdates:
+                            - attributeName: totalCurrentPower
+                              attributeValueType: Double
+                              valuePath: $.key.value
+                          targetPath: $.key._powerUpdates
+                          targetValueWriteMode: Append
+                          targetValueKind: Array
+                    # Energiemonitor (Fronius): prodTotal [kWh] -> PhotovoltaicSystem a12 TotalEnergyProduced
+                    - value: 20d26d65-0194-4343-12ff14c57935eac2
+                      transformations:
+                        - type: CreateUpdateInfo@1
+                          updateKind: UPDATE
+                          rtId: 6a10f05c0000000000000a12
+                          ckTypeId: EnergyIQ/PhotovoltaicSystem
+                          timestampPath: $.key.timestamp
+                          attributeUpdates:
+                            - attributeName: totalEnergyProduced
+                              attributeValueType: Double
+                              valuePath: $.key.value
+                          targetPath: $.key._energyUpdates
+                          targetValueWriteMode: Append
+                          targetValueKind: Array
+            - type: Flatten@1
+              path: $.states[*]._powerUpdates[*]
+              targetPath: $._powerUpdates
+            - type: Flatten@1
+              path: $.states[*]._energyUpdates[*]
+              targetPath: $._energyUpdates
+            - type: If@1
+              description: Energy updates present
+              path: $._energyUpdates[0].RtId
+              operator: NotEquals
+              value: null
+              valueType: String
+              transformations:
+                # Counters onto the entities only (no archive column for them).
+                - type: FilterLatestUpdateInfo@1
+                  path: $._energyUpdates
+                  targetPath: $._energyUpdates
+                - type: ApplyChanges@2
+                  entityUpdatesPath: $._energyUpdates
+            # Power last, like the Firmianstrasse pipeline (archive nodes at the end): in a test-2 dry run an If@1
+            # placed AFTER the archive nodes did not run its children.
+            - type: If@1
+              description: Power updates present
+              path: $._powerUpdates[0].RtId
+              operator: NotEquals
+              value: null
+              valueType: String
+              transformations:
+                # Every power value is a row (the archive node keeps only the items of its TargetCkTypeId).
+                - type: BackfillFromRtEntity@1
+                  description: Backfill PVString archive
+                  path: $._powerUpdates
+                  archiveRtId: 6a0e000000000000000a000a
+                - type: SaveStreamDataInArchive@1
+                  description: Save PVString power rows
+                  path: $._powerUpdates
+                  archiveRtId: 6a0e000000000000000a000a
+                - type: BackfillFromRtEntity@1
+                  description: Backfill PhotovoltaicSystem archive
+                  path: $._powerUpdates
+                  archiveRtId: 6a0e000000000000000a000c
+                - type: SaveStreamDataInArchive@1
+                  description: Save PhotovoltaicSystem power rows
+                  path: $._powerUpdates
+                  archiveRtId: 6a0e000000000000000a000c
+                - type: FilterLatestUpdateInfo@1
+                  path: $._powerUpdates
+                  targetPath: $._powerUpdates
+                - type: ApplyChanges@2
+                  entityUpdatesPath: $._powerUpdates

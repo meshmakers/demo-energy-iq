@@ -222,6 +222,18 @@ returns rooms, categories and controls of the Miniserver; the result of the firs
 [docs/fusch-loxone-runbook.md](docs/fusch-loxone-runbook.md). The Fusch Loxone files are not part of the local demo
 import scripts.
 
+**Live PV (AB#7696):** the data flow `Fusch Loxone PV live` (same file) watches six Miniserver states over the adapter's
+WebSocket (read only) and writes them, unscaled, onto the Fusch PV model: string meters `actual` [kW] / `total` [kWh]
+→ PVString `CurrentPower` / `EnergyProduced` (Süd `…0a13`, Nord `…0a14`), Fronius `prodCurr` [kW] / `prodTotal` [kWh]
+→ PhotovoltaicSystem `TotalCurrentPower` / `TotalEnergyProduced` (`…0a12`; the total is the inverter value, not a sum).
+Power values also become rows in `PVStringArchive` and `PhotovoltaicSystemArchive`. Grid power is **not** written
+(same quantity as the SHRDZM meter on `…0a03`), there is no battery and no numeric wall connector power
+([inventory](docs/fusch-loxone-inventory.md)). The watched states and targets are fixed by state UUID and rtId — no
+Loxone/Control entities or DataPointMappings, so the Firmianstraße auto-map and coverage pipelines never touch Fusch.
+**Archive sampling:** Loxone sends a value only when it changes, so the rows are event-based, not every 10 s; the
+Energiebilanz kWh formula `SUM × 10/3600` is therefore not exact for Fusch (nor for the Firmianstraße Loxone rows).
+Boards should take kWh from the energy counters or a time-weighted aggregation, or show the empty state.
+
 ## CI/CD (Azure DevOps)
 
 `devops-build/azure-pipelines.yml` runs on the self-hosted `meshmakers-ci-agents`:
