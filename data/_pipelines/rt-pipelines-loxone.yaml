@@ -453,15 +453,17 @@ entities:
             targetPath: $.mappingTargets
             targetValueKind: Simple
             targetValueWriteMode: Overwrite
-          # Load the current LoxoneConfiguration
+          # Load the Firmianstrasse LoxoneConfiguration BY WELL-KNOWN NAME (AB#7741). The tenant has more than
+          # one LoxoneConfiguration (Fusch: FuschLoxoneMiniserverConfig, AB#7695); "first of type" could pick the
+          # Fusch one and overwrite its MappingTargets with the Firmianstrasse list.
           - type: GetRtEntitiesByType@1
-            description: Load LoxoneConfiguration
+            description: Load the Firmianstrasse LoxoneConfiguration (LoxoneMiniserverConfig)
             ckTypeId: System.Communication/LoxoneConfiguration
             targetPath: $.configs
             fieldFilters:
-              - attributePath: Host
-                operator: NotEquals
-                comparisonValue: null
+              - attributePath: RtWellKnownName
+                operator: Equals
+                comparisonValue: LoxoneMiniserverConfig
           # Update the configuration with the resolved mapping targets
           - type: If@1
             description: Only update if configuration exists
