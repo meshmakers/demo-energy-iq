@@ -8,8 +8,13 @@ dependencies:
 # ALL VALUES BELOW ARE PLACEHOLDERS. The Miniserver LAN address is the only real value (a private address,
 # reachable only from the Fusch LAN behind edge device mm-octo-mesh-edge-0003). The user name is a
 # placeholder (a plain String attribute, runtime state: a re-import keeps the live value); the real user and
-# the password are NOT stored in this repository (it is public) and are not in Vault yet: they are entered at
-# rollout (docs/fusch-loxone-runbook.md).
+# the password are NOT stored in this repository (it is public) and not in Vault: like the Firmianstrasse
+# LoxoneMiniserverConfig they are entered in Refinery Studio on this configuration entity
+# (docs/fusch-loxone-runbook.md, step 2).
+#
+# Host: 192.168.20.4 (corrected live on prod-1 on 2026-10-29; the earlier 192.168.20.10 was wrong). The adapter
+# resolves the configuration when a pipeline is DEPLOYED: after changing host, port or credentials, run
+# DeployDataFlow for every Fusch Loxone data flow, otherwise the running pipelines keep the old values.
 #
 # The password is intentionally NOT part of this file: System.Communication/LoxoneConfiguration.Password is a
 # Secret attribute (optional in the CK), which is never seeded. Set it after the import with the Secret-aware
@@ -24,7 +29,7 @@ entities:
     rtWellKnownName: FuschLoxoneMiniserverConfig
     attributes:
       - id: System.Communication/Host
-        value: "192.168.20.10"
+        value: "192.168.20.4"
       - id: System.Communication/Port
         value: 80
       - id: System.Communication/Username

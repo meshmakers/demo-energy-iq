@@ -1,0 +1,61 @@
+{
+  "_note": "CONSTRUCTED sample in the event format of the Loxone adapter trigger FromLoxoneStateChange@1 (the input of the Fusch mesh pipeline 'Store Fusch PV States', AB#7696), NOT a recording: the discovery run of 2026-10-29 read only the structure, no values. The control and state UUIDs are the real ones of the Fusch Miniserver PV controls (from LoxAPP3.json, docs/fusch-loxone-inventory.md); the values and timestamps are invented but plausible (kW / kWh). The last item is a state the pipeline does not map (Fronius gridCurr = grid power, written only by the SHRDZM pipeline) and must be ignored. Replace with recorded events after the first live run.",
+  "states": [
+    {
+      "controlUuid": "20d2659d-02b3-47e2-ffff77d91626cdc4",
+      "stateName": "actual",
+      "pollUuid": "20d2659d-02b3-47d7-04ff2d9f59a93257",
+      "value": 3.214,
+      "code": "200",
+      "timestamp": "2026-10-29T11:00:00.0000000Z"
+    },
+    {
+      "controlUuid": "20d2659d-02b3-47e2-ffff77d91626cdc4",
+      "stateName": "total",
+      "pollUuid": "20d2659d-02b3-47d8-05ff2d9f59a93257",
+      "value": 15432.7,
+      "code": "200",
+      "timestamp": "2026-10-29T11:00:00.0000000Z"
+    },
+    {
+      "controlUuid": "20d265ba-02a5-98f5-ffff6a87a326836f",
+      "stateName": "actual",
+      "pollUuid": "20d265ba-02a5-98fa-ffff6a87a326836f",
+      "value": 0.987,
+      "code": "200",
+      "timestamp": "2026-10-29T11:00:00.0000000Z"
+    },
+    {
+      "controlUuid": "20d265ba-02a5-98f5-ffff6a87a326836f",
+      "stateName": "total",
+      "pollUuid": "20d265ba-02a5-98fb-ffff6a87a326836f",
+      "value": 6120.4,
+      "code": "200",
+      "timestamp": "2026-10-29T11:00:00.0000000Z"
+    },
+    {
+      "controlUuid": "20d26d65-0195-435f-ffff77d91626cdc4",
+      "stateName": "prodCurr",
+      "pollUuid": "20d26d65-0194-433f-0eff14c57935eac2",
+      "value": 4.05,
+      "code": "200",
+      "timestamp": "2026-10-29T11:00:00.0000000Z"
+    },
+    {
+      "controlUuid": "20d26d65-0195-435f-ffff77d91626cdc4",
+      "stateName": "prodTotal",
+      "pollUuid": "20d26d65-0194-4343-12ff14c57935eac2",
+      "value": 21311.9,
+      "code": "200",
+      "timestamp": "2026-10-29T11:00:00.0000000Z"
+    },
+    {
+      "controlUuid": "20d26d65-0195-435f-ffff77d91626cdc4",
+      "stateName": "gridCurr",
+      "pollUuid": "20d26d65-0194-4354-23ff14c57935eac2",
+      "value": -1.8,
+      "code": "200",
+      "timestamp": "2026-10-29T11:00:00.0000000Z"
+    }
+  ]
+}
