@@ -262,6 +262,20 @@ multi-hop scope, picker filter, empty scope, runtime queries bound to a selector
 there are wrong (mostly too high, change-driven PV rows can also come out too low); a correct figure needs a time-weighted energy aggregation in the platform. Measurements per KPI and
 site: [docs/meshboard-site-selector-fit.md](docs/meshboard-site-selector-fit.md).
 
+**Raumtemperaturen, Heizung & Kühlung, Beschattung & Beleuchtung (AB#7693):** the same visible **Standort** selector,
+but on `EnergyIQ/Site` (default Firmianstraße): rooms, sensors and plant hang off the spatial tree, which the electrical
+DistributionSystem does not reach at every site. Followers walk **Site → Building → BuildingStorey → Space** and from
+the room to the room sensors, heat pump, storage tanks, pump, luminaires or blinds; the outdoor sensor is found through
+an ExternalSpace directly under the Site. Every site must model storeys — a room directly under a Building is not found
+(Fusch: storeys UG/EG/OG, AB#7889); a site without an entity of a type (Fusch: heat pump, tanks, pump, outdoor sensor)
+shows the widget's empty state. The room pickers ("Raum", "Raum (Licht)", "Raum (Beschattung)") stay as they were and are
+not limited to the picked site: the per-room charts show the picked room whatever the site.
+**Open:** the five tiles "Wärmepumpe Firmianstraße – …" read the Firmianstraße heat-pump meter through a fixed rtId
+whatever the site, until AB#7888 links a meter to the equipment it meters (EnergyIQ 2.14.0).
+
+**Adding a site** (these three boards): Site → Building → BuildingStorey → Space, with sensors (`SpaceSensors`),
+luminaires and blinds (`SpaceElements`) on the rooms and plant (`ParentChild`) in a room, as in `rt-firmianstrasse.yaml`.
+
 ## CI/CD (Azure DevOps)
 
 `devops-build/azure-pipelines.yml` runs on the self-hosted `meshmakers-ci-agents`:

@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- AB#7693: MeshBoards **Raumtemperaturen**, **Heizung & Kühlung** and **Beschattung & Beleuchtung** get the visible
+  site selector "Standort" on `EnergyIQ/Site` (default Firmianstraße). Hidden followers walk Site → Building →
+  BuildingStorey → Space to the room sensors, heat pump, storage tanks, heating pump, luminaires and blinds, and Site →
+  ExternalSpace to the outdoor sensor; the tables, the outdoor and plant charts and the four light/blind bar charts
+  (grouping queries) are bound to them. Pins removed: outdoor sensor `…10051a1`, Warmwasserspeicher `…64f5`. The site-scoped
+  widgets need storeys at every site (Fusch: AB#7889); Fusch has no heat pump, tanks, pump or outdoor sensor, so those
+  widgets show the empty state there. Open: the five heat-pump meter tiles keep the Firmianstraße
+  meter pin `…3007a8` and are titled "Wärmepumpe Firmianstraße – …" until AB#7888; the room pickers are not limited to
+  the picked site (platform gap). Firmianstraße changes: "Aktuelle Raumtemperaturen" lists the 18 room sensors only, the
+  Warmwasserspeicher chart shows the Heizpuffer as an empty legend entry.
 - AB#7889: Fusch rooms sit in the storeys UG/EG/OG (`…0a70`-`…0a72`, elevations approximate, room assignment confirmed
   by Gerald), like Firmianstraße, so both sites have the same depth Building → BuildingStorey → Space for the room
   boards (AB#7693). Runbook section 8.3.
