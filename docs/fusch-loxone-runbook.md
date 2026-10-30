@@ -268,6 +268,80 @@ Run `…0d04` again only when the list in the file changes (then import the file
 
 Nothing is ever sent to a control of the Miniserver, the wall connector or evcc, so there is nothing to restore there.
 
+## 8. Rooms and devices (AB#7697)
+
+`data/bim/rt-fusch.yaml` now also holds the Fusch rooms and devices the inventory lists (rtIds `…0a20`-`…0a69`): 11
+Spaces under Building `…0a10`, 5 room TemperatureSensors (`…0a30`-`…0a34`), the heat mixer Valve `…0a40` with its flow
+TemperatureSensor `…0a41`, 6 ShadingDevices (`…0a50`-`…0a55`) and 10 Luminaires (`…0a60`-`…0a69`). Full list and the
+modelling decisions: header of the "Rooms and devices" block in that file. Existing Fusch entities `…0a01`-`…0a16` are
+unchanged; the upsert rewrites them with the same values.
+
+The **live mappings are not part of this change**: the state UUIDs of these controls are not in the repository (the
+discovery result was reduced to names and types for the public inventory). Section 8.2 lists what is needed; the
+mappings follow in a separate change once the UUIDs are known.
+
+### 8.1 Import the rooms and devices (model only)
+
+Preconditions: Gerald's go for prod-1 / `energyiq` in this session; the AB#7697 PR merged; no other import running.
+
+```bash
+cd demo-energy-iq/data
+octo-cli --context prod-1_energyiq -c authstatus
+
+# 1. Rollback copy (tenant dump, without archive data; a few MB). Path outside the repository.
+octo-cli --context prod-1_energyiq -c Dump -tid energyiq -f ~/.octo/dumps/energyiq-prod-1-before-ab7697.tar.gz
+
+# 2. Import (upsert by rtId; adds a20-a69, a01-a16 keep their values)
+octo-cli --context prod-1_energyiq -c ImportRt -f ./bim/rt-fusch.yaml -w -r
+```
+
+No deploy and no pipeline run: nothing executes on the edge device or the Miniserver, the Fusch Loxone data flows
+`…0d01`/`…0d03` stay as they are.
+
+Checks (read only):
+
+- Counts in the tenant: `EnergyIQ/Space` 18 → 29, `EnergyIQ/TemperatureSensor` 21 → 27, `EnergyIQ/Luminaire` 18 → 28,
+  `EnergyIQ/ShadingDevice` 8 → 14, `EnergyIQ/Valve` 14 → 15 (`rt_explorer.py count …` or Studio).
+- `get_entity_by_id` `EnergyIQ/Space` `6a10f05c0000000000000a2a` ("Wohnzimmer Fusch"): parent `…0a10`, one contained
+  sensor (`Temp-Wohnzimmer Fusch`), contained elements `Jalousie Wohnzimmer Balkontüre Fusch`,
+  `Jalousie Wohnzimmer Fenster Fusch`, `Licht Wohnzimmer Fusch`.
+- Boards: the Raumtemperaturen room selector lists the 11 Fusch rooms in addition to the Firmianstraße rooms; with a
+  Fusch room picked the chart is empty (no live values yet, see 8.2). With a Firmianstraße room picked nothing
+  changes. Bar charts and tables of Beschattung & Beleuchtung list the Fusch devices without values. The site
+  selector on these boards is AB#7693.
+- PV values on `…0a12`-`…0a14` keep arriving (section 7.3); GridConnection `…0a03` unchanged.
+
+Rollback (in this order, stop where the damage stops):
+
+1. Delete the new entities by rtId (MCP `delete_entity` or Studio), devices first, spaces last:
+   `…0a60`-`…0a69`, `…0a50`-`…0a55`, `…0a41`, `…0a40`, `…0a30`-`…0a34`, `…0a20`-`…0a2a`. **Never** delete
+   `…0a01`-`…0a16`.
+2. Only if the tenant is otherwise damaged: restore the dump of step 1 (`Restore`), which also resets every change made
+   after the dump — ask Gerald first.
+
+### 8.2 Live mappings: state UUIDs needed (blocked)
+
+To map read-only, like the PV data flow (fixed state UUID → fixed target rtId), these Miniserver states are needed
+(22 states; control UUID and state UUID of each):
+
+| Control (room, name, type) | State | Target | Rule |
+|----------------------------|-------|--------|------|
+| Bad OG, Flur EG, Küche OG, Schlafzimmer, Wohnzimmer — room controller `IRoomControllerV2` (5) | `tempActual` [°C] | TemperatureSensor `…0a30`-`…0a34` `CurrentValue` → TemperatureSensorArchive `6a0e…0a0001` | as is |
+| Heizraum, "Heizungsmischer", `Heatmixer` (1) | `tempActual` [°C] | TemperatureSensor `…0a41` `CurrentValue` → TemperatureSensorArchive | as is |
+| Bad OG "Automatikjalousie", Küche OG "Balkontür"/"Fenster", Schlafzimmer "Automatikjalousie", Wohnzimmer "Balkontüre"/"Fenster" — `Jalousie` (6) | `position` [0..1] | ShadingDevice `…0a50`-`…0a55` `Position` [%] → ShadingDeviceArchive `6a0e…0a0005` (rollup `…0a0013`) | `value * 100` (Firmianstraße `jalousie-shading`) |
+| Bad OG, Flur EG, Flur OG, Flur UG, Garage, Küche OG, Schlafzimmer, Stiegenhaus, Vorratskeller, Wohnzimmer — `LightControllerV2` (10) | `activeMoodsNum` | Luminaire `…0a60`-`…0a69` `IsOn` = `value <> 778`, `DimmingLevel` = `if(value <> 778, 100, 0)` → LuminaireArchive `6a0e…0a0004` (rollup `…0a0012`) | Firmianstraße `lightcontroller-ison`/`-level` |
+
+How to get them (read only, for Odin, after Gerald's go): read the debug points of the discovery execution
+`609f821f-8ec8-438f-8962-7001c2edb9b6` if they are still retained (`GetPipelineDebugPoints`, node of
+`SetPipelineExecutionResult@1`), otherwise run the discovery once more (section 4, two HTTP GETs, no write). Take
+only the 22 control/state UUID pairs of the table — nothing of the identity block — and hand them to the developer.
+
+The follow-up change then extends `rt-pipelines-loxone-fusch.yaml` (watch list of `…0d04`, mapping table of `…0d06`;
+the 6 PV mappings unchanged) and adds the states to `data/samples/loxone-fusch-states.json`. Its prod-1 steps will be
+section 7.1-7.4 again: `ImportRt … rt-pipelines-loxone-fusch.yaml -w -r`, `DeployDataFlow -id …0d03`,
+`ExecutePipeline -id …0d04` (watch list 6 → 28 states), verify values on the entities and rows in the archives,
+rollback = `UndeployDataFlow -id …0d03` and re-import of the previous file.
+
 ## Validation evidence (2026-10-28, before the PR)
 
 - Pipeline definition validated against the pipeline JSON schema of the Loxone adapter
@@ -285,3 +359,18 @@ Nothing is ever sent to a control of the Miniserver, the wall connector or evcc,
   result as described in step 4.
 - No write path: the pipeline has exactly the nodes `FromExecutePipelineCommand@1`, `GetPipelineConfigByWellKnownName@1`,
   `LoxoneBrowse@1` (two HTTP GETs, see above), `Project@1` (2x), `SetPipelineExecutionResult@1`.
+
+## Validation evidence AB#7697 (2026-10-30, before the PR)
+
+- Temporary tenant `tmp-daidalos7697` on test-2 (created under `octosystem`, deleted afterwards): EnergyIQ 2.13.0
+  (compiled from the unchanged CK source, `ck-energyiq-2.yaml`; `ImportFromCatalog EnergyIQ-2.13.0` imported only the
+  dependencies `Basic-2.5.0`/`Basic.Energy-1.10.0` and then reported "already up to date"), then
+  `data/bim/rt-fusch.yaml` imported three times: insert-only, upsert, upsert — all three jobs completed without error.
+- After the third import: 11 Spaces, 6 TemperatureSensors, 6 ShadingDevices, 10 Luminaires, 1 Valve (no duplicates);
+  every TemperatureSensor, Luminaire and ShadingDevice resolves to its Space over `EnergyIQ/SpaceSensors` /
+  `EnergyIQ/SpaceElements`, the Valve to "Heizraum Fusch" over `EnergyIQ/SpaceActuators`, the flow sensor to the Valve
+  over `EnergyIQ/EquipmentSensors`.
+- prod-1 (read only, `rt_explorer.py list`): no entity of the new types in the `6a10f05c…0a2x`-`…0a6x` range; all new
+  names end in "Fusch" and do not occur at Firmianstraße.
+- No pipeline changed, so no pipeline validation or dry run was needed for this change (they belong to the mapping
+  change of section 8.2).
