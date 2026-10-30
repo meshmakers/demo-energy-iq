@@ -5,7 +5,8 @@ octo-meshboard entity selector (`EntitySelectorConfig`, `EntitySelectorChildScop
 `PersistentQueryDataSource.entitySelectorId`). Result on 2026-10-28: **not with data configuration alone**
 (platform gaps below). The gaps were closed in octo-frontend-libraries by Feature AB#7719 (AB#7721-AB#7725,
 merged 2026-10-30); Energie and Energiebilanz now have one visible site selector — see
-[Part 2: implemented design](#part-2-implemented-design-2026-10-30). The three other boards follow in AB#7693.
+[Part 2: implemented design](#part-2-implemented-design-2026-10-30). The three room boards followed in AB#7693 — see
+[Part 3: room boards](#part-3-room-boards-ab7693-2026-10-30).
 
 ## Platform facts the analysis rests on
 
@@ -217,3 +218,107 @@ description and the YAML state the limit, and the correct figure is a platform g
 AggregationSdQuery (time-weighted integral ∫P dt over the query window, LOCF — `TimeWeightedAverage` exists but needs
 a rollup and the KPI cannot multiply it by the window length). Reported to Odin on AB#7692. Whether the KPIs should
 show nothing until then is open for the developer.
+
+## Part 3: room boards (AB#7693, 2026-10-30)
+
+Raumtemperaturen (`6a4a9f277e487162fbe3860a`), Heizung & Kühlung (`6a4b4000000000000000e100`) and Beschattung &
+Beleuchtung (`6a4d5000000000000000b100`) get the same visible selector "Standort", configured with data only.
+
+### Leader: the Site, not the electrical DistributionSystem
+
+| Field | Value |
+|-------|-------|
+| id / label | `standort` / "Standort", `showInToolbar: true` |
+| ckTypeId | `EnergyIQ/Site` (no picker filter: the type holds only sites) |
+| defaultRtId | `6789a00000000000000000a1` (Firmianstraße 31A) — the only site rtId of these selectors |
+
+Why a second leader type: rooms, sensors and plant hang off the spatial tree (Site → Building → BuildingStorey →
+Space). The electrical DistributionSystem reaches it only where it models `SystemSpaces` (Firmianstraße: the four
+storeys; Fusch: none), or through PV → PVString → Building, which with the storey level makes six hops (maximum five).
+Checked read-only on prod-1 with the library's hop query:
+
+| Candidate path (to TemperatureSensor) | Firmianstraße | Fusch (today) |
+|----------------------------------------|---------------|---------------|
+| DS → SystemSpaces → Space → sensor | 0 | 0 |
+| DS → SystemSpaces → Storey → Space → sensor | 18 | 0 (no SystemSpaces) |
+| DS → PV → PVString → Building → Space → sensor | 0 | 5 (no storeys yet) |
+| Site → Building → Space → sensor | 0 | 5 |
+| **Site → Building → Storey → Space → sensor** (chosen) | **18** | **0 until AB#7889** |
+
+Trade-off: the energy boards and the room boards have different leader types under the same label. A pick does not
+carry over from one kind of board to the other (it does not today either — each board keeps its own URL state), and the
+room boards list site names ("Firmianstraße 31A", "Fusch") while the energy boards list system names. In return the room
+boards depend on the spatial tree only, which every site has, and on no modelling choice of the electrical system.
+
+Precondition per site: storeys. A fixed path cannot serve a room directly under a Building and a room under a storey at
+the same time. Fusch had rooms directly under its Building; Gerald decided that Fusch gets storeys (UG, EG, OG; story
+AB#7889), so both sites have Building → BuildingStorey → Space. Until AB#7889 is imported the room followers resolve
+an empty scope for Fusch, and the widgets show the empty state.
+
+### Followers
+
+All followers: `followsSelectorId: standort`, `showInToolbar: false`, no default; `childScope.path` starts with
+`System/ParentChild` in → Building, → BuildingStorey, → Space (3 hops) and adds one hop:
+
+| Follower | Last hop | Firmianstraße (prod-1) | Fusch after AB#7889 |
+|----------|----------|------------------------|---------------------|
+| `raumsensoren` | `EnergyIQ/SpaceSensors` in → TemperatureSensor | 18 room sensors | 5 room sensors |
+| `aussensensor` | path Site → `System/ParentChild` in → ExternalSpace → `EnergyIQ/SpaceSensors` in → TemperatureSensor (2 hops) | `…10051a1` | empty (no outdoor sensor) |
+| `waermepumpe` | `System/ParentChild` in → HeatPump | `…60f1` | empty |
+| `speicher` | `System/ParentChild` in → ThermalEnergyStorage | `…63f4` (Heizpuffer), `…64f5` | empty |
+| `pumpe` | `System/ParentChild` in → Pump | `…62f3` | empty |
+| `leuchten` | `EnergyIQ/SpaceElements` in → Luminaire | 18 luminaires | 10 luminaires |
+| `raffstores` | `EnergyIQ/SpaceElements` in → ShadingDevice | 8 blinds | 6 blinds |
+
+The Fusch heat mixer (Valve `…0a40`) and its flow sensor (`…0a41`, `EquipmentSensors`) are not reached: the boards have
+no valve widget, and `raumsensoren` follows `SpaceSensors` only.
+
+### Widgets
+
+| Board | Widget | Query (family) | Selector | Fusch |
+|-------|--------|----------------|----------|-------|
+| Raumtemperaturen | Raumtemperatur – Verlauf | SimpleSdQuery TemperatureSensorArchive | `raum` (room picker, unchanged) | the picked room |
+| Raumtemperaturen | Aktuelle Raumtemperaturen | SimpleRtQuery TemperatureSensor (runtime) | `raumsensoren` | room sensors |
+| Raumtemperaturen | Außentemperatur – Verlauf | SimpleSdQuery TemperatureSensorArchive, pin removed | `aussensensor` | empty |
+| Heizung & Kühlung | Wärmepumpe – aktuell | SimpleRtQuery HeatPump (runtime) | `waermepumpe` | empty |
+| Heizung & Kühlung | Heizkreis Vorlauf / Rücklauf, Sole Eintritt / Austritt | SimpleSdQuery HeatPumpArchive | `waermepumpe` | empty |
+| Heizung & Kühlung | Warmwasserspeicher | SimpleSdQuery ThermalEnergyStorageArchive, pin removed | `speicher` | empty |
+| Heizung & Kühlung | Speicher – aktuell | SimpleRtQuery ThermalEnergyStorage (runtime) | `speicher` | empty |
+| Heizung & Kühlung | Heizkreispumpe – aktuell | SimpleRtQuery Pump (runtime) | `pumpe` | empty |
+| Heizung & Kühlung | Wärmepumpe Firmianstraße – Ø-Leistung, Zählerstand Fensterbeginn, Zählerstand Fensterende, Leistungsaufnahme, Energie kumuliert (5) | AggregationSdQuery / SimpleSdQuery MeterArchive, MeterEnergyArchive, pin `…3007a8` | none (open, AB#7888) | **Firmianstraße values** (exception, title names the site) |
+| Beschattung & Beleuchtung | Aktueller Lichtstatus | SimpleRtQuery Luminaire (runtime) | `leuchten` | luminaires |
+| Beschattung & Beleuchtung | Aktuelle Beschattung | SimpleRtQuery ShadingDevice (runtime) | `raffstores` | blinds |
+| Beschattung & Beleuchtung | Licht-Einschaltquote, Licht-Schaltvorgänge, Brenndauer je Leuchte | GroupingAggregationSdQuery LuminaireStatusArchive | `leuchten` | luminaires |
+| Beschattung & Beleuchtung | Ø Beschattung je Raffstore | GroupingAggregationSdQuery ShadingDeviceStatusArchive | `raffstores` | blinds |
+| Beschattung & Beleuchtung | Licht – Einschaltgrad Verlauf | SimpleSdQuery LuminaireArchive | `lichtraum` (room picker, unchanged) | the picked room |
+| Beschattung & Beleuchtung | Beschattung – Position Verlauf | SimpleSdQuery ShadingDeviceArchive | `beschattungsraum` (room picker, unchanged) | the picked room |
+
+### Open points and gaps
+
+1. **Heat-pump meter (AB#7888).** The five meter tiles need exactly the heat-pump meter `6789a00000000000003007a8`. No
+   association or attribute tells it apart from the other Technikraum meters (`…3005a6` IT-Schrank, `…3006a7`
+   Technikraum), and all three write rows (prod-1, 2026-10-29: 85k / 15k / 116k rows in MeterArchive). A room-based scope
+   would average or chart all three. Decision (Odin, 2026-10-30): keep the pin, title the tiles "Wärmepumpe Firmianstraße
+   – …", say it in the board description, no name filter. AC 3 stays open for these five tiles and AC 5 has this
+   documented exception. AB#7888 adds the association Meter → TechnicalSystem (EnergyIQ 2.14.0); the follower then ends
+   … → Space → HeatPump → Meter (5 hops).
+2. **Heizpuffer in the Warmwasserspeicher chart.** `speicher` yields both tanks; the Heizpuffer `…63f4` has no live feed,
+   so the chart shows it as an empty legend entry (accepted). The storage table lists both tanks, as before.
+3. **Room pickers are not site-scoped (platform gap: dependent picker).** A follower has no picker, and a picker filter
+   compares the listed entity's own attributes only and does not reset a pick that no longer matches (AB#7724 contract).
+   So "Raum", "Raum (Licht)" and "Raum (Beschattung)" stay independent pickers over all rooms of the tenant, and the three
+   per-room line charts show the picked room whatever the site. Each board therefore has two or three visible selectors.
+   A picker that lists the rooms of the leader's scope and resets on a leader change would close this.
+4. **ImportRt keeps attributes that a file leaves out.** Upsert (`-r`) merges attributes; the removed
+   `StreamDataQuery.RtIds` pins of `…38618` and `…e205` stay in a tenant that had them, and an empty list in the file is
+   ignored too. The widgets are not affected (a scoped widget overrides the persisted rtIds; an empty scope sends no
+   query), but the stale pin is cleared by one GraphQL update per tenant (`systemSimpleSdQuerys.update` with
+   `rtIds: []`), done on test-2 and listed in the prod-1 steps of the PR.
+
+### What changes for Firmianstraße (data, not layout)
+
+- "Aktuelle Raumtemperaturen" listed every TemperatureSensor of the tenant (Firmianstraße: 18 rooms + outdoor + two
+  heat-pump equipment sensors; on prod-1 also the 6 Fusch sensors); it now lists the 18 room sensors of the site.
+- "Aktueller Lichtstatus" / "Aktuelle Beschattung" and the four bar charts no longer include Fusch luminaires and blinds
+  (prod-1: 28 → 18 luminaires, 14 → 8 blinds); the Firmianstraße values are the same.
+- Warmwasserspeicher chart: one extra empty legend entry (Heizpuffer). All other widgets read the same rtIds as before.
