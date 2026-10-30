@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- AB#7692: MeshBoards **Energie** and **Energiebilanz** get one visible site selector "Standort" (electrical
+  DistributionSystems, picker filter `systemType = ELECTRICAL`, default Firmianstraße). Hidden followers resolve the pick
+  to the grid connection, PV system, battery (two-hop path through the PV system), wallboxes, appliances and meters; every
+  widget, including the runtime table "Aktuelle Leistungen" and all six Energiebilanz KPIs, is bound to its follower. A
+  site without e.g. a battery shows the empty state. Firmianstraße figures no longer include Fusch rows (PV KPI, meter
+  table). Requires a Studio whose octo-frontend-libraries support follower selectors, multi-hop scopes, picker
+  filters and selector-bound runtime queries (AB#7719). The Energiebilanz kWh factor 10/3600 was measured against prod-1
+  rows: it holds for no live site (grid rows every 5 s, PV/battery on change; kWh mostly too high) — documented in
+  `docs/meshboard-site-selector-fit.md`, board description and YAML header; a correct figure needs a platform energy
+  aggregation.
 - AB#7697: Fusch rooms and devices in `data/bim/rt-fusch.yaml` (rtIds `6a10f05c0000000000000a20` to `…a69`), only what
   the Miniserver inventory lists: 11 Spaces (Loxone rooms) under the Fusch building, 5 room TemperatureSensors, the heat
   mixer as Valve (Mixing) with its flow TemperatureSensor, 6 ShadingDevices (blinds) and 10 Luminaires (light

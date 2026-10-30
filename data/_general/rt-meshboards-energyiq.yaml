@@ -18,12 +18,23 @@ $schema: https://schemas.meshmakers.cloud/runtime-model.schema.json
 # polymorphic scopes (e.g. EnergyIQ/Meter) would fan out rtIds that have no rows
 # in the queried archive and produce ghost legend entries (gap-filled null bins).
 #
-# Site selection (AB#7692): the boards cannot offer one visible site selector with data configuration
-# alone (one childScope per selector, no selector-to-selector dependency, runtime queries unscoped,
-# empty scope falls back to the whole archive). Analysis and proposed platform capabilities:
-# docs/meshboard-site-selector-fit.md. Interim: the Energiebilanz KPI "Netzbezug" is scoped to the
-# Firmianstraße grid connection through the hidden selector `netz`, so Fusch rows in the shared
-# GridConnectionArchive no longer enter it.
+# Site selection on "Energie" and "Energiebilanz" (AB#7692): one visible leader selector
+# `standort` ("Standort") lists the electrical DistributionSystems (picker filter
+# systemType = ELECTRICAL; one per site: Firmianstraße, Fusch) and defaults to Firmianstraße.
+# Hidden followers (`followsSelectorId: standort`) turn the picked system into the source rtIds
+# of one target type each, and every widget binds the matching follower (`entitySelectorId`):
+#   netz      DS -SystemMembers-> GridConnection                     (grid line chart, KPI Netzbezug)
+#   pv        DS -SystemMembers-> PhotovoltaicSystem                 (PV line chart, 3 PV KPIs)
+#   wallboxen DS -SystemMembers-> ChargingStation                    (Wallboxen line chart)
+#   geraete   DS -SystemMembers-> Appliance                          (Geräte line chart)
+#   batterie  DS -SystemMembers-> PhotovoltaicSystem -SystemMembers-> BatteryStorage (path, 2 hops)
+#   zaehler   DS -SystemMembers-> Meter (incl. GridConnection/ChargingStation/Appliance; runtime
+#             table "Aktuelle Leistungen", rtId IN filter on the server)
+# A site without e.g. a battery resolves an EMPTY scope: the widget shows its no-data state and
+# sends no query (never the whole archive). Adding a site: give it an electrical DistributionSystem
+# (DistributionSystemTypeValue 3) whose SystemMembers are its GridConnection, PhotovoltaicSystem
+# (battery as member of the PV system), ChargingStations, Appliances and Meters — no board change.
+# Only the leader's defaultRtId names a site. Background: docs/meshboard-site-selector-fit.md.
 #
 # Imported as Status=Created; om_importrt.ps1 activates the rollups after import
 # (provisions the CrateDB tables). Backfill of pre-existing history is optional:
@@ -313,9 +324,9 @@ entities:
         value: Energie
       - id: System/Description
         value: |-
-          Energieübersicht: Netzbezug, PV-Produktion, Wallboxen, Geräte und Batteriespeicher aus den Stream-Data-Archiven + aktuelle Leistungen aller Zähler.
+          Energieübersicht des gewählten Standorts: Netzbezug, PV-Produktion, Wallboxen, Geräte und Batteriespeicher aus den Stream-Data-Archiven + aktuelle Leistungen der Zähler des Standorts.
           ---MESHBOARD_VARIABLES---
-          {"timeFilter": {"enabled": true, "selection": {"type": "relative", "relativeValue": 24, "relativeUnit": "hours"}}, "autoRefreshSeconds": 300, "entitySelectors": [{"id": "netz", "label": "Netzanschluss", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "defaultRtId": "6789a00000000000006000d3", "childScope": {"targetCkTypeId": "EnergyIQ/GridConnection", "roleId": "EnergyIQ/SystemMembers", "direction": "out"}}, {"id": "wallboxen", "label": "Wallboxen", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "defaultRtId": "6789a00000000000006000d3", "childScope": {"targetCkTypeId": "EnergyIQ/ChargingStation", "roleId": "EnergyIQ/SystemMembers", "direction": "out"}}, {"id": "geraete", "label": "Geräte", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "defaultRtId": "6789a00000000000006000d3", "childScope": {"targetCkTypeId": "EnergyIQ/Appliance", "roleId": "EnergyIQ/SystemMembers", "direction": "out"}}, {"id": "pv", "label": "PV-Anlage", "ckTypeId": "EnergyIQ/PhotovoltaicSystem", "attributeMappings": [], "showInToolbar": false, "defaultRtId": "6789a00000000000000080a1"}, {"id": "batterie", "label": "Batterie", "ckTypeId": "EnergyIQ/PhotovoltaicSystem", "attributeMappings": [], "showInToolbar": false, "defaultRtId": "6789a00000000000000080a1", "childScope": {"targetCkTypeId": "EnergyIQ/BatteryStorage", "roleId": "EnergyIQ/SystemMembers", "direction": "out"}}]}
+          {"timeFilter": {"enabled": true, "selection": {"type": "relative", "relativeValue": 24, "relativeUnit": "hours"}}, "autoRefreshSeconds": 300, "entitySelectors": [{"id": "standort", "label": "Standort", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [{"attributePath": "name", "variableName": "standortName"}], "showInToolbar": true, "defaultRtId": "6789a00000000000006000d3", "filters": [{"attributePath": "systemType", "operator": "EQUALS", "comparisonValue": "ELECTRICAL"}]}, {"id": "netz", "label": "Netzanschluss", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"targetCkTypeId": "EnergyIQ/GridConnection", "roleId": "EnergyIQ/SystemMembers", "direction": "out"}}, {"id": "pv", "label": "PV-Anlage", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"targetCkTypeId": "EnergyIQ/PhotovoltaicSystem", "roleId": "EnergyIQ/SystemMembers", "direction": "out"}}, {"id": "wallboxen", "label": "Wallboxen", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"targetCkTypeId": "EnergyIQ/ChargingStation", "roleId": "EnergyIQ/SystemMembers", "direction": "out"}}, {"id": "geraete", "label": "Geräte", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"targetCkTypeId": "EnergyIQ/Appliance", "roleId": "EnergyIQ/SystemMembers", "direction": "out"}}, {"id": "batterie", "label": "Batterie", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"path": [{"roleId": "EnergyIQ/SystemMembers", "direction": "out", "targetCkTypeId": "EnergyIQ/PhotovoltaicSystem"}, {"roleId": "EnergyIQ/SystemMembers", "direction": "out", "targetCkTypeId": "EnergyIQ/BatteryStorage"}]}}, {"id": "zaehler", "label": "Zähler", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"targetCkTypeId": "EnergyIQ/Meter", "roleId": "EnergyIQ/SystemMembers", "direction": "out"}}]}
       - id: System.UI/Dashboard.Columns
         value: 12
       - id: System.UI/Dashboard.RowHeight
@@ -495,7 +506,7 @@ entities:
         value: 6a4aa4cc22664f2b26c67e64
       - id: System.UI/DashboardWidget.Config
         value: |-
-          {"columns": [{"field": "name", "title": "Zähler / Verbraucher"}, {"field": "activePower", "title": "Wirkleistung (W)"}], "pageSize": 15, "sortable": true, "queryName": "Aktuelle Leistungen", "queryRtId": "6a4aa4cc22664f2b26c67e64", "queryFamily": "runtime"}
+          {"columns": [{"field": "name", "title": "Zähler / Verbraucher"}, {"field": "activePower", "title": "Wirkleistung (W)"}], "pageSize": 15, "sortable": true, "queryName": "Aktuelle Leistungen", "queryRtId": "6a4aa4cc22664f2b26c67e64", "queryFamily": "runtime", "entitySelectorId": "zaehler"}
 
   - rtId: 6a4aa4cc22664f2b26c67e5f
     ckTypeId: System/SimpleSdQuery
@@ -634,7 +645,7 @@ entities:
         value: Aktuelle Leistungen
       - id: System/Description
         value: >-
-          Current active power of all meters (grid connection, sub-meters, wallboxes, appliances). Used by the Energie MeshBoard table.
+          Current active power of all meters (grid connection, sub-meters, wallboxes, appliances). The Energie MeshBoard table restricts it to the meters of the picked site (selector follower `zaehler`).
       - id: System/Query.CkTypeId
         value: EnergyIQ/Meter
       - id: System/Query.NavigationFilterMode
@@ -1036,11 +1047,19 @@ entities:
   # Dashboard: Energiebilanz (cumulated kWh over the time filter)
   #
   # Each KPI runs a persistent AggregationSdQuery (SUM of the value column,
-  # optionally sign-filtered) bound to the board time filter and converts the
-  # kW-sample sum to kWh via the KPI valueMultiplier 10/3600 (simulator writes
-  # every 10 s, uniform sampling — SUM is linear, so the factor holds for any
-  # window). "Batterie entladen" uses the NEGATED multiplier on the < 0-filtered
-  # sum to display positive kWh discharged.
+  # optionally sign-filtered) bound to the board time filter and to a follower of
+  # the `standort` selector, and converts the kW-sample sum to kWh via the KPI
+  # valueMultiplier 10/3600. "Batterie entladen" uses the NEGATED multiplier on the
+  # < 0-filtered sum to display positive kWh discharged.
+  #
+  # LIMIT: 10/3600 is only correct for rows written exactly every 10 s (the demo
+  # simulator, rt-simulation-adapters.yaml). Live sites do not write that way:
+  # grid rows (Loxone Firmianstraße, SHRDZM Fusch) arrive about every 5 s (kWh shown
+  # about 2x too high), PV and battery rows are written on change (kWh off in either
+  # direction: Firmianstraße several times too high, Fusch PV too low). A correct
+  # figure needs a time-weighted energy integral in the
+  # aggregation query (platform gap, AB#7692 comment). Measurements per KPI and site:
+  # docs/meshboard-site-selector-fit.md, section "Energiebilanz kWh".
   # ============================================================
   - rtId: 6a4aaf1922664f2b26c67ecc
     ckTypeId: System.UI/Dashboard
@@ -1049,9 +1068,9 @@ entities:
         value: Energiebilanz
       - id: System/Description
         value: |-
-          Kumulierte Energiebilanz über den gewählten Zeitraum: PV-Produktion, Eigenverbrauch, Netzeinspeisung, Netzbezug sowie geladene/entladene Batterie-Energie. Werte in kWh (SUM der 10-s-kW-Samples × 10/3600).
+          Kumulierte Energiebilanz des gewählten Standorts über den gewählten Zeitraum: PV-Produktion, Eigenverbrauch, Netzeinspeisung, Netzbezug sowie geladene/entladene Batterie-Energie. Werte in kWh = SUM der kW-Samples × 10/3600 — nur korrekt bei Samples im 10-s-Raster (Simulator); bei Live-Daten (5-s- oder änderungsgetriebene Samples) ungenau, meist zu hoch.
           ---MESHBOARD_VARIABLES---
-          {"timeFilter": {"enabled": true, "selection": {"type": "relative", "relativeValue": 24, "relativeUnit": "hours"}}, "autoRefreshSeconds": 300, "entitySelectors": [{"id": "netz", "label": "Netzanschluss", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "defaultRtId": "6789a00000000000006000d3", "childScope": {"targetCkTypeId": "EnergyIQ/GridConnection", "roleId": "EnergyIQ/SystemMembers", "direction": "out"}}]}
+          {"timeFilter": {"enabled": true, "selection": {"type": "relative", "relativeValue": 24, "relativeUnit": "hours"}}, "autoRefreshSeconds": 300, "entitySelectors": [{"id": "standort", "label": "Standort", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [{"attributePath": "name", "variableName": "standortName"}], "showInToolbar": true, "defaultRtId": "6789a00000000000006000d3", "filters": [{"attributePath": "systemType", "operator": "EQUALS", "comparisonValue": "ELECTRICAL"}]}, {"id": "netz", "label": "Netzanschluss", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"targetCkTypeId": "EnergyIQ/GridConnection", "roleId": "EnergyIQ/SystemMembers", "direction": "out"}}, {"id": "pv", "label": "PV-Anlage", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"targetCkTypeId": "EnergyIQ/PhotovoltaicSystem", "roleId": "EnergyIQ/SystemMembers", "direction": "out"}}, {"id": "batterie", "label": "Batterie", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"path": [{"roleId": "EnergyIQ/SystemMembers", "direction": "out", "targetCkTypeId": "EnergyIQ/PhotovoltaicSystem"}, {"roleId": "EnergyIQ/SystemMembers", "direction": "out", "targetCkTypeId": "EnergyIQ/BatteryStorage"}]}}]}
       - id: System.UI/Dashboard.Columns
         value: 12
       - id: System.UI/Dashboard.RowHeight
@@ -1086,7 +1105,7 @@ entities:
         value: 6a4aaddc22664f2b26c67ec4
       - id: System.UI/DashboardWidget.Config
         value: |-
-          {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "totalcurrentpower_sum", "valueMultiplier": 0.002777777777777778, "suffix": " kWh", "queryName": "PV-Produktion kumuliert", "queryRtId": "6a4aaddc22664f2b26c67ec4", "queryFamily": "streamData"}
+          {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "totalcurrentpower_sum", "valueMultiplier": 0.002777777777777778, "suffix": " kWh", "queryName": "PV-Produktion kumuliert", "queryRtId": "6a4aaddc22664f2b26c67ec4", "queryFamily": "streamData", "entitySelectorId": "pv"}
 
   - rtId: 6a4aaf1922664f2b26c67ece
     ckTypeId: System.UI/DashboardWidget
@@ -1115,7 +1134,7 @@ entities:
         value: 6a4aaddc22664f2b26c67ec5
       - id: System.UI/DashboardWidget.Config
         value: |-
-          {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "selfconsumption_sum", "valueMultiplier": 0.002777777777777778, "suffix": " kWh", "queryName": "Eigenverbrauch kumuliert", "queryRtId": "6a4aaddc22664f2b26c67ec5", "queryFamily": "streamData"}
+          {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "selfconsumption_sum", "valueMultiplier": 0.002777777777777778, "suffix": " kWh", "queryName": "Eigenverbrauch kumuliert", "queryRtId": "6a4aaddc22664f2b26c67ec5", "queryFamily": "streamData", "entitySelectorId": "pv"}
 
   - rtId: 6a4aaf1922664f2b26c67ecf
     ckTypeId: System.UI/DashboardWidget
@@ -1144,7 +1163,7 @@ entities:
         value: 6a4aaddc22664f2b26c67ec6
       - id: System.UI/DashboardWidget.Config
         value: |-
-          {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "gridfeedin_sum", "valueMultiplier": 0.002777777777777778, "suffix": " kWh", "queryName": "Netzeinspeisung kumuliert", "queryRtId": "6a4aaddc22664f2b26c67ec6", "queryFamily": "streamData"}
+          {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "gridfeedin_sum", "valueMultiplier": 0.002777777777777778, "suffix": " kWh", "queryName": "Netzeinspeisung kumuliert", "queryRtId": "6a4aaddc22664f2b26c67ec6", "queryFamily": "streamData", "entitySelectorId": "pv"}
 
   - rtId: 6a4aaf1922664f2b26c67ed0
     ckTypeId: System.UI/DashboardWidget
@@ -1202,7 +1221,7 @@ entities:
         value: 6a4aaddc22664f2b26c67ec8
       - id: System.UI/DashboardWidget.Config
         value: |-
-          {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "chargingpower_sum", "valueMultiplier": 0.002777777777777778, "suffix": " kWh", "queryName": "Batterie geladen kumuliert", "queryRtId": "6a4aaddc22664f2b26c67ec8", "queryFamily": "streamData"}
+          {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "chargingpower_sum", "valueMultiplier": 0.002777777777777778, "suffix": " kWh", "queryName": "Batterie geladen kumuliert", "queryRtId": "6a4aaddc22664f2b26c67ec8", "queryFamily": "streamData", "entitySelectorId": "batterie"}
 
   - rtId: 6a4aaf1922664f2b26c67ed2
     ckTypeId: System.UI/DashboardWidget
@@ -1231,7 +1250,7 @@ entities:
         value: 6a4aaddc22664f2b26c67ec9
       - id: System.UI/DashboardWidget.Config
         value: |-
-          {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "chargingpower_sum", "valueMultiplier": -0.002777777777777778, "suffix": " kWh", "queryName": "Batterie entladen kumuliert", "queryRtId": "6a4aaddc22664f2b26c67ec9", "queryFamily": "streamData"}
+          {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "chargingpower_sum", "valueMultiplier": -0.002777777777777778, "suffix": " kWh", "queryName": "Batterie entladen kumuliert", "queryRtId": "6a4aaddc22664f2b26c67ec9", "queryFamily": "streamData", "entitySelectorId": "batterie"}
 
   # SUM of the TotalCurrentPower kW samples — × 10/3600 = kWh (operator 2=LessThan, 4=GreaterThan).
   - rtId: 6a4aaddc22664f2b26c67ec4
