@@ -11,6 +11,12 @@ dependencies:
 #   |- Building "Gebaeude Fusch" (a10)                   (System/ParentChild -> Site)
 #   |  '- PVString "PV Dach String Sued" (a13)           (System/ParentChild -> Building)
 #   |  '- PVString "PV Dach String Nord" (a14)           (System/ParentChild -> Building)
+#   |  '- 11 Spaces "<Loxone room> Fusch" (a20-a2a)      (System/ParentChild -> Building, AB#7697)
+#   |     '- TemperatureSensor "Temp-<room> Fusch" (a30-a34)   (EnergyIQ/SpaceSensors -> Space)
+#   |     '- ShadingDevice "Jalousie <room> Fusch" (a50-a55)   (EnergyIQ/SpaceElements -> Space)
+#   |     '- Luminaire "Licht <room> Fusch" (a60-a69)          (EnergyIQ/SpaceElements -> Space)
+#   |     '- Valve "Heizungsmischer Fusch" (a40, Heizraum)     (EnergyIQ/SpaceActuators -> Space)
+#   |        '- TemperatureSensor "Temp-Heizungsmischer-Vorlauf Fusch" (a41)  (EnergyIQ/EquipmentSensors -> Valve)
 #   |- ExternalSpace "Netzanschluss Fusch" (a02)         (System/ParentChild -> Site)
 #   |  '- GridConnection "Hauptzaehler Fusch" (a03)      (EnergyIQ/SpaceElements -> ExternalSpace)
 #   '- ExternalSpace "Stellplatz Fusch" (a15)            (System/ParentChild -> Site)
@@ -191,3 +197,485 @@ entities:
       - roleId: EnergyIQ/SpaceElements
         targetRtId: 6a10f05c0000000000000a15
         targetCkTypeId: EnergyIQ/ExternalSpace
+
+  # ============================================================
+  # Rooms and devices (AB#7697, Feature AB#7690)
+  # ============================================================
+  # Only rooms and devices the Fusch Miniserver inventory lists (docs/fusch-loxone-inventory.md, sections
+  # 'Rooms with temperature', 'Heating / cooling', 'Shading', 'Lighting'): the Loxone rooms that hold a room
+  # controller (IRoomControllerV2), a light controller (LightControllerV2), a blind (Jalousie) or the heat mixer
+  # (Heatmixer). Types and roles as Firmianstrasse: TemperatureSensor via EnergyIQ/SpaceSensors, Luminaire and
+  # ShadingDevice via EnergyIQ/SpaceElements. Names carry the site ("... Fusch") so they are unique across sites.
+  #
+  # The spaces hang directly under the building (System/ParentChild -> Building a10), without BuildingStorey:
+  # the inventory names the floor for only 5 of the 11 rooms (EG/OG/UG in the Loxone room name) and gives no
+  # elevation, which BuildingStorey requires. Floor areas, set points, luminaire types and ratings stay empty
+  # until a named source exists. Humidity and CO2 of the room controllers are not modelled: the structure
+  # exposes them by type only (inventory). The outdoor temperature (Aussenbereich) is not part of this story.
+  # Live values: read-only mappings by fixed state UUID in rt-pipelines-loxone-fusch.yaml (pipelines d04/d06; see
+  # docs/fusch-loxone-runbook.md section 8).
+
+  - rtId: 6a10f05c0000000000000a20
+    ckTypeId: EnergyIQ/Space
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: space-fusch-bad-og
+      - id: System/Name
+        value: Bad OG Fusch
+      - id: System/Description
+        value: Raum "Bad OG" des Loxone Miniservers Fusch
+      - id: EnergyIQ/SpaceTypeValue
+        value: 17  # Bathroom
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a10f05c0000000000000a10
+        targetCkTypeId: EnergyIQ/Building
+
+  - rtId: 6a10f05c0000000000000a21
+    ckTypeId: EnergyIQ/Space
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: space-fusch-flur-eg
+      - id: System/Name
+        value: Flur EG Fusch
+      - id: System/Description
+        value: Raum "Flur EG" des Loxone Miniservers Fusch
+      - id: EnergyIQ/SpaceTypeValue
+        value: 2  # Corridor
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a10f05c0000000000000a10
+        targetCkTypeId: EnergyIQ/Building
+
+  - rtId: 6a10f05c0000000000000a22
+    ckTypeId: EnergyIQ/Space
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: space-fusch-flur-og
+      - id: System/Name
+        value: Flur OG Fusch
+      - id: System/Description
+        value: Raum "Flur OG" des Loxone Miniservers Fusch
+      - id: EnergyIQ/SpaceTypeValue
+        value: 2  # Corridor
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a10f05c0000000000000a10
+        targetCkTypeId: EnergyIQ/Building
+
+  - rtId: 6a10f05c0000000000000a23
+    ckTypeId: EnergyIQ/Space
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: space-fusch-flur-ug
+      - id: System/Name
+        value: Flur UG Fusch
+      - id: System/Description
+        value: Raum "Flur UG" des Loxone Miniservers Fusch
+      - id: EnergyIQ/SpaceTypeValue
+        value: 2  # Corridor
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a10f05c0000000000000a10
+        targetCkTypeId: EnergyIQ/Building
+
+  - rtId: 6a10f05c0000000000000a24
+    ckTypeId: EnergyIQ/Space
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: space-fusch-garage
+      - id: System/Name
+        value: Garage Fusch
+      - id: System/Description
+        value: Raum "Garage" des Loxone Miniservers Fusch
+      - id: EnergyIQ/SpaceTypeValue
+        value: 23  # Garage
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a10f05c0000000000000a10
+        targetCkTypeId: EnergyIQ/Building
+
+  - rtId: 6a10f05c0000000000000a25
+    ckTypeId: EnergyIQ/Space
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: space-fusch-heizraum
+      - id: System/Name
+        value: Heizraum Fusch
+      - id: System/Description
+        value: Raum "Heizraum" des Loxone Miniservers Fusch
+      - id: EnergyIQ/SpaceTypeValue
+        value: 5  # TechnicalRoom
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a10f05c0000000000000a10
+        targetCkTypeId: EnergyIQ/Building
+
+  - rtId: 6a10f05c0000000000000a26
+    ckTypeId: EnergyIQ/Space
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: space-fusch-kueche-og
+      - id: System/Name
+        value: Küche OG Fusch
+      - id: System/Description
+        value: Raum "Küche OG" des Loxone Miniservers Fusch
+      - id: EnergyIQ/SpaceTypeValue
+        value: 4  # Kitchen
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a10f05c0000000000000a10
+        targetCkTypeId: EnergyIQ/Building
+
+  - rtId: 6a10f05c0000000000000a27
+    ckTypeId: EnergyIQ/Space
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: space-fusch-schlafzimmer
+      - id: System/Name
+        value: Schlafzimmer Fusch
+      - id: System/Description
+        value: Raum "Schlafzimmer" des Loxone Miniservers Fusch
+      - id: EnergyIQ/SpaceTypeValue
+        value: 16  # Bedroom
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a10f05c0000000000000a10
+        targetCkTypeId: EnergyIQ/Building
+
+  - rtId: 6a10f05c0000000000000a28
+    ckTypeId: EnergyIQ/Space
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: space-fusch-stiegenhaus
+      - id: System/Name
+        value: Stiegenhaus Fusch
+      - id: System/Description
+        value: Raum "Stiegenhaus" des Loxone Miniservers Fusch
+      - id: EnergyIQ/SpaceTypeValue
+        value: 9  # Staircase
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a10f05c0000000000000a10
+        targetCkTypeId: EnergyIQ/Building
+
+  - rtId: 6a10f05c0000000000000a29
+    ckTypeId: EnergyIQ/Space
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: space-fusch-vorratskeller
+      - id: System/Name
+        value: Vorratskeller Fusch
+      - id: System/Description
+        value: Raum "Vorratskeller" des Loxone Miniservers Fusch
+      - id: EnergyIQ/SpaceTypeValue
+        value: 6  # Storage
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a10f05c0000000000000a10
+        targetCkTypeId: EnergyIQ/Building
+
+  - rtId: 6a10f05c0000000000000a2a
+    ckTypeId: EnergyIQ/Space
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: space-fusch-wohnzimmer
+      - id: System/Name
+        value: Wohnzimmer Fusch
+      - id: System/Description
+        value: Raum "Wohnzimmer" des Loxone Miniservers Fusch
+      - id: EnergyIQ/SpaceTypeValue
+        value: 15  # LivingRoom
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a10f05c0000000000000a10
+        targetCkTypeId: EnergyIQ/Building
+
+  # Room temperature of the five room controllers (IRoomControllerV2 state tempActual, degC).
+
+  - rtId: 6a10f05c0000000000000a30
+    ckTypeId: EnergyIQ/TemperatureSensor
+    attributes:
+      - id: System/Name
+        value: Temp-Bad OG Fusch
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6a10f05c0000000000000a20
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6a10f05c0000000000000a31
+    ckTypeId: EnergyIQ/TemperatureSensor
+    attributes:
+      - id: System/Name
+        value: Temp-Flur EG Fusch
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6a10f05c0000000000000a21
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6a10f05c0000000000000a32
+    ckTypeId: EnergyIQ/TemperatureSensor
+    attributes:
+      - id: System/Name
+        value: Temp-Küche OG Fusch
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6a10f05c0000000000000a26
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6a10f05c0000000000000a33
+    ckTypeId: EnergyIQ/TemperatureSensor
+    attributes:
+      - id: System/Name
+        value: Temp-Schlafzimmer Fusch
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6a10f05c0000000000000a27
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6a10f05c0000000000000a34
+    ckTypeId: EnergyIQ/TemperatureSensor
+    attributes:
+      - id: System/Name
+        value: Temp-Wohnzimmer Fusch
+    associations:
+      - roleId: EnergyIQ/SpaceSensors
+        targetRtId: 6a10f05c0000000000000a2a
+        targetCkTypeId: EnergyIQ/Space
+
+  # Heat mixer of the heating circuit (Loxone Heatmixer "Heizungsmischer", room Heizraum): a mixing valve with
+  # its flow temperature sensor (state tempActual, degC). The target temperature (tempTarget) has no EnergyIQ
+  # attribute on Valve or TemperatureSensor and is not modelled.
+
+  - rtId: 6a10f05c0000000000000a40
+    ckTypeId: EnergyIQ/Valve
+    attributes:
+      - id: System/Name
+        value: Heizungsmischer Fusch
+      - id: System/Description
+        value: Mischer des Heizkreises im Heizraum Fusch (Loxone Heatmixer)
+      - id: EnergyIQ/ValveTypeValue
+        value: 4  # Mixing
+    associations:
+      - roleId: EnergyIQ/SpaceActuators
+        targetRtId: 6a10f05c0000000000000a25
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6a10f05c0000000000000a41
+    ckTypeId: EnergyIQ/TemperatureSensor
+    attributes:
+      - id: System/Name
+        value: Temp-Heizungsmischer-Vorlauf Fusch
+    associations:
+      - roleId: EnergyIQ/EquipmentSensors
+        targetRtId: 6a10f05c0000000000000a40
+        targetCkTypeId: EnergyIQ/Valve
+
+  # Blinds (Loxone Jalousie). ShadingDevice.Position will come from state position x 100 (%).
+
+  - rtId: 6a10f05c0000000000000a50
+    ckTypeId: EnergyIQ/ShadingDevice
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: shading-fusch-bad-og
+      - id: System/Name
+        value: Jalousie Bad OG Fusch
+      - id: EnergyIQ/ShadingTypeValue
+        value: 0  # Blind
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6a10f05c0000000000000a20
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6a10f05c0000000000000a51
+    ckTypeId: EnergyIQ/ShadingDevice
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: shading-fusch-kueche-og-balkontuer
+      - id: System/Name
+        value: Jalousie Küche OG Balkontür Fusch
+      - id: EnergyIQ/ShadingTypeValue
+        value: 0  # Blind
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6a10f05c0000000000000a26
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6a10f05c0000000000000a52
+    ckTypeId: EnergyIQ/ShadingDevice
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: shading-fusch-kueche-og-fenster
+      - id: System/Name
+        value: Jalousie Küche OG Fenster Fusch
+      - id: EnergyIQ/ShadingTypeValue
+        value: 0  # Blind
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6a10f05c0000000000000a26
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6a10f05c0000000000000a53
+    ckTypeId: EnergyIQ/ShadingDevice
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: shading-fusch-schlafzimmer
+      - id: System/Name
+        value: Jalousie Schlafzimmer Fusch
+      - id: EnergyIQ/ShadingTypeValue
+        value: 0  # Blind
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6a10f05c0000000000000a27
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6a10f05c0000000000000a54
+    ckTypeId: EnergyIQ/ShadingDevice
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: shading-fusch-wohnzimmer-balkontuere
+      - id: System/Name
+        value: Jalousie Wohnzimmer Balkontüre Fusch
+      - id: EnergyIQ/ShadingTypeValue
+        value: 0  # Blind
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6a10f05c0000000000000a2a
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6a10f05c0000000000000a55
+    ckTypeId: EnergyIQ/ShadingDevice
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: shading-fusch-wohnzimmer-fenster
+      - id: System/Name
+        value: Jalousie Wohnzimmer Fenster Fusch
+      - id: EnergyIQ/ShadingTypeValue
+        value: 0  # Blind
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6a10f05c0000000000000a2a
+        targetCkTypeId: EnergyIQ/Space
+
+  # Lights: one Luminaire per Loxone light controller (LightControllerV2); IsOn/DimmingLevel will come from
+  # the controller states (Firmianstrasse rules lightcontroller-ison/-level). Luminaire type and rating unknown.
+
+  - rtId: 6a10f05c0000000000000a60
+    ckTypeId: EnergyIQ/Luminaire
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: luminaire-fusch-bad-og
+      - id: System/Name
+        value: Licht Bad OG Fusch
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6a10f05c0000000000000a20
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6a10f05c0000000000000a61
+    ckTypeId: EnergyIQ/Luminaire
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: luminaire-fusch-flur-eg
+      - id: System/Name
+        value: Licht Flur EG Fusch
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6a10f05c0000000000000a21
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6a10f05c0000000000000a62
+    ckTypeId: EnergyIQ/Luminaire
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: luminaire-fusch-flur-og
+      - id: System/Name
+        value: Licht Flur OG Fusch
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6a10f05c0000000000000a22
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6a10f05c0000000000000a63
+    ckTypeId: EnergyIQ/Luminaire
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: luminaire-fusch-flur-ug
+      - id: System/Name
+        value: Licht Flur UG Fusch
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6a10f05c0000000000000a23
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6a10f05c0000000000000a64
+    ckTypeId: EnergyIQ/Luminaire
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: luminaire-fusch-garage
+      - id: System/Name
+        value: Licht Garage Fusch
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6a10f05c0000000000000a24
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6a10f05c0000000000000a65
+    ckTypeId: EnergyIQ/Luminaire
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: luminaire-fusch-kueche-og
+      - id: System/Name
+        value: Licht Küche OG Fusch
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6a10f05c0000000000000a26
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6a10f05c0000000000000a66
+    ckTypeId: EnergyIQ/Luminaire
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: luminaire-fusch-schlafzimmer
+      - id: System/Name
+        value: Licht Schlafzimmer Fusch
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6a10f05c0000000000000a27
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6a10f05c0000000000000a67
+    ckTypeId: EnergyIQ/Luminaire
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: luminaire-fusch-stiegenhaus
+      - id: System/Name
+        value: Licht Stiegenhaus Fusch
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6a10f05c0000000000000a28
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6a10f05c0000000000000a68
+    ckTypeId: EnergyIQ/Luminaire
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: luminaire-fusch-vorratskeller
+      - id: System/Name
+        value: Licht Vorratskeller Fusch
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6a10f05c0000000000000a29
+        targetCkTypeId: EnergyIQ/Space
+
+  - rtId: 6a10f05c0000000000000a69
+    ckTypeId: EnergyIQ/Luminaire
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: luminaire-fusch-wohnzimmer
+      - id: System/Name
+        value: Licht Wohnzimmer Fusch
+    associations:
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6a10f05c0000000000000a2a
+        targetCkTypeId: EnergyIQ/Space

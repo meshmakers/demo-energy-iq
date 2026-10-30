@@ -33,6 +33,11 @@ What this inventory contains and what it leaves out (the repository is public):
 
 **Rooms and sensors (AB#7697):**
 
+> Modelled by AB#7697 in `data/bim/rt-fusch.yaml` (rtIds `…0a20`-`…0a69`): the 11 rooms that hold one of the controls
+> below, the 5 room controllers' temperatures, the heat mixer, the 6 blinds and the 10 lights, fed read only by the Fusch
+> live data flow; the state UUIDs are in `data/_pipelines/rt-pipelines-loxone-fusch.yaml` (runbook section 8).
+
+
 - **Raumtemperaturen: yes.** Five rooms have a room controller (`IRoomControllerV2`) with `tempActual`/`tempTarget`:
   Bad OG, Flur EG, Küche OG, Schlafzimmer, Wohnzimmer. One outdoor temperature (`InfoOnlyAnalog` "Temperatur",
   Außenbereich). The room controller type also exposes `humidityActual` and `co2`; whether a physical sensor delivers

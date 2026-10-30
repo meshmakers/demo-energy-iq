@@ -268,6 +268,111 @@ Run `…0d04` again only when the list in the file changes (then import the file
 
 Nothing is ever sent to a control of the Miniserver, the wall connector or evcc, so there is nothing to restore there.
 
+## 8. Rooms and devices (AB#7697)
+
+`data/bim/rt-fusch.yaml` now also holds the Fusch rooms and devices the inventory lists (rtIds `…0a20`-`…0a69`): 11
+Spaces under Building `…0a10`, 5 room TemperatureSensors (`…0a30`-`…0a34`), the heat mixer Valve `…0a40` with its flow
+TemperatureSensor `…0a41`, 6 ShadingDevices (`…0a50`-`…0a55`) and 10 Luminaires (`…0a60`-`…0a69`). Full list and the
+modelling decisions: header of the "Rooms and devices" block in that file. Existing Fusch entities `…0a01`-`…0a16` are
+unchanged; the upsert rewrites them with the same values.
+
+The data flow `Fusch Loxone PV live` (`…0d03`, names of the data flow and its pipelines unchanged) now also feeds
+these entities, read only, by fixed state UUID → fixed rtId (state UUIDs from the debug output of discovery run
+`609f821f-8ec8-438f-8962-7001c2edb9b6`, node `SetPipelineExecutionResult@1`):
+
+| Control (room, name, type) | State | Target | Rule |
+|----------------------------|-------|--------|------|
+| Bad OG, Flur EG, Küche OG, Schlafzimmer, Wohnzimmer — room controller `IRoomControllerV2` (5) | `tempActual` [°C] | TemperatureSensor `…0a30`-`…0a34` `CurrentValue` → TemperatureSensorArchive `6a0e…0a0001` | as is |
+| Heizraum, "Heizungsmischer", `Heatmixer` (1) | `tempActual` [°C] | TemperatureSensor `…0a41` `CurrentValue` → TemperatureSensorArchive `6a0e…0a0001` | as is |
+| Bad OG "Automatikjalousie", Küche OG "Balkontür"/"Fenster", Schlafzimmer "Automatikjalousie", Wohnzimmer "Balkontüre"/"Fenster" — `Jalousie` (6) | `position` [0..1] | ShadingDevice `…0a50`-`…0a55` `Position` [%] → ShadingDeviceArchive `6a0e…0a0005` and ShadingDeviceStatusArchive `6a0e…0a0013` | `value * 100` (Firmianstraße `jalousie-shading`) |
+| Bad OG, Flur EG, Flur OG, Flur UG, Garage, Küche OG, Schlafzimmer, Stiegenhaus, Vorratskeller, Wohnzimmer — `LightControllerV2` (10) | `activeMoodsNum` | Luminaire `…0a60`-`…0a69` `IsOn` = `value <> 778`, `DimmingLevel` = 100 / 0 → LuminaireArchive `6a0e…0a0004` and LuminaireStatusArchive `6a0e…0a0012` | Firmianstraße `lightcontroller-ison` / `lightcontroller-level` (778 = Loxone "Off" mood) |
+
+Exact UUID → rtId pairs: the `Switch@1` cases of `…0d06` (one comment per case). `…0d04` now writes 28 watched
+states (the 6 PV states unchanged, then the 22 new ones). The PV cases of `…0d06` are unchanged; only the internal list
+of archived updates is renamed `_archiveUpdates` (PV power and the room values share one list and one `If@1`, because
+an `If@1` after the archive nodes did not run in a dry run, see section 7). Not mapped: `tempTarget`, humidity, CO2,
+the central blocks, the outdoor temperature and the heating plant states.
+
+Order on prod-1: 8.1 (entities) before 8.2 (mappings) — the mappings address the new rtIds.
+
+### 8.1 Import the rooms and devices
+
+Preconditions: Gerald's go for prod-1 / `energyiq` in this session; the AB#7697 PR merged; no other import running.
+
+```bash
+cd demo-energy-iq/data
+octo-cli --context prod-1_energyiq -c authstatus
+
+# 1. Rollback copy (tenant dump, without archive data; a few MB). Path outside the repository.
+octo-cli --context prod-1_energyiq -c Dump -tid energyiq -f ~/.octo/dumps/energyiq-prod-1-before-ab7697.tar.gz
+
+# 2. Import (upsert by rtId; adds a20-a69, a01-a16 keep their values)
+octo-cli --context prod-1_energyiq -c ImportRt -f ./bim/rt-fusch.yaml -w -r
+```
+
+No deploy and no pipeline run in this step.
+
+Checks (read only):
+
+- Counts in the tenant: `EnergyIQ/Space` 18 → 29, `EnergyIQ/TemperatureSensor` 21 → 27, `EnergyIQ/Luminaire` 18 → 28,
+  `EnergyIQ/ShadingDevice` 8 → 14, `EnergyIQ/Valve` 14 → 15 (`rt_explorer.py count …` or Studio).
+- `get_entity_by_id` `EnergyIQ/Space` `6a10f05c0000000000000a2a` ("Wohnzimmer Fusch"): parent `…0a10`, one contained
+  sensor (`Temp-Wohnzimmer Fusch`), contained elements `Jalousie Wohnzimmer Balkontüre Fusch`,
+  `Jalousie Wohnzimmer Fenster Fusch`, `Licht Wohnzimmer Fusch`.
+- PV values on `…0a12`-`…0a14` keep arriving (section 7.3); GridConnection `…0a03` unchanged.
+
+Rollback (in this order, stop where the damage stops):
+
+1. If 8.2 already ran: its rollback first (section 8.2).
+2. Delete the new entities by rtId (MCP `delete_entity` or Studio), devices first, spaces last:
+   `…0a60`-`…0a69`, `…0a50`-`…0a55`, `…0a41`, `…0a40`, `…0a30`-`…0a34`, `…0a20`-`…0a2a`. **Never** delete
+   `…0a01`-`…0a16`.
+3. Only if the tenant is otherwise damaged: restore the dump of step 1 (`Restore`), which also resets every change made
+   after the dump — ask Gerald first.
+
+### 8.2 Redeploy the live data flow with the room mappings
+
+Preconditions: 8.1 done; the archives `6a0e…0a0001`, `…0a0004`, `…0a0005`, `…0a0012`, `…0a0013` are `Activated` on
+prod-1 (they feed the Firmianstraße boards; check in Studio or with `get_archive_storage_stats`); adapter `…0b04`
+Deployed/Online.
+
+```bash
+cd demo-energy-iq/data
+# 1. Rollback copy of the definitions live since 2026-10-30 (commit a806ee6 = state before AB#7697), outside the repository
+git show a806ee6:data/_pipelines/rt-pipelines-loxone-fusch.yaml > ~/.octo/dumps/rt-pipelines-loxone-fusch-before-ab7697.yaml
+# 2. Import the new definitions (upsert; d01/d02 unchanged, d03-d06 get the new definitions)
+octo-cli --context prod-1_energyiq -c ImportRt -f ./_pipelines/rt-pipelines-loxone-fusch.yaml -w -r
+# 3. Redeploy the data flow (d04, d05, d06)
+octo-cli --context prod-1_energyiq -c DeployDataFlow -id 6a10f05c0000000000000d03
+octo-cli --context prod-1_energyiq -c GetDataFlowStatus --identifier 6a10f05c0000000000000d03 --json   # d04, d05, d06 Deployed
+# 4. Write the 28 watched states onto FuschLoxoneMiniserverConfig and redeploy the edge pipeline d05
+octo-cli --context prod-1_energyiq -c ExecutePipeline -id 6a10f05c0000000000000d04
+```
+
+Checks (read only):
+
+- `get_entity_by_id` `System.Communication/LoxoneConfiguration` `…0b03`: `mappingTargets` has **28** items (the first 6
+  are the PV states); host, user and the password state are unchanged.
+- Adapter log of `…0b04` (Dash0 dataset `prod-1`): "Loxone state change trigger started, watching 28 UUIDs" and, with a
+  connected cache, "sending 28 initial values".
+- Entities: TemperatureSensors `…0a30`-`…0a34` and `…0a41` `currentValue` in °C (rooms about 18-25, mixer flow about
+  25-60); ShadingDevices `…0a50`-`…0a55` `position` 0-100; Luminaires `…0a60`-`…0a69` `isOn` true/false with
+  `dimmingLevel` 100/0. Compare one room temperature, one blind and one light with the Loxone app.
+- Archives: rows for the new rtIds in `TemperatureSensorArchive`, `LuminaireArchive` / `LuminaireStatusArchive` (with the
+  `name` column filled) and `ShadingDeviceArchive` / `ShadingDeviceStatusArchive`; one row per change.
+- PV: `…0a12`-`…0a14` keep receiving values (section 7.3); GridConnection `…0a03` unchanged.
+- Boards: with a Fusch room picked the Raumtemperaturen chart shows its values; with a Firmianstraße room picked nothing
+  changes. The site selector on the three boards is AB#7693.
+
+Rollback:
+
+1. `octo-cli --context prod-1_energyiq -c ImportRt -f ~/.octo/dumps/rt-pipelines-loxone-fusch-before-ab7697.yaml -w -r`,
+   then `DeployDataFlow -id …0d03` and `ExecutePipeline -id …0d04` — back to the 6 PV states (watch list 28 → 6).
+2. If PV must stop as well: section 7.4.
+3. Values already written stay on the entities and in the archives (time series rows are not deleted).
+
+Nothing is ever sent to a control of the Miniserver: the pipelines only receive state changes.
+
 ## Validation evidence (2026-10-28, before the PR)
 
 - Pipeline definition validated against the pipeline JSON schema of the Loxone adapter
@@ -285,3 +390,34 @@ Nothing is ever sent to a control of the Miniserver, the wall connector or evcc,
   result as described in step 4.
 - No write path: the pipeline has exactly the nodes `FromExecutePipelineCommand@1`, `GetPipelineConfigByWellKnownName@1`,
   `LoxoneBrowse@1` (two HTTP GETs, see above), `Project@1` (2x), `SetPipelineExecutionResult@1`.
+
+## Validation evidence AB#7697 (2026-10-30, before the PR)
+
+- Temporary tenant `tmp-daidalos7697` on test-2 (created under `octosystem`, deleted afterwards): EnergyIQ 2.13.0
+  (compiled from the unchanged CK source, `ck-energyiq-2.yaml`; `ImportFromCatalog EnergyIQ-2.13.0` imported only the
+  dependencies `Basic-2.5.0`/`Basic.Energy-1.10.0` and then reported "already up to date"), then
+  `data/bim/rt-fusch.yaml` imported three times: insert-only, upsert, upsert — all three jobs completed without error.
+- After the third import: 11 Spaces, 6 TemperatureSensors, 6 ShadingDevices, 10 Luminaires, 1 Valve (no duplicates);
+  every TemperatureSensor, Luminaire and ShadingDevice resolves to its Space over `EnergyIQ/SpaceSensors` /
+  `EnergyIQ/SpaceElements`, the Valve to "Heizraum Fusch" over `EnergyIQ/SpaceActuators`, the flow sensor to the Valve
+  over `EnergyIQ/EquipmentSensors`.
+- prod-1 (read only, `rt_explorer.py list`): no entity of the new types in the `6a10f05c…0a2x`-`…0a6x` range; all new
+  names end in "Fusch" and do not occur at Firmianstraße.
+- Mappings: every UUID of the 22 states (Odin's extraction) cross-checked against the watch list of `…0d04` (control
+  UUID, state name, state UUID) and against the `CreateUpdateInfo@1` target of its `…0d06` case; the 6 PV cases are
+  identical to `origin/main` apart from the list rename; 28 watch-list entries = 28 cases.
+- `validate_pipeline_definition` on test-2 (tenant `energyiq`, mesh adapter `670000000000000000000002`): `isValid: true`
+  for `…0d06` with one case of each kind (PV, room temperature, blind, light; all cases come from the same templates)
+  and all tail nodes. The same tool rejects a probe with an invalid enum value. The local `pipeline_validate.py`
+  passes all definitions but also passes invalid probes, so it is not counted as evidence.
+- Dry run of `…0d06` with `data/samples/loxone-fusch-states.json` (29 states) on test-2 `energyiq`: temporary DataFlow
+  `6a10f05c0000000000000f01` and pipeline `…0f02` (both named `tmp-AB7697-dryrun`, trigger swapped to
+  `FromExecutePipelineCommand@1`), execution `9b3458b0-dea6-4a53-a9bb-a3cb354153ac`. Debug tree: 28 items hit their
+  case (6 PV, 6 temperatures, 6 blinds with `Math@1` then `CreateUpdateInfo@1`, 10 lights); the lights with value 778
+  ran only the `Equals` branch, the lights with value 1 only the `NotEquals` branch; the `gridCurr` item hit no case;
+  both `If@1` blocks ran, with all 7 archive pairs and both `ApplyChanges@2` (dry run, nothing written: PVString
+  `…0a13` `rtChangedDateTime` still 2026-10-28). Afterwards the data flow was undeployed and both temporary entities
+  deleted; GraphQL shows `totalCount: 0` for both. No other entity on test-2 was deployed or changed.
+- Not dry-run: `…0d04` (all its writes are dry-run honoured nodes, its only change is the longer JSON list) and the
+  edge pipeline `…0d05` (unchanged). A scratch tenant `tmp-daidalos7697b` for the dry run was given up: its mesh adapter
+  stayed `Pending`/`Unregistered` for 10 minutes (same as section 7; reported to Odin); deleted afterwards.
