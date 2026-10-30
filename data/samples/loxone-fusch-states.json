@@ -1,5 +1,5 @@
 {
-  "_note": "CONSTRUCTED sample in the event format of the Loxone adapter trigger FromLoxoneStateChange@1 (the input of the Fusch mesh pipeline 'Store Fusch PV States', AB#7696), NOT a recording: the discovery run of 2026-10-29 read only the structure, no values. The control and state UUIDs are the real ones of the Fusch Miniserver PV controls (from LoxAPP3.json, docs/fusch-loxone-inventory.md); the values and timestamps are invented but plausible (kW / kWh). The last item is a state the pipeline does not map (Fronius gridCurr = grid power, written only by the SHRDZM pipeline) and must be ignored. Replace with recorded events after the first live run.",
+  "_note": "CONSTRUCTED sample in the event format of the Loxone adapter trigger FromLoxoneStateChange@1 (the input of the Fusch mesh pipeline 'Store Fusch PV States' d06), NOT a recording. The control and state UUIDs are the real ones of the Fusch Miniserver (PV controls from LoxAPP3.json, AB#7696; room controllers, heat mixer, blinds and lights from the debug output of discovery run 609f821f, AB#7697); the values and timestamps are invented but plausible (kW / kWh / degC / blind position 0..1 / light mood id, 778 = Loxone 'Off' mood). The last item is a state the pipeline does not map (Fronius gridCurr = grid power, written only by the SHRDZM pipeline) and must be ignored. Replace with recorded events after the first live run.",
   "states": [
     {
       "controlUuid": "20d2659d-02b3-47e2-ffff77d91626cdc4",
@@ -46,6 +46,182 @@
       "stateName": "prodTotal",
       "pollUuid": "20d26d65-0194-4343-12ff14c57935eac2",
       "value": 21311.9,
+      "code": "200",
+      "timestamp": "2026-10-29T11:00:00.0000000Z"
+    },
+    {
+      "controlUuid": "2181ffbb-0072-2554-ffffcd79afcbec1c",
+      "stateName": "activeMoodsNum",
+      "pollUuid": "2181ffbb-0072-24dd-ffff5277bb83624f",
+      "value": 1,
+      "code": "200",
+      "timestamp": "2026-10-29T11:00:00.0000000Z"
+    },
+    {
+      "controlUuid": "0e01a7d6-0235-64e3-ffffcd79afcbec1c",
+      "stateName": "position",
+      "pollUuid": "0e01a7d6-0235-64dd-ffff449c273f7f17",
+      "value": 0.0,
+      "code": "200",
+      "timestamp": "2026-10-29T11:00:00.0000000Z"
+    },
+    {
+      "controlUuid": "0d735d4e-0306-a18d-ffffcd79afcbec1c",
+      "stateName": "tempActual",
+      "pollUuid": "168b26ac-027c-4d63-ffff708aeba60c88",
+      "value": 23.4,
+      "code": "200",
+      "timestamp": "2026-10-29T11:00:00.0000000Z"
+    },
+    {
+      "controlUuid": "1dd24866-0043-0ba6-ffffcd79afcbec1c",
+      "stateName": "activeMoodsNum",
+      "pollUuid": "1dd24866-0043-0b34-ffffccc64d47dc02",
+      "value": 778,
+      "code": "200",
+      "timestamp": "2026-10-29T11:00:00.0000000Z"
+    },
+    {
+      "controlUuid": "1dd32bf1-005d-35a3-ffffcd79afcbec1c",
+      "stateName": "tempActual",
+      "pollUuid": "1dd32bf1-005d-356e-02ff99e1e37a4cc6",
+      "value": 20.1,
+      "code": "200",
+      "timestamp": "2026-10-29T11:00:00.0000000Z"
+    },
+    {
+      "controlUuid": "12b01e51-02a9-120c-ffffcd79afcbec1c",
+      "stateName": "activeMoodsNum",
+      "pollUuid": "18069b52-0267-59a1-ffffcd79afcbec1c",
+      "value": 778,
+      "code": "200",
+      "timestamp": "2026-10-29T11:00:00.0000000Z"
+    },
+    {
+      "controlUuid": "1fc70bae-019f-0802-ffff77d91626cdc4",
+      "stateName": "activeMoodsNum",
+      "pollUuid": "1fc70bae-019f-0790-ffff86635c721d8b",
+      "value": 778,
+      "code": "200",
+      "timestamp": "2026-10-29T11:00:00.0000000Z"
+    },
+    {
+      "controlUuid": "1fc70c1a-00db-71ea-ffff77d91626cdc4",
+      "stateName": "activeMoodsNum",
+      "pollUuid": "1fc70c1a-00db-7178-ffff6aae8af00076",
+      "value": 778,
+      "code": "200",
+      "timestamp": "2026-10-29T11:00:00.0000000Z"
+    },
+    {
+      "controlUuid": "1d92b9d5-02a7-fbe2-ffffcd79afcbec1c",
+      "stateName": "tempActual",
+      "pollUuid": "1d92b9d5-02a7-fbd0-01ffe6b61eceb9f7",
+      "value": 38.5,
+      "code": "200",
+      "timestamp": "2026-10-29T11:00:00.0000000Z"
+    },
+    {
+      "controlUuid": "0d79c692-02ee-615d-ffffcd79afcbec1c",
+      "stateName": "activeMoodsNum",
+      "pollUuid": "18069b52-0279-5a83-ffffcd79afcbec1c",
+      "value": 1,
+      "code": "200",
+      "timestamp": "2026-10-29T11:00:00.0000000Z"
+    },
+    {
+      "controlUuid": "0e01a67b-0379-85e4-ffffcd79afcbec1c",
+      "stateName": "position",
+      "pollUuid": "0e01a67b-0379-85de-ffff13063e930ceb",
+      "value": 0.35,
+      "code": "200",
+      "timestamp": "2026-10-29T11:00:00.0000000Z"
+    },
+    {
+      "controlUuid": "2181e7dd-030a-7ddf-ffff624b619d9bfc",
+      "stateName": "position",
+      "pollUuid": "2181e7dd-030b-7e09-ffff624b619d9bfc",
+      "value": 1.0,
+      "code": "200",
+      "timestamp": "2026-10-29T11:00:00.0000000Z"
+    },
+    {
+      "controlUuid": "0d812600-0094-5b91-ffffcd79afcbec1c",
+      "stateName": "tempActual",
+      "pollUuid": "168b2604-0280-ceac-ffff2fd469511214",
+      "value": 21.8,
+      "code": "200",
+      "timestamp": "2026-10-29T11:00:00.0000000Z"
+    },
+    {
+      "controlUuid": "0d79f213-038f-0387-ffffcd79afcbec1c",
+      "stateName": "activeMoodsNum",
+      "pollUuid": "18069b52-0279-5bb7-ffffcd79afcbec1c",
+      "value": 778,
+      "code": "200",
+      "timestamp": "2026-10-29T11:00:00.0000000Z"
+    },
+    {
+      "controlUuid": "0e01a727-0399-2fc9-ffffcd79afcbec1c",
+      "stateName": "position",
+      "pollUuid": "0e01a727-0399-2fc3-ffff8821af68c30e",
+      "value": 1.0,
+      "code": "200",
+      "timestamp": "2026-10-29T11:00:00.0000000Z"
+    },
+    {
+      "controlUuid": "0d735dae-0045-ba18-ffffcd79afcbec1c",
+      "stateName": "tempActual",
+      "pollUuid": "168c78de-012e-d7fa-ffffe4d8c39d6f4b",
+      "value": 19.2,
+      "code": "200",
+      "timestamp": "2026-10-29T11:00:00.0000000Z"
+    },
+    {
+      "controlUuid": "1fc70b58-0071-1e06-ffff77d91626cdc4",
+      "stateName": "activeMoodsNum",
+      "pollUuid": "1fc70b58-0071-1d94-ffff0351f6cca7ef",
+      "value": 778,
+      "code": "200",
+      "timestamp": "2026-10-29T11:00:00.0000000Z"
+    },
+    {
+      "controlUuid": "1fc70c9d-026f-d053-ffff77d91626cdc4",
+      "stateName": "activeMoodsNum",
+      "pollUuid": "1fc70c9d-026f-cfe1-ffffa623de47b135",
+      "value": 778,
+      "code": "200",
+      "timestamp": "2026-10-29T11:00:00.0000000Z"
+    },
+    {
+      "controlUuid": "0d79f0b5-0077-7b86-ffffcd79afcbec1c",
+      "stateName": "activeMoodsNum",
+      "pollUuid": "18069b52-0279-5d2b-ffffcd79afcbec1c",
+      "value": 1,
+      "code": "200",
+      "timestamp": "2026-10-29T11:00:00.0000000Z"
+    },
+    {
+      "controlUuid": "0e01a367-0230-17f5-ffffcd79afcbec1c",
+      "stateName": "position",
+      "pollUuid": "0e01a367-0230-17ef-ffff043b35dcd411",
+      "value": 0.5,
+      "code": "200",
+      "timestamp": "2026-10-29T11:00:00.0000000Z"
+    },
+    {
+      "controlUuid": "2181dcca-03c4-73d8-ffff1f0681efb61e",
+      "stateName": "position",
+      "pollUuid": "2181dcca-03c4-7402-ffff1f0681efb61e",
+      "value": 0.0,
+      "code": "200",
+      "timestamp": "2026-10-29T11:00:00.0000000Z"
+    },
+    {
+      "controlUuid": "0d735dd7-02db-ea75-ffffcd79afcbec1c",
+      "stateName": "tempActual",
+      "pollUuid": "168b2458-028a-04a5-ffffb4399fc0d4dd",
+      "value": 22.0,
       "code": "200",
       "timestamp": "2026-10-29T11:00:00.0000000Z"
     },

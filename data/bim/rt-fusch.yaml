@@ -212,8 +212,8 @@ entities:
   # elevation, which BuildingStorey requires. Floor areas, set points, luminaire types and ratings stay empty
   # until a named source exists. Humidity and CO2 of the room controllers are not modelled: the structure
   # exposes them by type only (inventory). The outdoor temperature (Aussenbereich) is not part of this story.
-  # Live values: the read-only mappings in rt-pipelines-loxone-fusch.yaml follow once the state UUIDs of these
-  # controls are known (see docs/fusch-loxone-runbook.md).
+  # Live values: read-only mappings by fixed state UUID in rt-pipelines-loxone-fusch.yaml (pipelines d04/d06; see
+  # docs/fusch-loxone-runbook.md section 8).
 
   - rtId: 6a10f05c0000000000000a20
     ckTypeId: EnergyIQ/Space

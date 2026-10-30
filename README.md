@@ -237,8 +237,9 @@ Boards should take kWh from the energy counters or a time-weighted aggregation, 
 **Rooms and devices (AB#7697):** `data/bim/rt-fusch.yaml` models the Fusch rooms and devices the inventory lists — 11
 Spaces (Loxone rooms) under the Fusch building, 5 room temperature sensors, the heat mixer (Valve with flow temperature
 sensor), 6 blinds (ShadingDevice) and 10 lights (Luminaire) — with the Firmianstraße types and roles and names ending in
-"Fusch". They have no live values yet: the read-only mappings need the state UUIDs of these controls, which are not in
-the repository ([runbook](docs/fusch-loxone-runbook.md) section 8).
+"Fusch". The same live data flow feeds them read only (room and mixer temperature, blind position × 100, light on/off
+and level by the Firmianstraße rules) and writes the TemperatureSensor, Luminaire and ShadingDevice archives; the watch
+list grows from 6 to 28 states ([runbook](docs/fusch-loxone-runbook.md) section 8).
 
 ## CI/CD (Azure DevOps)
 

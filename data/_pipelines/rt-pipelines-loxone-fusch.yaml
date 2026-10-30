@@ -26,13 +26,15 @@ dependencies:
 # DataPointMappings: the watched states and their targets are fixed here by state UUID and target rtId.
 #
 #   d04 Configure Fusch PV State Sync (mesh, run once / after a change of the list):
-#       WriteJson@1 (the 6 watched states) -> CreateUpdateInfo@1 + ApplyChanges@2 (MappingTargets onto the Fusch
+#       WriteJson@1 (the 28 watched states) -> CreateUpdateInfo@1 + ApplyChanges@2 (MappingTargets onto the Fusch
 #       configuration b03, by rtId) -> DeployPipeline@1 (d05, so the edge trigger reads the new list)
 #   d05 Receive Fusch PV State Changes (edge): FromLoxoneStateChange@1 (WebSocket state cache, only the watched
 #       states, only changed values) -> ToPipelineDataEvent@1 -> d06
 #   d06 Store Fusch PV States (mesh): FromPipelineDataEvent@1 -> ForEach state: Switch@1 on the state UUID ->
-#       CreateUpdateInfo@1 (fixed rtId, value as is) -> power rows into PVStringArchive (a000a) and
-#       PhotovoltaicSystemArchive (a000c) -> newest value per entity onto the entities (ApplyChanges@2)
+#       CreateUpdateInfo@1 (fixed rtId; PV values as is, room values by the Firmianstrasse rules) -> value rows into
+#       PVStringArchive (a000a), PhotovoltaicSystemArchive (a000c), TemperatureSensorArchive (a0001), LuminaireArchive
+#       (a0004) / LuminaireStatusArchive (a0012), ShadingDeviceArchive (a0005) / ShadingDeviceStatusArchive (a0013)
+#       -> newest value per entity onto the entities (ApplyChanges@2)
 #
 # Watched states (state UUIDs from LoxAPP3.json of 2026-10-29) and targets. Units: Loxone Meter actual = kW,
 # total = kWh; Fronius prodCurr = kW, prodTotal = kWh (Loxone structure documentation; the same units the EnergyIQ
@@ -48,11 +50,22 @@ dependencies:
 #
 # NOT written (docs/fusch-loxone-inventory.md): grid power (Fronius gridCurr, EFM Gpwr) - the same quantity as the
 # SHRDZM meter on GridConnection a03, which stays its only writer (AB#7511); battery states (no battery); wall
-# connector (no numeric power in the Miniserver); rooms, heating, shading, lighting (AB#7697).
+# connector (no numeric power in the Miniserver).
+#
+# Rooms and devices (AB#7697; state UUIDs from the debug output of discovery run 609f821f, node
+# SetPipelineExecutionResult@1; targets in data/bim/rt-fusch.yaml). Read only, like the PV states:
+#   IRoomControllerV2 tempActual [degC] (Bad OG, Flur EG, Kueche OG, Schlafzimmer, Wohnzimmer)
+#       -> TemperatureSensor a30-a34 CurrentValue (as is)
+#   Heatmixer "Heizungsmischer" (Heizraum) tempActual [degC] -> TemperatureSensor a41 CurrentValue (as is)
+#   Jalousie position [0..1] (6 blinds) -> ShadingDevice a50-a55 Position [%] = value * 100
+#   LightControllerV2 activeMoodsNum (10 rooms) -> Luminaire a60-a69 IsOn = (value <> 778),
+#       DimmingLevel = 100 when on, 0 when the Loxone "Off" mood 778 is active
+# Exact UUID -> rtId pairs: the Switch@1 cases of d06 (one comment per case). Not mapped: tempTarget, humidity, CO2,
+# the central blocks, the outdoor temperature, the heating plant states (docs/fusch-loxone-inventory.md).
 #
 # Site safety: no Loxone/Control entity and no DataPointMapping is created, so the Firmianstrasse auto-map,
 # coverage and BuildMappingTargets pipelines never see a Fusch control; every write here addresses a fixed Fusch rtId
-# (a12, a13, a14, b03, d05).
+# (a12, a13, a14, a30-a34, a41, a50-a55, a60-a69, b03, d05).
 #
 # Read-only towards the Miniserver: LoxoneBrowse@1 (two HTTP GETs) and FromLoxoneStateChange@1 (the adapter's
 # WebSocket session: authentication and the status subscription "enablebinstatusupdate", then it only receives).
@@ -147,7 +160,7 @@ entities:
       - id: System/Name
         value: Fusch Loxone PV live
       - id: System/Description
-        value: PV string power and energy and the PV system total from the Fusch Loxone Miniserver into the Fusch PV model and the PV archives
+        value: PV string power and energy, the PV system total and (AB#7697) room temperatures, heat mixer, blinds and lights from the Fusch Loxone Miniserver into the Fusch model and the EnergyIQ archives
 
   # Pipeline d04: mesh adapter, writes the fixed list of watched states onto the Fusch configuration and redeploys
   # the edge pipeline d05. Run once after the data flow is deployed, and again after the list changes.
@@ -164,7 +177,7 @@ entities:
       - id: System/Name
         value: Configure Fusch PV State Sync
       - id: System/Description
-        value: Writes the watched Fusch PV state UUIDs as MappingTargets onto FuschLoxoneMiniserverConfig and redeploys the Fusch edge state pipeline
+        value: Writes the 28 watched Fusch state UUIDs (6 PV, 22 rooms and devices) as MappingTargets onto FuschLoxoneMiniserverConfig and redeploys the Fusch edge state pipeline
       - id: System/Enabled
         value: true
       - id: System.Communication/PipelineDefinition
@@ -175,7 +188,7 @@ entities:
             # The watched states in the record shape that BuildMappingTargets@1 produces for Firmianstrasse
             # (SourceIdentifier = control UUID, Name = state name, ExternalId = state UUID).
             - type: WriteJson@1
-              description: Fixed list of the watched Fusch PV states
+              description: Fixed list of the watched Fusch states (6 PV, then 22 rooms and devices, AB#7697)
               targetPath: $.mappingTargets
               jsonString: |-
                 [
@@ -190,7 +203,51 @@ entities:
                   { "CkRecordId": { "SemanticVersionedFullName": "System.Communication/MappingTarget" },
                     "Attributes": { "SourceIdentifier": "20d26d65-0195-435f-ffff77d91626cdc4", "Name": "prodCurr", "ExternalId": "20d26d65-0194-433f-0eff14c57935eac2" } },
                   { "CkRecordId": { "SemanticVersionedFullName": "System.Communication/MappingTarget" },
-                    "Attributes": { "SourceIdentifier": "20d26d65-0195-435f-ffff77d91626cdc4", "Name": "prodTotal", "ExternalId": "20d26d65-0194-4343-12ff14c57935eac2" } }
+                    "Attributes": { "SourceIdentifier": "20d26d65-0195-435f-ffff77d91626cdc4", "Name": "prodTotal", "ExternalId": "20d26d65-0194-4343-12ff14c57935eac2" } },
+                  { "CkRecordId": { "SemanticVersionedFullName": "System.Communication/MappingTarget" },
+                     "Attributes": { "SourceIdentifier": "0d735d4e-0306-a18d-ffffcd79afcbec1c", "Name": "tempActual", "ExternalId": "168b26ac-027c-4d63-ffff708aeba60c88" } },
+                  { "CkRecordId": { "SemanticVersionedFullName": "System.Communication/MappingTarget" },
+                     "Attributes": { "SourceIdentifier": "1dd32bf1-005d-35a3-ffffcd79afcbec1c", "Name": "tempActual", "ExternalId": "1dd32bf1-005d-356e-02ff99e1e37a4cc6" } },
+                  { "CkRecordId": { "SemanticVersionedFullName": "System.Communication/MappingTarget" },
+                     "Attributes": { "SourceIdentifier": "0d812600-0094-5b91-ffffcd79afcbec1c", "Name": "tempActual", "ExternalId": "168b2604-0280-ceac-ffff2fd469511214" } },
+                  { "CkRecordId": { "SemanticVersionedFullName": "System.Communication/MappingTarget" },
+                     "Attributes": { "SourceIdentifier": "0d735dae-0045-ba18-ffffcd79afcbec1c", "Name": "tempActual", "ExternalId": "168c78de-012e-d7fa-ffffe4d8c39d6f4b" } },
+                  { "CkRecordId": { "SemanticVersionedFullName": "System.Communication/MappingTarget" },
+                     "Attributes": { "SourceIdentifier": "0d735dd7-02db-ea75-ffffcd79afcbec1c", "Name": "tempActual", "ExternalId": "168b2458-028a-04a5-ffffb4399fc0d4dd" } },
+                  { "CkRecordId": { "SemanticVersionedFullName": "System.Communication/MappingTarget" },
+                     "Attributes": { "SourceIdentifier": "1d92b9d5-02a7-fbe2-ffffcd79afcbec1c", "Name": "tempActual", "ExternalId": "1d92b9d5-02a7-fbd0-01ffe6b61eceb9f7" } },
+                  { "CkRecordId": { "SemanticVersionedFullName": "System.Communication/MappingTarget" },
+                     "Attributes": { "SourceIdentifier": "0e01a7d6-0235-64e3-ffffcd79afcbec1c", "Name": "position", "ExternalId": "0e01a7d6-0235-64dd-ffff449c273f7f17" } },
+                  { "CkRecordId": { "SemanticVersionedFullName": "System.Communication/MappingTarget" },
+                     "Attributes": { "SourceIdentifier": "0e01a67b-0379-85e4-ffffcd79afcbec1c", "Name": "position", "ExternalId": "0e01a67b-0379-85de-ffff13063e930ceb" } },
+                  { "CkRecordId": { "SemanticVersionedFullName": "System.Communication/MappingTarget" },
+                     "Attributes": { "SourceIdentifier": "2181e7dd-030a-7ddf-ffff624b619d9bfc", "Name": "position", "ExternalId": "2181e7dd-030b-7e09-ffff624b619d9bfc" } },
+                  { "CkRecordId": { "SemanticVersionedFullName": "System.Communication/MappingTarget" },
+                     "Attributes": { "SourceIdentifier": "0e01a727-0399-2fc9-ffffcd79afcbec1c", "Name": "position", "ExternalId": "0e01a727-0399-2fc3-ffff8821af68c30e" } },
+                  { "CkRecordId": { "SemanticVersionedFullName": "System.Communication/MappingTarget" },
+                     "Attributes": { "SourceIdentifier": "0e01a367-0230-17f5-ffffcd79afcbec1c", "Name": "position", "ExternalId": "0e01a367-0230-17ef-ffff043b35dcd411" } },
+                  { "CkRecordId": { "SemanticVersionedFullName": "System.Communication/MappingTarget" },
+                     "Attributes": { "SourceIdentifier": "2181dcca-03c4-73d8-ffff1f0681efb61e", "Name": "position", "ExternalId": "2181dcca-03c4-7402-ffff1f0681efb61e" } },
+                  { "CkRecordId": { "SemanticVersionedFullName": "System.Communication/MappingTarget" },
+                     "Attributes": { "SourceIdentifier": "2181ffbb-0072-2554-ffffcd79afcbec1c", "Name": "activeMoodsNum", "ExternalId": "2181ffbb-0072-24dd-ffff5277bb83624f" } },
+                  { "CkRecordId": { "SemanticVersionedFullName": "System.Communication/MappingTarget" },
+                     "Attributes": { "SourceIdentifier": "1dd24866-0043-0ba6-ffffcd79afcbec1c", "Name": "activeMoodsNum", "ExternalId": "1dd24866-0043-0b34-ffffccc64d47dc02" } },
+                  { "CkRecordId": { "SemanticVersionedFullName": "System.Communication/MappingTarget" },
+                     "Attributes": { "SourceIdentifier": "12b01e51-02a9-120c-ffffcd79afcbec1c", "Name": "activeMoodsNum", "ExternalId": "18069b52-0267-59a1-ffffcd79afcbec1c" } },
+                  { "CkRecordId": { "SemanticVersionedFullName": "System.Communication/MappingTarget" },
+                     "Attributes": { "SourceIdentifier": "1fc70bae-019f-0802-ffff77d91626cdc4", "Name": "activeMoodsNum", "ExternalId": "1fc70bae-019f-0790-ffff86635c721d8b" } },
+                  { "CkRecordId": { "SemanticVersionedFullName": "System.Communication/MappingTarget" },
+                     "Attributes": { "SourceIdentifier": "1fc70c1a-00db-71ea-ffff77d91626cdc4", "Name": "activeMoodsNum", "ExternalId": "1fc70c1a-00db-7178-ffff6aae8af00076" } },
+                  { "CkRecordId": { "SemanticVersionedFullName": "System.Communication/MappingTarget" },
+                     "Attributes": { "SourceIdentifier": "0d79c692-02ee-615d-ffffcd79afcbec1c", "Name": "activeMoodsNum", "ExternalId": "18069b52-0279-5a83-ffffcd79afcbec1c" } },
+                  { "CkRecordId": { "SemanticVersionedFullName": "System.Communication/MappingTarget" },
+                     "Attributes": { "SourceIdentifier": "0d79f213-038f-0387-ffffcd79afcbec1c", "Name": "activeMoodsNum", "ExternalId": "18069b52-0279-5bb7-ffffcd79afcbec1c" } },
+                  { "CkRecordId": { "SemanticVersionedFullName": "System.Communication/MappingTarget" },
+                     "Attributes": { "SourceIdentifier": "1fc70b58-0071-1e06-ffff77d91626cdc4", "Name": "activeMoodsNum", "ExternalId": "1fc70b58-0071-1d94-ffff0351f6cca7ef" } },
+                  { "CkRecordId": { "SemanticVersionedFullName": "System.Communication/MappingTarget" },
+                     "Attributes": { "SourceIdentifier": "1fc70c9d-026f-d053-ffff77d91626cdc4", "Name": "activeMoodsNum", "ExternalId": "1fc70c9d-026f-cfe1-ffffa623de47b135" } },
+                  { "CkRecordId": { "SemanticVersionedFullName": "System.Communication/MappingTarget" },
+                     "Attributes": { "SourceIdentifier": "0d79f0b5-0077-7b86-ffffcd79afcbec1c", "Name": "activeMoodsNum", "ExternalId": "18069b52-0279-5d2b-ffffcd79afcbec1c" } }
                 ]
             # By rtId: only the Fusch configuration is touched (never the Firmianstrasse LoxoneMiniserverConfig).
             - type: CreateUpdateInfo@1
@@ -232,7 +289,7 @@ entities:
       - id: System/Name
         value: Receive Fusch PV State Changes
       - id: System/Description
-        value: Receives the changed Fusch PV states from the Miniserver WebSocket (read only) and sends them to the mesh pipeline
+        value: Receives the changed watched Fusch states from the Miniserver WebSocket (read only) and sends them to the mesh pipeline
       - id: System/Enabled
         value: true
       - id: System.Communication/PipelineDefinition
@@ -264,7 +321,7 @@ entities:
       - id: System/Name
         value: Store Fusch PV States
       - id: System/Description
-        value: Writes PV string power and energy and the PV system total onto the Fusch PV entities and the power rows into the PV archives
+        value: Writes the watched Fusch states onto their fixed Fusch entities (PV, room temperature, heat mixer, blinds, lights) and the value rows into the EnergyIQ archives
       - id: System/Enabled
         value: true
       - id: System.Communication/PipelineDefinition
@@ -273,12 +330,15 @@ entities:
             - type: FromPipelineDataEvent@1
           transformations:
             # One update per state; the target is chosen by the state UUID (pollUuid) and addressed by its fixed rtId.
-            # Power updates and energy updates are collected separately: only power goes into the archives, and the
-            # newest value per entity is filtered per group (FilterLatestUpdateInfo keeps ONE update per entity, so a
-            # mixed list would drop the energy or the power update of the same entity).
+            # Archived updates (PV power and, since AB#7697, room temperature, mixer flow temperature, blind position,
+            # light on/level) and energy updates (PV counters) are collected separately: only the first group goes into
+            # the archives, and the newest value per entity is filtered per group (FilterLatestUpdateInfo keeps ONE
+            # update per entity, so a mixed list would drop the energy or the power update of the same entity).
+            # Room rules as Firmianstrasse (rt-pipelines-loxone.yaml): jalousie-shading (position x 100),
+            # lightcontroller-ison (activeMoodsNum <> 778) and lightcontroller-level (100 / 0).
             # A state without a case (not in the list) is ignored.
             - type: ForEach@1
-              description: Map every changed state to its Fusch PV target
+              description: Map every changed state to its fixed Fusch target
               iterationPath: $.states
               targetPath: $.states
               fullDocumentPath: $.full
@@ -301,7 +361,7 @@ entities:
                             - attributeName: currentPower
                               attributeValueType: Double
                               valuePath: $.key.value
-                          targetPath: $.key._powerUpdates
+                          targetPath: $.key._archiveUpdates
                           targetValueWriteMode: Append
                           targetValueKind: Array
                     # PV Dach String Sued: total [kWh] -> PVString a13 EnergyProduced
@@ -331,7 +391,7 @@ entities:
                             - attributeName: currentPower
                               attributeValueType: Double
                               valuePath: $.key.value
-                          targetPath: $.key._powerUpdates
+                          targetPath: $.key._archiveUpdates
                           targetValueWriteMode: Append
                           targetValueKind: Array
                     # PV Dach String Nord: total [kWh] -> PVString a14 EnergyProduced
@@ -361,7 +421,7 @@ entities:
                             - attributeName: totalCurrentPower
                               attributeValueType: Double
                               valuePath: $.key.value
-                          targetPath: $.key._powerUpdates
+                          targetPath: $.key._archiveUpdates
                           targetValueWriteMode: Append
                           targetValueKind: Array
                     # Energiemonitor (Fronius): prodTotal [kWh] -> PhotovoltaicSystem a12 TotalEnergyProduced
@@ -379,9 +439,675 @@ entities:
                           targetPath: $.key._energyUpdates
                           targetValueWriteMode: Append
                           targetValueKind: Array
+                    # Raumregler Bad OG: tempActual [degC] -> TemperatureSensor a30 CurrentValue
+                    - value: 168b26ac-027c-4d63-ffff708aeba60c88
+                      transformations:
+                        - type: CreateUpdateInfo@1
+                          updateKind: UPDATE
+                          rtId: 6a10f05c0000000000000a30
+                          ckTypeId: EnergyIQ/TemperatureSensor
+                          timestampPath: $.key.timestamp
+                          attributeUpdates:
+                            - attributeName: currentValue
+                              attributeValueType: Double
+                              valuePath: $.key.value
+                          targetPath: $.key._archiveUpdates
+                          targetValueWriteMode: Append
+                          targetValueKind: Array
+                    # Raumregler Flur EG: tempActual [degC] -> TemperatureSensor a31 CurrentValue
+                    - value: 1dd32bf1-005d-356e-02ff99e1e37a4cc6
+                      transformations:
+                        - type: CreateUpdateInfo@1
+                          updateKind: UPDATE
+                          rtId: 6a10f05c0000000000000a31
+                          ckTypeId: EnergyIQ/TemperatureSensor
+                          timestampPath: $.key.timestamp
+                          attributeUpdates:
+                            - attributeName: currentValue
+                              attributeValueType: Double
+                              valuePath: $.key.value
+                          targetPath: $.key._archiveUpdates
+                          targetValueWriteMode: Append
+                          targetValueKind: Array
+                    # Raumregler Küche OG: tempActual [degC] -> TemperatureSensor a32 CurrentValue
+                    - value: 168b2604-0280-ceac-ffff2fd469511214
+                      transformations:
+                        - type: CreateUpdateInfo@1
+                          updateKind: UPDATE
+                          rtId: 6a10f05c0000000000000a32
+                          ckTypeId: EnergyIQ/TemperatureSensor
+                          timestampPath: $.key.timestamp
+                          attributeUpdates:
+                            - attributeName: currentValue
+                              attributeValueType: Double
+                              valuePath: $.key.value
+                          targetPath: $.key._archiveUpdates
+                          targetValueWriteMode: Append
+                          targetValueKind: Array
+                    # Raumregler Schlafzimmer: tempActual [degC] -> TemperatureSensor a33 CurrentValue
+                    - value: 168c78de-012e-d7fa-ffffe4d8c39d6f4b
+                      transformations:
+                        - type: CreateUpdateInfo@1
+                          updateKind: UPDATE
+                          rtId: 6a10f05c0000000000000a33
+                          ckTypeId: EnergyIQ/TemperatureSensor
+                          timestampPath: $.key.timestamp
+                          attributeUpdates:
+                            - attributeName: currentValue
+                              attributeValueType: Double
+                              valuePath: $.key.value
+                          targetPath: $.key._archiveUpdates
+                          targetValueWriteMode: Append
+                          targetValueKind: Array
+                    # Raumregler Wohnzimmer: tempActual [degC] -> TemperatureSensor a34 CurrentValue
+                    - value: 168b2458-028a-04a5-ffffb4399fc0d4dd
+                      transformations:
+                        - type: CreateUpdateInfo@1
+                          updateKind: UPDATE
+                          rtId: 6a10f05c0000000000000a34
+                          ckTypeId: EnergyIQ/TemperatureSensor
+                          timestampPath: $.key.timestamp
+                          attributeUpdates:
+                            - attributeName: currentValue
+                              attributeValueType: Double
+                              valuePath: $.key.value
+                          targetPath: $.key._archiveUpdates
+                          targetValueWriteMode: Append
+                          targetValueKind: Array
+                    # Heizungsmischer (Heizraum): tempActual [degC] -> TemperatureSensor a41 CurrentValue
+                    - value: 1d92b9d5-02a7-fbd0-01ffe6b61eceb9f7
+                      transformations:
+                        - type: CreateUpdateInfo@1
+                          updateKind: UPDATE
+                          rtId: 6a10f05c0000000000000a41
+                          ckTypeId: EnergyIQ/TemperatureSensor
+                          timestampPath: $.key.timestamp
+                          attributeUpdates:
+                            - attributeName: currentValue
+                              attributeValueType: Double
+                              valuePath: $.key.value
+                          targetPath: $.key._archiveUpdates
+                          targetValueWriteMode: Append
+                          targetValueKind: Array
+                    # Jalousie Bad OG Automatikjalousie: position [0..1] -> ShadingDevice a50 Position = value * 100 [%]
+                    - value: 0e01a7d6-0235-64dd-ffff449c273f7f17
+                      transformations:
+                        - type: Math@1
+                          path: $.key
+                          operation: Multiply
+                          value: 100
+                          itemPath: $.value
+                          itemTargetPath: $.positionPercent
+                        - type: CreateUpdateInfo@1
+                          updateKind: UPDATE
+                          rtId: 6a10f05c0000000000000a50
+                          ckTypeId: EnergyIQ/ShadingDevice
+                          timestampPath: $.key.timestamp
+                          attributeUpdates:
+                            - attributeName: position
+                              attributeValueType: Double
+                              valuePath: $.key.positionPercent
+                          targetPath: $.key._archiveUpdates
+                          targetValueWriteMode: Append
+                          targetValueKind: Array
+                    # Jalousie Küche OG Balkontür: position [0..1] -> ShadingDevice a51 Position = value * 100 [%]
+                    - value: 0e01a67b-0379-85de-ffff13063e930ceb
+                      transformations:
+                        - type: Math@1
+                          path: $.key
+                          operation: Multiply
+                          value: 100
+                          itemPath: $.value
+                          itemTargetPath: $.positionPercent
+                        - type: CreateUpdateInfo@1
+                          updateKind: UPDATE
+                          rtId: 6a10f05c0000000000000a51
+                          ckTypeId: EnergyIQ/ShadingDevice
+                          timestampPath: $.key.timestamp
+                          attributeUpdates:
+                            - attributeName: position
+                              attributeValueType: Double
+                              valuePath: $.key.positionPercent
+                          targetPath: $.key._archiveUpdates
+                          targetValueWriteMode: Append
+                          targetValueKind: Array
+                    # Jalousie Küche OG Fenster: position [0..1] -> ShadingDevice a52 Position = value * 100 [%]
+                    - value: 2181e7dd-030b-7e09-ffff624b619d9bfc
+                      transformations:
+                        - type: Math@1
+                          path: $.key
+                          operation: Multiply
+                          value: 100
+                          itemPath: $.value
+                          itemTargetPath: $.positionPercent
+                        - type: CreateUpdateInfo@1
+                          updateKind: UPDATE
+                          rtId: 6a10f05c0000000000000a52
+                          ckTypeId: EnergyIQ/ShadingDevice
+                          timestampPath: $.key.timestamp
+                          attributeUpdates:
+                            - attributeName: position
+                              attributeValueType: Double
+                              valuePath: $.key.positionPercent
+                          targetPath: $.key._archiveUpdates
+                          targetValueWriteMode: Append
+                          targetValueKind: Array
+                    # Jalousie Schlafzimmer Automatikjalousie: position [0..1] -> ShadingDevice a53 Position = value * 100 [%]
+                    - value: 0e01a727-0399-2fc3-ffff8821af68c30e
+                      transformations:
+                        - type: Math@1
+                          path: $.key
+                          operation: Multiply
+                          value: 100
+                          itemPath: $.value
+                          itemTargetPath: $.positionPercent
+                        - type: CreateUpdateInfo@1
+                          updateKind: UPDATE
+                          rtId: 6a10f05c0000000000000a53
+                          ckTypeId: EnergyIQ/ShadingDevice
+                          timestampPath: $.key.timestamp
+                          attributeUpdates:
+                            - attributeName: position
+                              attributeValueType: Double
+                              valuePath: $.key.positionPercent
+                          targetPath: $.key._archiveUpdates
+                          targetValueWriteMode: Append
+                          targetValueKind: Array
+                    # Jalousie Wohnzimmer Balkontüre: position [0..1] -> ShadingDevice a54 Position = value * 100 [%]
+                    - value: 0e01a367-0230-17ef-ffff043b35dcd411
+                      transformations:
+                        - type: Math@1
+                          path: $.key
+                          operation: Multiply
+                          value: 100
+                          itemPath: $.value
+                          itemTargetPath: $.positionPercent
+                        - type: CreateUpdateInfo@1
+                          updateKind: UPDATE
+                          rtId: 6a10f05c0000000000000a54
+                          ckTypeId: EnergyIQ/ShadingDevice
+                          timestampPath: $.key.timestamp
+                          attributeUpdates:
+                            - attributeName: position
+                              attributeValueType: Double
+                              valuePath: $.key.positionPercent
+                          targetPath: $.key._archiveUpdates
+                          targetValueWriteMode: Append
+                          targetValueKind: Array
+                    # Jalousie Wohnzimmer Fenster: position [0..1] -> ShadingDevice a55 Position = value * 100 [%]
+                    - value: 2181dcca-03c4-7402-ffff1f0681efb61e
+                      transformations:
+                        - type: Math@1
+                          path: $.key
+                          operation: Multiply
+                          value: 100
+                          itemPath: $.value
+                          itemTargetPath: $.positionPercent
+                        - type: CreateUpdateInfo@1
+                          updateKind: UPDATE
+                          rtId: 6a10f05c0000000000000a55
+                          ckTypeId: EnergyIQ/ShadingDevice
+                          timestampPath: $.key.timestamp
+                          attributeUpdates:
+                            - attributeName: position
+                              attributeValueType: Double
+                              valuePath: $.key.positionPercent
+                          targetPath: $.key._archiveUpdates
+                          targetValueWriteMode: Append
+                          targetValueKind: Array
+                    # Licht Bad OG: activeMoodsNum -> Luminaire a60 IsOn = value <> 778, DimmingLevel = 100/0
+                    - value: 2181ffbb-0072-24dd-ffff5277bb83624f
+                      transformations:
+                        - type: If@1
+                          path: $.key.value
+                          operator: Equals
+                          value: 778
+                          valueType: Double
+                          transformations:
+                            - type: CreateUpdateInfo@1
+                              updateKind: UPDATE
+                              rtId: 6a10f05c0000000000000a60
+                              ckTypeId: EnergyIQ/Luminaire
+                              timestampPath: $.key.timestamp
+                              attributeUpdates:
+                                - attributeName: isOn
+                                  attributeValueType: Boolean
+                                  value: false
+                                - attributeName: dimmingLevel
+                                  attributeValueType: Double
+                                  value: 0
+                              targetPath: $.key._archiveUpdates
+                              targetValueWriteMode: Append
+                              targetValueKind: Array
+                        - type: If@1
+                          path: $.key.value
+                          operator: NotEquals
+                          value: 778
+                          valueType: Double
+                          transformations:
+                            - type: CreateUpdateInfo@1
+                              updateKind: UPDATE
+                              rtId: 6a10f05c0000000000000a60
+                              ckTypeId: EnergyIQ/Luminaire
+                              timestampPath: $.key.timestamp
+                              attributeUpdates:
+                                - attributeName: isOn
+                                  attributeValueType: Boolean
+                                  value: true
+                                - attributeName: dimmingLevel
+                                  attributeValueType: Double
+                                  value: 100
+                              targetPath: $.key._archiveUpdates
+                              targetValueWriteMode: Append
+                              targetValueKind: Array
+                    # Licht Flur EG: activeMoodsNum -> Luminaire a61 IsOn = value <> 778, DimmingLevel = 100/0
+                    - value: 1dd24866-0043-0b34-ffffccc64d47dc02
+                      transformations:
+                        - type: If@1
+                          path: $.key.value
+                          operator: Equals
+                          value: 778
+                          valueType: Double
+                          transformations:
+                            - type: CreateUpdateInfo@1
+                              updateKind: UPDATE
+                              rtId: 6a10f05c0000000000000a61
+                              ckTypeId: EnergyIQ/Luminaire
+                              timestampPath: $.key.timestamp
+                              attributeUpdates:
+                                - attributeName: isOn
+                                  attributeValueType: Boolean
+                                  value: false
+                                - attributeName: dimmingLevel
+                                  attributeValueType: Double
+                                  value: 0
+                              targetPath: $.key._archiveUpdates
+                              targetValueWriteMode: Append
+                              targetValueKind: Array
+                        - type: If@1
+                          path: $.key.value
+                          operator: NotEquals
+                          value: 778
+                          valueType: Double
+                          transformations:
+                            - type: CreateUpdateInfo@1
+                              updateKind: UPDATE
+                              rtId: 6a10f05c0000000000000a61
+                              ckTypeId: EnergyIQ/Luminaire
+                              timestampPath: $.key.timestamp
+                              attributeUpdates:
+                                - attributeName: isOn
+                                  attributeValueType: Boolean
+                                  value: true
+                                - attributeName: dimmingLevel
+                                  attributeValueType: Double
+                                  value: 100
+                              targetPath: $.key._archiveUpdates
+                              targetValueWriteMode: Append
+                              targetValueKind: Array
+                    # Licht Flur OG: activeMoodsNum -> Luminaire a62 IsOn = value <> 778, DimmingLevel = 100/0
+                    - value: 18069b52-0267-59a1-ffffcd79afcbec1c
+                      transformations:
+                        - type: If@1
+                          path: $.key.value
+                          operator: Equals
+                          value: 778
+                          valueType: Double
+                          transformations:
+                            - type: CreateUpdateInfo@1
+                              updateKind: UPDATE
+                              rtId: 6a10f05c0000000000000a62
+                              ckTypeId: EnergyIQ/Luminaire
+                              timestampPath: $.key.timestamp
+                              attributeUpdates:
+                                - attributeName: isOn
+                                  attributeValueType: Boolean
+                                  value: false
+                                - attributeName: dimmingLevel
+                                  attributeValueType: Double
+                                  value: 0
+                              targetPath: $.key._archiveUpdates
+                              targetValueWriteMode: Append
+                              targetValueKind: Array
+                        - type: If@1
+                          path: $.key.value
+                          operator: NotEquals
+                          value: 778
+                          valueType: Double
+                          transformations:
+                            - type: CreateUpdateInfo@1
+                              updateKind: UPDATE
+                              rtId: 6a10f05c0000000000000a62
+                              ckTypeId: EnergyIQ/Luminaire
+                              timestampPath: $.key.timestamp
+                              attributeUpdates:
+                                - attributeName: isOn
+                                  attributeValueType: Boolean
+                                  value: true
+                                - attributeName: dimmingLevel
+                                  attributeValueType: Double
+                                  value: 100
+                              targetPath: $.key._archiveUpdates
+                              targetValueWriteMode: Append
+                              targetValueKind: Array
+                    # Licht Flur UG: activeMoodsNum -> Luminaire a63 IsOn = value <> 778, DimmingLevel = 100/0
+                    - value: 1fc70bae-019f-0790-ffff86635c721d8b
+                      transformations:
+                        - type: If@1
+                          path: $.key.value
+                          operator: Equals
+                          value: 778
+                          valueType: Double
+                          transformations:
+                            - type: CreateUpdateInfo@1
+                              updateKind: UPDATE
+                              rtId: 6a10f05c0000000000000a63
+                              ckTypeId: EnergyIQ/Luminaire
+                              timestampPath: $.key.timestamp
+                              attributeUpdates:
+                                - attributeName: isOn
+                                  attributeValueType: Boolean
+                                  value: false
+                                - attributeName: dimmingLevel
+                                  attributeValueType: Double
+                                  value: 0
+                              targetPath: $.key._archiveUpdates
+                              targetValueWriteMode: Append
+                              targetValueKind: Array
+                        - type: If@1
+                          path: $.key.value
+                          operator: NotEquals
+                          value: 778
+                          valueType: Double
+                          transformations:
+                            - type: CreateUpdateInfo@1
+                              updateKind: UPDATE
+                              rtId: 6a10f05c0000000000000a63
+                              ckTypeId: EnergyIQ/Luminaire
+                              timestampPath: $.key.timestamp
+                              attributeUpdates:
+                                - attributeName: isOn
+                                  attributeValueType: Boolean
+                                  value: true
+                                - attributeName: dimmingLevel
+                                  attributeValueType: Double
+                                  value: 100
+                              targetPath: $.key._archiveUpdates
+                              targetValueWriteMode: Append
+                              targetValueKind: Array
+                    # Licht Garage: activeMoodsNum -> Luminaire a64 IsOn = value <> 778, DimmingLevel = 100/0
+                    - value: 1fc70c1a-00db-7178-ffff6aae8af00076
+                      transformations:
+                        - type: If@1
+                          path: $.key.value
+                          operator: Equals
+                          value: 778
+                          valueType: Double
+                          transformations:
+                            - type: CreateUpdateInfo@1
+                              updateKind: UPDATE
+                              rtId: 6a10f05c0000000000000a64
+                              ckTypeId: EnergyIQ/Luminaire
+                              timestampPath: $.key.timestamp
+                              attributeUpdates:
+                                - attributeName: isOn
+                                  attributeValueType: Boolean
+                                  value: false
+                                - attributeName: dimmingLevel
+                                  attributeValueType: Double
+                                  value: 0
+                              targetPath: $.key._archiveUpdates
+                              targetValueWriteMode: Append
+                              targetValueKind: Array
+                        - type: If@1
+                          path: $.key.value
+                          operator: NotEquals
+                          value: 778
+                          valueType: Double
+                          transformations:
+                            - type: CreateUpdateInfo@1
+                              updateKind: UPDATE
+                              rtId: 6a10f05c0000000000000a64
+                              ckTypeId: EnergyIQ/Luminaire
+                              timestampPath: $.key.timestamp
+                              attributeUpdates:
+                                - attributeName: isOn
+                                  attributeValueType: Boolean
+                                  value: true
+                                - attributeName: dimmingLevel
+                                  attributeValueType: Double
+                                  value: 100
+                              targetPath: $.key._archiveUpdates
+                              targetValueWriteMode: Append
+                              targetValueKind: Array
+                    # Licht Küche OG: activeMoodsNum -> Luminaire a65 IsOn = value <> 778, DimmingLevel = 100/0
+                    - value: 18069b52-0279-5a83-ffffcd79afcbec1c
+                      transformations:
+                        - type: If@1
+                          path: $.key.value
+                          operator: Equals
+                          value: 778
+                          valueType: Double
+                          transformations:
+                            - type: CreateUpdateInfo@1
+                              updateKind: UPDATE
+                              rtId: 6a10f05c0000000000000a65
+                              ckTypeId: EnergyIQ/Luminaire
+                              timestampPath: $.key.timestamp
+                              attributeUpdates:
+                                - attributeName: isOn
+                                  attributeValueType: Boolean
+                                  value: false
+                                - attributeName: dimmingLevel
+                                  attributeValueType: Double
+                                  value: 0
+                              targetPath: $.key._archiveUpdates
+                              targetValueWriteMode: Append
+                              targetValueKind: Array
+                        - type: If@1
+                          path: $.key.value
+                          operator: NotEquals
+                          value: 778
+                          valueType: Double
+                          transformations:
+                            - type: CreateUpdateInfo@1
+                              updateKind: UPDATE
+                              rtId: 6a10f05c0000000000000a65
+                              ckTypeId: EnergyIQ/Luminaire
+                              timestampPath: $.key.timestamp
+                              attributeUpdates:
+                                - attributeName: isOn
+                                  attributeValueType: Boolean
+                                  value: true
+                                - attributeName: dimmingLevel
+                                  attributeValueType: Double
+                                  value: 100
+                              targetPath: $.key._archiveUpdates
+                              targetValueWriteMode: Append
+                              targetValueKind: Array
+                    # Licht Schlafzimmer: activeMoodsNum -> Luminaire a66 IsOn = value <> 778, DimmingLevel = 100/0
+                    - value: 18069b52-0279-5bb7-ffffcd79afcbec1c
+                      transformations:
+                        - type: If@1
+                          path: $.key.value
+                          operator: Equals
+                          value: 778
+                          valueType: Double
+                          transformations:
+                            - type: CreateUpdateInfo@1
+                              updateKind: UPDATE
+                              rtId: 6a10f05c0000000000000a66
+                              ckTypeId: EnergyIQ/Luminaire
+                              timestampPath: $.key.timestamp
+                              attributeUpdates:
+                                - attributeName: isOn
+                                  attributeValueType: Boolean
+                                  value: false
+                                - attributeName: dimmingLevel
+                                  attributeValueType: Double
+                                  value: 0
+                              targetPath: $.key._archiveUpdates
+                              targetValueWriteMode: Append
+                              targetValueKind: Array
+                        - type: If@1
+                          path: $.key.value
+                          operator: NotEquals
+                          value: 778
+                          valueType: Double
+                          transformations:
+                            - type: CreateUpdateInfo@1
+                              updateKind: UPDATE
+                              rtId: 6a10f05c0000000000000a66
+                              ckTypeId: EnergyIQ/Luminaire
+                              timestampPath: $.key.timestamp
+                              attributeUpdates:
+                                - attributeName: isOn
+                                  attributeValueType: Boolean
+                                  value: true
+                                - attributeName: dimmingLevel
+                                  attributeValueType: Double
+                                  value: 100
+                              targetPath: $.key._archiveUpdates
+                              targetValueWriteMode: Append
+                              targetValueKind: Array
+                    # Licht Stiegenhaus: activeMoodsNum -> Luminaire a67 IsOn = value <> 778, DimmingLevel = 100/0
+                    - value: 1fc70b58-0071-1d94-ffff0351f6cca7ef
+                      transformations:
+                        - type: If@1
+                          path: $.key.value
+                          operator: Equals
+                          value: 778
+                          valueType: Double
+                          transformations:
+                            - type: CreateUpdateInfo@1
+                              updateKind: UPDATE
+                              rtId: 6a10f05c0000000000000a67
+                              ckTypeId: EnergyIQ/Luminaire
+                              timestampPath: $.key.timestamp
+                              attributeUpdates:
+                                - attributeName: isOn
+                                  attributeValueType: Boolean
+                                  value: false
+                                - attributeName: dimmingLevel
+                                  attributeValueType: Double
+                                  value: 0
+                              targetPath: $.key._archiveUpdates
+                              targetValueWriteMode: Append
+                              targetValueKind: Array
+                        - type: If@1
+                          path: $.key.value
+                          operator: NotEquals
+                          value: 778
+                          valueType: Double
+                          transformations:
+                            - type: CreateUpdateInfo@1
+                              updateKind: UPDATE
+                              rtId: 6a10f05c0000000000000a67
+                              ckTypeId: EnergyIQ/Luminaire
+                              timestampPath: $.key.timestamp
+                              attributeUpdates:
+                                - attributeName: isOn
+                                  attributeValueType: Boolean
+                                  value: true
+                                - attributeName: dimmingLevel
+                                  attributeValueType: Double
+                                  value: 100
+                              targetPath: $.key._archiveUpdates
+                              targetValueWriteMode: Append
+                              targetValueKind: Array
+                    # Licht Vorratskeller: activeMoodsNum -> Luminaire a68 IsOn = value <> 778, DimmingLevel = 100/0
+                    - value: 1fc70c9d-026f-cfe1-ffffa623de47b135
+                      transformations:
+                        - type: If@1
+                          path: $.key.value
+                          operator: Equals
+                          value: 778
+                          valueType: Double
+                          transformations:
+                            - type: CreateUpdateInfo@1
+                              updateKind: UPDATE
+                              rtId: 6a10f05c0000000000000a68
+                              ckTypeId: EnergyIQ/Luminaire
+                              timestampPath: $.key.timestamp
+                              attributeUpdates:
+                                - attributeName: isOn
+                                  attributeValueType: Boolean
+                                  value: false
+                                - attributeName: dimmingLevel
+                                  attributeValueType: Double
+                                  value: 0
+                              targetPath: $.key._archiveUpdates
+                              targetValueWriteMode: Append
+                              targetValueKind: Array
+                        - type: If@1
+                          path: $.key.value
+                          operator: NotEquals
+                          value: 778
+                          valueType: Double
+                          transformations:
+                            - type: CreateUpdateInfo@1
+                              updateKind: UPDATE
+                              rtId: 6a10f05c0000000000000a68
+                              ckTypeId: EnergyIQ/Luminaire
+                              timestampPath: $.key.timestamp
+                              attributeUpdates:
+                                - attributeName: isOn
+                                  attributeValueType: Boolean
+                                  value: true
+                                - attributeName: dimmingLevel
+                                  attributeValueType: Double
+                                  value: 100
+                              targetPath: $.key._archiveUpdates
+                              targetValueWriteMode: Append
+                              targetValueKind: Array
+                    # Licht Wohnzimmer: activeMoodsNum -> Luminaire a69 IsOn = value <> 778, DimmingLevel = 100/0
+                    - value: 18069b52-0279-5d2b-ffffcd79afcbec1c
+                      transformations:
+                        - type: If@1
+                          path: $.key.value
+                          operator: Equals
+                          value: 778
+                          valueType: Double
+                          transformations:
+                            - type: CreateUpdateInfo@1
+                              updateKind: UPDATE
+                              rtId: 6a10f05c0000000000000a69
+                              ckTypeId: EnergyIQ/Luminaire
+                              timestampPath: $.key.timestamp
+                              attributeUpdates:
+                                - attributeName: isOn
+                                  attributeValueType: Boolean
+                                  value: false
+                                - attributeName: dimmingLevel
+                                  attributeValueType: Double
+                                  value: 0
+                              targetPath: $.key._archiveUpdates
+                              targetValueWriteMode: Append
+                              targetValueKind: Array
+                        - type: If@1
+                          path: $.key.value
+                          operator: NotEquals
+                          value: 778
+                          valueType: Double
+                          transformations:
+                            - type: CreateUpdateInfo@1
+                              updateKind: UPDATE
+                              rtId: 6a10f05c0000000000000a69
+                              ckTypeId: EnergyIQ/Luminaire
+                              timestampPath: $.key.timestamp
+                              attributeUpdates:
+                                - attributeName: isOn
+                                  attributeValueType: Boolean
+                                  value: true
+                                - attributeName: dimmingLevel
+                                  attributeValueType: Double
+                                  value: 100
+                              targetPath: $.key._archiveUpdates
+                              targetValueWriteMode: Append
+                              targetValueKind: Array
             - type: Flatten@1
-              path: $.states[*]._powerUpdates[*]
-              targetPath: $._powerUpdates
+              path: $.states[*]._archiveUpdates[*]
+              targetPath: $._archiveUpdates
             - type: Flatten@1
               path: $.states[*]._energyUpdates[*]
               targetPath: $._energyUpdates
@@ -398,34 +1124,75 @@ entities:
                   targetPath: $._energyUpdates
                 - type: ApplyChanges@2
                   entityUpdatesPath: $._energyUpdates
-            # Power last, like the Firmianstrasse pipeline (archive nodes at the end): in a test-2 dry run an If@1
-            # placed AFTER the archive nodes did not run its children.
+            # Archived values last, like the Firmianstrasse pipeline (archive nodes at the end): in a test-2 dry run
+            # an If@1 placed AFTER the archive nodes did not run its children. PV power and the room values (AB#7697)
+            # therefore share ONE list and ONE If@1.
             - type: If@1
-              description: Power updates present
-              path: $._powerUpdates[0].RtId
+              description: Archived updates present (PV power, room temperature, mixer, blinds, lights)
+              path: $._archiveUpdates[0].RtId
               operator: NotEquals
               value: null
               valueType: String
               transformations:
-                # Every power value is a row (the archive node keeps only the items of its TargetCkTypeId).
+                # Every value is a row (each archive node keeps only the items of its TargetCkTypeId).
                 - type: BackfillFromRtEntity@1
                   description: Backfill PVString archive
-                  path: $._powerUpdates
+                  path: $._archiveUpdates
                   archiveRtId: 6a0e000000000000000a000a
                 - type: SaveStreamDataInArchive@1
                   description: Save PVString power rows
-                  path: $._powerUpdates
+                  path: $._archiveUpdates
                   archiveRtId: 6a0e000000000000000a000a
                 - type: BackfillFromRtEntity@1
                   description: Backfill PhotovoltaicSystem archive
-                  path: $._powerUpdates
+                  path: $._archiveUpdates
                   archiveRtId: 6a0e000000000000000a000c
                 - type: SaveStreamDataInArchive@1
                   description: Save PhotovoltaicSystem power rows
-                  path: $._powerUpdates
+                  path: $._archiveUpdates
                   archiveRtId: 6a0e000000000000000a000c
+                - type: BackfillFromRtEntity@1
+                  description: Backfill TemperatureSensor (room temperature, mixer flow) archive
+                  path: $._archiveUpdates
+                  archiveRtId: 6a0e000000000000000a0001
+                - type: SaveStreamDataInArchive@1
+                  description: Save TemperatureSensor (room temperature, mixer flow) rows
+                  path: $._archiveUpdates
+                  archiveRtId: 6a0e000000000000000a0001
+                - type: BackfillFromRtEntity@1
+                  description: Backfill Luminaire archive
+                  path: $._archiveUpdates
+                  archiveRtId: 6a0e000000000000000a0004
+                - type: SaveStreamDataInArchive@1
+                  description: Save Luminaire rows
+                  path: $._archiveUpdates
+                  archiveRtId: 6a0e000000000000000a0004
+                - type: BackfillFromRtEntity@1
+                  description: Backfill Luminaire status (Name column) archive
+                  path: $._archiveUpdates
+                  archiveRtId: 6a0e000000000000000a0012
+                - type: SaveStreamDataInArchive@1
+                  description: Save Luminaire status (Name column) rows
+                  path: $._archiveUpdates
+                  archiveRtId: 6a0e000000000000000a0012
+                - type: BackfillFromRtEntity@1
+                  description: Backfill ShadingDevice archive
+                  path: $._archiveUpdates
+                  archiveRtId: 6a0e000000000000000a0005
+                - type: SaveStreamDataInArchive@1
+                  description: Save ShadingDevice rows
+                  path: $._archiveUpdates
+                  archiveRtId: 6a0e000000000000000a0005
+                - type: BackfillFromRtEntity@1
+                  description: Backfill ShadingDevice status (Name column) archive
+                  path: $._archiveUpdates
+                  archiveRtId: 6a0e000000000000000a0013
+                - type: SaveStreamDataInArchive@1
+                  description: Save ShadingDevice status (Name column) rows
+                  path: $._archiveUpdates
+                  archiveRtId: 6a0e000000000000000a0013
                 - type: FilterLatestUpdateInfo@1
-                  path: $._powerUpdates
-                  targetPath: $._powerUpdates
+                  path: $._archiveUpdates
+                  targetPath: $._archiveUpdates
                 - type: ApplyChanges@2
-                  entityUpdatesPath: $._powerUpdates
+                  entityUpdatesPath: $._archiveUpdates
