@@ -1055,8 +1055,9 @@ entities:
   # LIMIT: 10/3600 is only correct for rows written exactly every 10 s (the demo
   # simulator, rt-simulation-adapters.yaml). Live sites do not write that way:
   # grid rows (Loxone Firmianstraße, SHRDZM Fusch) arrive about every 5 s (kWh shown
-  # about 2x too high), PV and battery rows are written on change (kWh shown several
-  # times too high). A correct figure needs a time-weighted energy integral in the
+  # about 2x too high), PV and battery rows are written on change (kWh off in either
+  # direction: Firmianstraße several times too high, Fusch PV too low). A correct
+  # figure needs a time-weighted energy integral in the
   # aggregation query (platform gap, AB#7692 comment). Measurements per KPI and site:
   # docs/meshboard-site-selector-fit.md, section "Energiebilanz kWh".
   # ============================================================
@@ -1067,7 +1068,7 @@ entities:
         value: Energiebilanz
       - id: System/Description
         value: |-
-          Kumulierte Energiebilanz des gewählten Standorts über den gewählten Zeitraum: PV-Produktion, Eigenverbrauch, Netzeinspeisung, Netzbezug sowie geladene/entladene Batterie-Energie. Werte in kWh = SUM der kW-Samples × 10/3600 — nur korrekt bei Samples im 10-s-Raster (Simulator); bei Live-Daten (5-s- oder änderungsgetriebene Samples) zu hoch.
+          Kumulierte Energiebilanz des gewählten Standorts über den gewählten Zeitraum: PV-Produktion, Eigenverbrauch, Netzeinspeisung, Netzbezug sowie geladene/entladene Batterie-Energie. Werte in kWh = SUM der kW-Samples × 10/3600 — nur korrekt bei Samples im 10-s-Raster (Simulator); bei Live-Daten (5-s- oder änderungsgetriebene Samples) ungenau, meist zu hoch.
           ---MESHBOARD_VARIABLES---
           {"timeFilter": {"enabled": true, "selection": {"type": "relative", "relativeValue": 24, "relativeUnit": "hours"}}, "autoRefreshSeconds": 300, "entitySelectors": [{"id": "standort", "label": "Standort", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [{"attributePath": "name", "variableName": "standortName"}], "showInToolbar": true, "defaultRtId": "6789a00000000000006000d3", "filters": [{"attributePath": "systemType", "operator": "EQUALS", "comparisonValue": "ELECTRICAL"}]}, {"id": "netz", "label": "Netzanschluss", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"targetCkTypeId": "EnergyIQ/GridConnection", "roleId": "EnergyIQ/SystemMembers", "direction": "out"}}, {"id": "pv", "label": "PV-Anlage", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"targetCkTypeId": "EnergyIQ/PhotovoltaicSystem", "roleId": "EnergyIQ/SystemMembers", "direction": "out"}}, {"id": "batterie", "label": "Batterie", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"path": [{"roleId": "EnergyIQ/SystemMembers", "direction": "out", "targetCkTypeId": "EnergyIQ/PhotovoltaicSystem"}, {"roleId": "EnergyIQ/SystemMembers", "direction": "out", "targetCkTypeId": "EnergyIQ/BatteryStorage"}]}}]}
       - id: System.UI/Dashboard.Columns

@@ -160,7 +160,7 @@ produces no ghost series (header of the YAML).
 | Energiebilanz | Batterie geladen | AggregationSdQuery BatteryStorageArchive SUM > 0 | `batterie` | empty scope → no data |
 | Energiebilanz | Batterie entladen | AggregationSdQuery BatteryStorageArchive SUM < 0 | `batterie` | empty scope → no data |
 
-Validation without a running Studio (test-2 down, local stack not running): the selectors of both boards were run
+Validation of the configuration (without a Studio run): the selectors of both boards were run
 through the library's own pure helpers at octo-frontend-libraries `origin/main` (`resolveFollowLeader`,
 `followValidationError`, `scopePlan`, `resolveScopePath`, `hasPickerFilter`) with a hop fetcher that sends the
 library's `getAssociationTargetRtIds` query read-only to prod-1/energyiq: one visible selector per board, all followers

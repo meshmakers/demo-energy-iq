@@ -244,8 +244,9 @@ list grows from 6 to 28 states ([runbook](docs/fusch-loxone-runbook.md) section 
 ## MeshBoards: site selector (AB#7692)
 
 The boards **Energie** and **Energiebilanz** (`data/_general/rt-meshboards-energyiq.yaml`) have one visible selector
-**Standort** in the toolbar. It lists the electrical DistributionSystems — one per site (Firmianstraße, Fusch) — and
-defaults to Firmianstraße. Hidden selectors follow it (`followsSelectorId`), each resolves the picked system to the
+**Standort** in the toolbar. It lists the electrical DistributionSystems of the tenant — one per site (Firmianstraße;
+Fusch only where `data/bim/rt-fusch.yaml` is imported, e.g. prod-1, not by the local import scripts) — and defaults to
+Firmianstraße. Hidden selectors follow it (`followsSelectorId`), each resolves the picked system to the
 entities of one type over `EnergyIQ/SystemMembers` (grid connection, PV system, battery through the PV system,
 wallboxes, appliances, all meters), and every widget is bound to the matching follower. A site that has no entity of a
 type (Fusch: no battery, no appliances) shows the widget's empty state; no widget falls back to the whole archive or to
@@ -258,7 +259,7 @@ multi-hop scope, picker filter, empty scope, runtime queries bound to a selector
 
 **Energiebilanz kWh:** the KPIs show `SUM(kW) × 10/3600`, which is only correct for rows written exactly every 10 s
 (the demo simulator). The live sites write grid rows about every 5 s and PV/battery rows on change, so the kWh shown
-there are too high; a correct figure needs a time-weighted energy aggregation in the platform. Measurements per KPI and
+there are wrong (mostly too high, change-driven PV rows can also come out too low); a correct figure needs a time-weighted energy aggregation in the platform. Measurements per KPI and
 site: [docs/meshboard-site-selector-fit.md](docs/meshboard-site-selector-fit.md).
 
 ## CI/CD (Azure DevOps)
