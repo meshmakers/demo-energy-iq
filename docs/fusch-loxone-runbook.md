@@ -271,7 +271,7 @@ Nothing is ever sent to a control of the Miniserver, the wall connector or evcc,
 ## 8. Rooms and devices (AB#7697)
 
 `data/bim/rt-fusch.yaml` now also holds the Fusch rooms and devices the inventory lists (rtIds `…0a20`-`…0a69`): 11
-Spaces under Building `…0a10`, 5 room TemperatureSensors (`…0a30`-`…0a34`), the heat mixer Valve `…0a40` with its flow
+Spaces in the storeys `…0a70` (UG), `…0a71` (EG) and `…0a72` (OG) under Building `…0a10` (AB#7889), 5 room TemperatureSensors (`…0a30`-`…0a34`), the heat mixer Valve `…0a40` with its flow
 TemperatureSensor `…0a41`, 6 ShadingDevices (`…0a50`-`…0a55`) and 10 Luminaires (`…0a60`-`…0a69`). Full list and the
 modelling decisions: header of the "Rooms and devices" block in that file. Existing Fusch entities `…0a01`-`…0a16` are
 unchanged; the upsert rewrites them with the same values.
@@ -372,6 +372,26 @@ Rollback:
 3. Values already written stay on the entities and in the archives (time series rows are not deleted).
 
 Nothing is ever sent to a control of the Miniserver: the pipelines only receive state changes.
+
+### 8.3 Storeys (AB#7889)
+
+Adds the BuildingStoreys `…0a70`-`…0a72` and moves the 11 Spaces from Building `…0a10` to their storey. The sensors,
+devices and live mappings stay unchanged, because they address their targets by rtId. The import replaces only the
+ParentChild association of each Space.
+
+```bash
+cd demo-energy-iq/data
+octo-cli --context prod-1_energyiq -c Dump -tid energyiq -f ~/.octo/dumps/energyiq-prod-1-before-ab7889.tar.gz
+# Extract: the 3 storeys and the 11 Spaces only (a70-a72, a20-a2a)
+ruby -ryaml -e 'd=YAML.load_file("bim/rt-fusch.yaml"); e=d["entities"].select{|x| x["rtId"]=~/0a(7[0-2]|2[0-9a])$/}; File.write(ARGV[0], YAML.dump({"$schema"=>d["$schema"],"dependencies"=>d["dependencies"],"entities"=>e}))' /tmp/rt-ab7889.yaml
+octo-cli --context prod-1_energyiq -c ImportRt -f /tmp/rt-ab7889.yaml -w -r
+```
+
+Checks: `EnergyIQ/BuildingStorey` count +3. Each Fusch Space has exactly one parent (a storey) and still contains its
+sensor or devices. The room values keep arriving.
+
+Rollback: re-import the 11 Spaces from the previous commit (parent Building `…0a10`) with `-r`, then delete the 3
+storeys.
 
 ## Validation evidence (2026-10-28, before the PR)
 
