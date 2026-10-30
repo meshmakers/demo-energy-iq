@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- AB#7741: Firmianstraße `Configure State Sync` (`67f0b00ec4ff02221e0b6009`) now loads its LoxoneConfiguration by
+  well-known name `LoxoneMiniserverConfig` instead of the first configuration with a host. With the Fusch
+  configuration in the same tenant (AB#7695) it could otherwise overwrite the Fusch watch list. No other pipeline used
+  the "first of type" pattern.
 - AB#7696: DataFlow `Fusch Loxone PV live` (`…0d03`-`…0d06` in `data/_pipelines/rt-pipelines-loxone-fusch.yaml`): PV
   string power/energy and the PV system total from the Fusch Miniserver (WebSocket, read only) onto PVString `…0a13` /
   `…0a14` and PhotovoltaicSystem `…0a12`, power rows into `PVStringArchive` and `PhotovoltaicSystemArchive`. Fixed state
