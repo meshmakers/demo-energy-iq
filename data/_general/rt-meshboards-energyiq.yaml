@@ -524,7 +524,7 @@ entities:
         value: 6a4aa4cc22664f2b26c67e64
       - id: System.UI/DashboardWidget.Config
         value: |-
-          {"columns": [{"field": "name", "title": "Zähler / Verbraucher"}, {"field": "activePower", "title": "Wirkleistung (W)"}], "pageSize": 15, "sortable": true, "queryName": "Aktuelle Leistungen", "queryRtId": "6a4aa4cc22664f2b26c67e64", "queryFamily": "runtime", "entitySelectorId": "zaehler"}
+          {"columns": [{"field": "name", "title": "Zähler / Verbraucher"}, {"field": "activePower", "title": "Wirkleistung (kW)"}], "pageSize": 15, "sortable": true, "queryName": "Aktuelle Leistungen", "queryRtId": "6a4aa4cc22664f2b26c67e64", "queryFamily": "runtime", "entitySelectorId": "zaehler"}
 
   - rtId: 6a4aa4cc22664f2b26c67e5f
     ckTypeId: System/SimpleSdQuery
