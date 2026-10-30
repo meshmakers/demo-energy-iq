@@ -2,8 +2,10 @@
 
 Analysis of the five boards in `data/_general/rt-meshboards-energyiq.yaml` against the
 octo-meshboard entity selector (`EntitySelectorConfig`, `EntitySelectorChildScope`,
-`PersistentQueryDataSource.entitySelectorId`). Result: **not with data configuration alone**.
-The boards therefore keep their current selectors; see "Platform gaps" for what is missing.
+`PersistentQueryDataSource.entitySelectorId`). Result on 2026-10-28: **not with data configuration alone**
+(platform gaps below). The gaps were closed in octo-frontend-libraries by Feature AB#7719 (AB#7721-AB#7725,
+merged 2026-10-30); Energie and Energiebilanz now have one visible site selector — see
+[Part 2: implemented design](#part-2-implemented-design-2026-10-30). The three other boards follow in AB#7693.
 
 ## Platform facts the analysis rests on
 
@@ -81,7 +83,7 @@ the three Luminaire grouping bar charts, the ShadingDevice bar chart and both ta
 
 No workaround (app code, custom widget, per-site copy pipeline, second board) was built.
 
-## Energiebilanz kWh = SUM(kW) x 10/3600
+## Energiebilanz kWh = SUM(kW) x 10/3600 (2026-10-28; measured in Part 2 below)
 
 The factor assumes exactly one row every 10 s per entity. It holds only for uniformly sampled
 archives.
@@ -97,9 +99,121 @@ archives.
 - Correct alternatives need a platform capability: a time-weighted integral in aggregation queries
   (the Beschattung board already uses a time-weighted rollup) or the register delta of the meter.
 
-## Done in this change
+## Done in part 1 (PR #11)
 
 The Energiebilanz KPI "Netzbezug" summed the shared GridConnectionArchive including the Fusch rows
 (AB#7511). It is now scoped by a hidden selector `netz` (DistributionSystem, default Firmianstraße,
 childScope GridConnection) like the Energie line chart. Other KPIs are unaffected (their archives
 hold only Firmianstraße rows).
+
+## Part 2: implemented design (2026-10-30)
+
+With AB#7719 in octo-frontend-libraries (follower selectors AB#7722, multi-hop path AB#7723, picker filter AB#7724,
+empty scope AB#7721, runtime/grouping queries bound to a selector AB#7725) both boards are configured with data only.
+
+### Leader: the electrical DistributionSystem
+
+| Field | Value |
+|-------|-------|
+| id / label | `standort` / "Standort", `showInToolbar: true` |
+| ckTypeId | `EnergyIQ/DistributionSystem` |
+| filters | `systemType EQUALS ELECTRICAL` (lists exactly one system per site; heating, cooling and ventilation circuits are hidden) |
+| defaultRtId | `6789a00000000000006000d3` (Firmianstraße "Elektrisch (PV + Eigenverbrauch)") — the only site rtId on the boards |
+
+Why not `EnergyIQ/Site`: neither site has an association from the Site to its electrical entities (F6; the
+Firmianstraße GridConnection has no spatial association at all), so every follower would need a path the model does
+not have. The electrical DistributionSystem already groups everything the boards show over one association
+(`EnergyIQ/SystemMembers`, outbound) at both sites. Consequence: the picker shows the system names
+("Elektrisch (PV + Eigenverbrauch)", "Elektrisch Fusch"), not the site names (open point: rename in the model stories).
+
+### Followers
+
+All followers: `followsSelectorId: standort`, `showInToolbar: false`, no default, role `EnergyIQ/SystemMembers`
+direction `out`.
+
+| Follower | Scope | Firmianstraße | Fusch |
+|----------|-------|---------------|-------|
+| `netz` | DS → GridConnection | `…3000a1` | `…0a03` |
+| `pv` | DS → PhotovoltaicSystem | `…0080a1` | `…0a12` |
+| `wallboxen` | DS → ChargingStation | `…3010b1`, `…3011b2` | `…0a16` |
+| `geraete` | DS → Appliance | `…3020c1`, `…3021c2` | empty |
+| `batterie` | path DS → PhotovoltaicSystem → BatteryStorage | `…0087d1` | empty |
+| `zaehler` | DS → Meter (polymorphic: also GridConnection, ChargingStation, Appliance) | 12 meters | `…0a03`, `…0a16` |
+
+The polymorphic `zaehler` scope is used only by the runtime table (`rtId IN` filter), never by an archive query, so it
+produces no ghost series (header of the YAML).
+
+### Widgets
+
+| Board | Widget | Query (family) | Follower | Fusch |
+|-------|--------|----------------|----------|-------|
+| Energie | Netzbezug (Hausanschluss) | SimpleSdQuery GridConnectionArchive (stream) | `netz` | SHRDZM data |
+| Energie | PV-Produktion | SimpleSdQuery PhotovoltaicSystemArchive (stream) | `pv` | Loxone data (since AB#7696) |
+| Energie | Wallboxen | SimpleSdQuery ChargingStationArchive (stream) | `wallboxen` | no rows → empty chart (on prod-1 the ChargingStationArchive and ApplianceArchive had no rows for either site on 2026-10-29/30) |
+| Energie | Geräte | SimpleSdQuery ApplianceArchive (stream) | `geraete` | empty scope → no data |
+| Energie | Batteriespeicher (Ladeleistung) | SimpleSdQuery BatteryStorageArchive (stream) | `batterie` | empty scope → no data |
+| Energie | Aktuelle Leistungen | SimpleRtQuery EnergyIQ/Meter (runtime) | `zaehler` | 2 rows |
+| Energiebilanz | PV-Produktion | AggregationSdQuery PhotovoltaicSystemArchive SUM | `pv` | see kWh |
+| Energiebilanz | Eigenverbrauch (PV) | AggregationSdQuery SUM SelfConsumption | `pv` | column not written for Fusch → no value |
+| Energiebilanz | Netzeinspeisung | AggregationSdQuery SUM GridFeedIn | `pv` | column not written for Fusch → no value |
+| Energiebilanz | Netzbezug | AggregationSdQuery GridConnectionArchive SUM ActivePower > 0 | `netz` | see kWh |
+| Energiebilanz | Batterie geladen | AggregationSdQuery BatteryStorageArchive SUM > 0 | `batterie` | empty scope → no data |
+| Energiebilanz | Batterie entladen | AggregationSdQuery BatteryStorageArchive SUM < 0 | `batterie` | empty scope → no data |
+
+Validation without a running Studio (test-2 down, local stack not running): the selectors of both boards were run
+through the library's own pure helpers at octo-frontend-libraries `origin/main` (`resolveFollowLeader`,
+`followValidationError`, `scopePlan`, `resolveScopePath`, `hasPickerFilter`) with a hop fetcher that sends the
+library's `getAssociationTargetRtIds` query read-only to prod-1/energyiq: one visible selector per board, all followers
+valid, no invalid plan, scopes as in the table above. The picker filter was checked with the same GraphQL
+`fieldFilter` read-only on prod-1: it returns exactly the two electrical systems.
+
+Fixed Firmianstraße rtIds (AC 4): in the 26 entities of the two boards (2 dashboards, 12 widgets, 12 queries) `6789a0`
+occurs only as the leader's `defaultRtId` (once per board).
+
+What changes for Firmianstraße compared with before (data, not layout):
+- "Aktuelle Leistungen" listed every Meter of the tenant, on prod-1 including the Fusch grid connection and wall
+  connector; it now lists the 12 Firmianstraße meters.
+- Energiebilanz "PV-Produktion" summed the whole PhotovoltaicSystemArchive, which on prod-1 contains the Fusch PV rows
+  since AB#7696 (2026-10-30 06:06Z); scoped now. Example window 2026-10-29T10:00Z-2026-10-30T10:00Z: before
+  92.21 + 2.16 = 94.37 "kWh", after 92.21.
+- Energiebilanz "Netzbezug" was already scoped by AB#7692 part 1. All other widgets read the same rtIds as before.
+
+## Energiebilanz kWh: measured per KPI and site (AC 7)
+
+Read-only exports from prod-1/energyiq (`octo-cli -c ExportArchiveData`), window 2026-10-29T00:00Z-2026-10-30T00:00Z
+(Fusch PV: 2026-10-30T06:06Z-10:00Z, first live day). "Factor" = what the KPI shows (SUM × 10/3600); "integral" =
+time-weighted (last value held until the next row) energy from the same rows.
+
+| Archive | Site | Rows / cadence | KPI | Factor | Integral | Factor holds? |
+|---------|------|----------------|-----|--------|----------|---------------|
+| GridConnection | Firmianstraße (Loxone) | 16 797, median 5.0 s (p5 4.7, p95 5.6) | Netzbezug (> 0) | 33.47 kWh | 17.28 kWh | no, about 2x |
+| GridConnection | Fusch (SHRDZM) | 17 276, median 5.0 s (p5 4.95, p95 5.05) | Netzbezug (> 0) | 20.11 kWh | 10.06 kWh | no, 2x |
+| PhotovoltaicSystem | Firmianstraße (Loxone, on change) | 11 539, median 2.8 s, gaps up to 218 s | PV-Produktion | 87.20 kWh | 23.58 kWh | no, 3.7x |
+| PhotovoltaicSystem | Fusch (Loxone, on change) | 1 150 in 3.9 h, median 10.1 s, p95 20 s, gaps up to 561 s | PV-Produktion | 2.16 kWh | 2.47 kWh | no, -12 % |
+| PhotovoltaicSystem | both | SelfConsumption / GridFeedIn not written | Eigenverbrauch, Netzeinspeisung | no value | — | — |
+| BatteryStorage | Firmianstraße (Loxone, on change) | 24 177, many rows with the same timestamp | Batterie geladen | 56.98 kWh | 7.80 kWh | no, 7x |
+| BatteryStorage | Fusch | no battery | Batterie geladen / entladen | empty | — | — |
+
+**Fusch grid against the meter registers (AC 7):** the registers `ImportedEnergy` / `ExportedEnergy` of GridConnection
+`6a10f05c0000000000000a03` were read read-only once a minute on prod-1, and the GridConnectionArchive rows of the same
+readings exported. Window 2026-10-30T10:30:10.7Z-11:15:45.8Z (45.6 min, 547 rows, median 4.99 s):
+
+| Figure | Import | vs register |
+|--------|--------|-------------|
+| Register delta `ImportedEnergy` | 0.924 kWh | — |
+| KPI "Netzbezug" (SUM of ActivePower > 0 × 10/3600) | 1.857 kWh | **+101 %** |
+| Time-weighted integral of the same rows | 0.929 kWh | +0.5 % |
+
+(Export: register delta 0.068 kWh, time-weighted integral 0.072 kWh.) The 1 % criterion fails for the KPI; the rows
+themselves are good enough — a time-weighted integral matches the meter within 0.5 %. The register cannot replace the
+KPI by configuration: the GridConnectionArchive stores only `ActivePower`, so no register value is available for an
+arbitrary window.
+
+Conclusion: on the live tenant prod-1 the factor holds for **no** KPI at **any** site; it holds only for the demo
+simulator (`rt-simulation-adapters.yaml`, rows exactly every 10 s). A per-site empty state cannot be configured — it
+would have to depend on the cadence, not on the scope — and a cadence-specific factor (e.g. 5/3600 for the grid) would
+be wrong on simulator tenants that import the same file. The KPIs are therefore unchanged in value, the board
+description and the YAML state the limit, and the correct figure is a platform gap: an energy aggregation for
+AggregationSdQuery (time-weighted integral ∫P dt over the query window, LOCF — `TimeWeightedAverage` exists but needs
+a rollup and the KPI cannot multiply it by the window length). Reported to Odin on AB#7692. Whether the KPIs should
+show nothing until then is open for the developer.

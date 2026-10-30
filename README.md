@@ -241,6 +241,26 @@ sensor), 6 blinds (ShadingDevice) and 10 lights (Luminaire) — with the Firmian
 and level by the Firmianstraße rules) and writes the TemperatureSensor, Luminaire and ShadingDevice archives; the watch
 list grows from 6 to 28 states ([runbook](docs/fusch-loxone-runbook.md) section 8).
 
+## MeshBoards: site selector (AB#7692)
+
+The boards **Energie** and **Energiebilanz** (`data/_general/rt-meshboards-energyiq.yaml`) have one visible selector
+**Standort** in the toolbar. It lists the electrical DistributionSystems — one per site (Firmianstraße, Fusch) — and
+defaults to Firmianstraße. Hidden selectors follow it (`followsSelectorId`), each resolves the picked system to the
+entities of one type over `EnergyIQ/SystemMembers` (grid connection, PV system, battery through the PV system,
+wallboxes, appliances, all meters), and every widget is bound to the matching follower. A site that has no entity of a
+type (Fusch: no battery, no appliances) shows the widget's empty state; no widget falls back to the whole archive or to
+another site. Only the selector's default names a site.
+
+**Adding a site:** model an electrical DistributionSystem (`DistributionSystemTypeValue` 3) whose `SystemMembers` are the
+site's GridConnection, PhotovoltaicSystem (battery as member of the PV system), ChargingStations, Appliances and
+Meters. The board picks it up without a change. Requires octo-frontend-libraries with AB#7719 (follower selectors,
+multi-hop scope, picker filter, empty scope, runtime queries bound to a selector).
+
+**Energiebilanz kWh:** the KPIs show `SUM(kW) × 10/3600`, which is only correct for rows written exactly every 10 s
+(the demo simulator). The live sites write grid rows about every 5 s and PV/battery rows on change, so the kWh shown
+there are too high; a correct figure needs a time-weighted energy aggregation in the platform. Measurements per KPI and
+site: [docs/meshboard-site-selector-fit.md](docs/meshboard-site-selector-fit.md).
+
 ## CI/CD (Azure DevOps)
 
 `devops-build/azure-pipelines.yml` runs on the self-hosted `meshmakers-ci-agents`:
