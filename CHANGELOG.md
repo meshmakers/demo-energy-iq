@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- AB#7696: Fusch Loxone live data flow rolled out on prod-1 (2026-10-30); runbook warning about `Configure State Sync`
+  removed, as AB#7741 fixed it.
 - AB#7741: Firmianstraße `Configure State Sync` (`67f0b00ec4ff02221e0b6009`) now loads its LoxoneConfiguration by
   well-known name `LoxoneMiniserverConfig` instead of the first configuration with a host. With the Fusch
   configuration in the same tenant (AB#7695) it could otherwise overwrite the Fusch watch list. No other pipeline used

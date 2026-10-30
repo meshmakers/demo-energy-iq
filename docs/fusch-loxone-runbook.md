@@ -211,10 +211,10 @@ connector are not written: `docs/fusch-loxone-inventory.md`.
 - Gerald's go for prod-1 / `energyiq` in this session; this PR merged.
 - Steps 1-3 done (adapter `…0b04` Deployed/Online, credentials set) — true since 2026-10-29.
 - Fusch PV entities `…0a12`-`…0a14` exist (AB#7694, imported) and the two archives are `Activated`.
-- **Do not run the Firmianstraße pipeline `Configure State Sync` (`67f0b00ec4ff02221e0b6009`) until its bug is fixed:**
-  it updates the *first* `LoxoneConfiguration` of the tenant (filter `Host != null`, `Items[0]`), which can now be
-  `FuschLoxoneMiniserverConfig`; it would overwrite the Fusch watch list with Firmianstraße UUIDs (see the bug linked in
-  the PR). The Fusch pipelines address the Fusch configuration only by rtId.
+- The Firmianstraße pipeline `Configure State Sync` (`67f0b00ec4ff02221e0b6009`) loads its configuration by
+  well-known name `LoxoneMiniserverConfig` since AB#7741 (prod-1 2026-10-30), so it no longer touches
+  `FuschLoxoneMiniserverConfig`. The Fusch pipelines address the Fusch configuration only by rtId.
+- Rolled out on prod-1/energyiq 2026-10-30 06:05Z (dump `energyiq-prod-1-pre-ab7696-20261030`).
 
 ### 7.1 Import and deploy
 
