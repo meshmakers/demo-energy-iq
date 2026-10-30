@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- AB#7889: Fusch rooms sit in the storeys UG/EG/OG (`…0a70`-`…0a72`, elevations approximate, room assignment confirmed
+  by Gerald), like Firmianstraße, so both sites have the same depth Building → BuildingStorey → Space for the room
+  boards (AB#7693). Runbook section 8.3.
 - AB#7692: MeshBoards **Energie** and **Energiebilanz** get one visible site selector "Standort" (electrical
   DistributionSystems, picker filter `systemType = ELECTRICAL`, default Firmianstraße). Hidden followers resolve the pick
   to the grid connection, PV system, battery (two-hop path through the PV system), wallboxes, appliances and meters; every

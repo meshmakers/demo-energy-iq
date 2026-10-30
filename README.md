@@ -235,7 +235,7 @@ Energiebilanz kWh formula `SUM × 10/3600` is therefore not exact for Fusch (nor
 Boards should take kWh from the energy counters or a time-weighted aggregation, or show the empty state.
 
 **Rooms and devices (AB#7697):** `data/bim/rt-fusch.yaml` models the Fusch rooms and devices the inventory lists — 11
-Spaces (Loxone rooms) under the Fusch building, 5 room temperature sensors, the heat mixer (Valve with flow temperature
+Spaces (Loxone rooms) in the storeys UG/EG/OG of the Fusch building (AB#7889), 5 room temperature sensors, the heat mixer (Valve with flow temperature
 sensor), 6 blinds (ShadingDevice) and 10 lights (Luminaire) — with the Firmianstraße types and roles and names ending in
 "Fusch". The same live data flow feeds them read only (room and mixer temperature, blind position × 100, light on/off
 and level by the Firmianstraße rules) and writes the TemperatureSensor, Luminaire and ShadingDevice archives; the watch

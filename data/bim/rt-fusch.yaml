@@ -207,11 +207,80 @@ entities:
   # (Heatmixer). Types and roles as Firmianstrasse: TemperatureSensor via EnergyIQ/SpaceSensors, Luminaire and
   # ShadingDevice via EnergyIQ/SpaceElements. Names carry the site ("... Fusch") so they are unique across sites.
   #
-  # The spaces hang directly under the building (System/ParentChild -> Building a10), without BuildingStorey:
-  # the inventory names the floor for only 5 of the 11 rooms (EG/OG/UG in the Loxone room name) and gives no
-  # elevation, which BuildingStorey requires. Floor areas, set points, luminaire types and ratings stay empty
+  # The spaces sit in the storeys UG/EG/OG (System/ParentChild -> BuildingStorey a70/a71/a72, AB#7889); the
+  # storey of each room was confirmed by Gerald on 2026-10-30, the elevations are approximations. Floor areas, set
+  # points, luminaire types and ratings stay empty
   # until a named source exists. Humidity and CO2 of the room controllers are not modelled: the structure
   # exposes them by type only (inventory). The outdoor temperature (Aussenbereich) is not part of this story.
+  # Storeys (AB#7889, confirmed by Gerald 2026-10-30): the Fusch rooms sit in UG/EG/OG like Firmianstrasse, so both
+  # sites have the same depth Building -> BuildingStorey -> Space. Elevations are approximations; StoreyNumber follows Firmianstrasse (EG = 1).
+
+  - rtId: 6a10f05c0000000000000a70
+    ckTypeId: EnergyIQ/BuildingStorey
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: storey-fusch-ug
+      - id: System/Name
+        value: UG Fusch
+      - id: EnergyIQ/LongName
+        value: Untergeschoss
+      - id: EnergyIQ/Elevation
+        value: -2.8  # approximation (AB#7889)
+      - id: EnergyIQ/AboveGround
+        value: false
+      - id: EnergyIQ/StoreyNumber
+        value: 0
+      - id: EnergyIQ/FloorDesignation
+        value: UG
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a10f05c0000000000000a10
+        targetCkTypeId: EnergyIQ/Building
+
+  - rtId: 6a10f05c0000000000000a71
+    ckTypeId: EnergyIQ/BuildingStorey
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: storey-fusch-eg
+      - id: System/Name
+        value: EG Fusch
+      - id: EnergyIQ/LongName
+        value: Erdgeschoss
+      - id: EnergyIQ/Elevation
+        value: 0.0  # approximation (AB#7889)
+      - id: EnergyIQ/AboveGround
+        value: true
+      - id: EnergyIQ/StoreyNumber
+        value: 1
+      - id: EnergyIQ/FloorDesignation
+        value: EG
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a10f05c0000000000000a10
+        targetCkTypeId: EnergyIQ/Building
+
+  - rtId: 6a10f05c0000000000000a72
+    ckTypeId: EnergyIQ/BuildingStorey
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: storey-fusch-og
+      - id: System/Name
+        value: OG Fusch
+      - id: EnergyIQ/LongName
+        value: Obergeschoss
+      - id: EnergyIQ/Elevation
+        value: 2.8  # approximation (AB#7889)
+      - id: EnergyIQ/AboveGround
+        value: true
+      - id: EnergyIQ/StoreyNumber
+        value: 2
+      - id: EnergyIQ/FloorDesignation
+        value: OG
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a10f05c0000000000000a10
+        targetCkTypeId: EnergyIQ/Building
+
   # Live values: read-only mappings by fixed state UUID in rt-pipelines-loxone-fusch.yaml (pipelines d04/d06; see
   # docs/fusch-loxone-runbook.md section 8).
 
@@ -228,8 +297,8 @@ entities:
         value: 17  # Bathroom
     associations:
       - roleId: System/ParentChild
-        targetRtId: 6a10f05c0000000000000a10
-        targetCkTypeId: EnergyIQ/Building
+        targetRtId: 6a10f05c0000000000000a72
+        targetCkTypeId: EnergyIQ/BuildingStorey
 
   - rtId: 6a10f05c0000000000000a21
     ckTypeId: EnergyIQ/Space
@@ -244,8 +313,8 @@ entities:
         value: 2  # Corridor
     associations:
       - roleId: System/ParentChild
-        targetRtId: 6a10f05c0000000000000a10
-        targetCkTypeId: EnergyIQ/Building
+        targetRtId: 6a10f05c0000000000000a71
+        targetCkTypeId: EnergyIQ/BuildingStorey
 
   - rtId: 6a10f05c0000000000000a22
     ckTypeId: EnergyIQ/Space
@@ -260,8 +329,8 @@ entities:
         value: 2  # Corridor
     associations:
       - roleId: System/ParentChild
-        targetRtId: 6a10f05c0000000000000a10
-        targetCkTypeId: EnergyIQ/Building
+        targetRtId: 6a10f05c0000000000000a72
+        targetCkTypeId: EnergyIQ/BuildingStorey
 
   - rtId: 6a10f05c0000000000000a23
     ckTypeId: EnergyIQ/Space
@@ -276,8 +345,8 @@ entities:
         value: 2  # Corridor
     associations:
       - roleId: System/ParentChild
-        targetRtId: 6a10f05c0000000000000a10
-        targetCkTypeId: EnergyIQ/Building
+        targetRtId: 6a10f05c0000000000000a70
+        targetCkTypeId: EnergyIQ/BuildingStorey
 
   - rtId: 6a10f05c0000000000000a24
     ckTypeId: EnergyIQ/Space
@@ -292,8 +361,8 @@ entities:
         value: 23  # Garage
     associations:
       - roleId: System/ParentChild
-        targetRtId: 6a10f05c0000000000000a10
-        targetCkTypeId: EnergyIQ/Building
+        targetRtId: 6a10f05c0000000000000a71
+        targetCkTypeId: EnergyIQ/BuildingStorey
 
   - rtId: 6a10f05c0000000000000a25
     ckTypeId: EnergyIQ/Space
@@ -308,8 +377,8 @@ entities:
         value: 5  # TechnicalRoom
     associations:
       - roleId: System/ParentChild
-        targetRtId: 6a10f05c0000000000000a10
-        targetCkTypeId: EnergyIQ/Building
+        targetRtId: 6a10f05c0000000000000a70
+        targetCkTypeId: EnergyIQ/BuildingStorey
 
   - rtId: 6a10f05c0000000000000a26
     ckTypeId: EnergyIQ/Space
@@ -324,8 +393,8 @@ entities:
         value: 4  # Kitchen
     associations:
       - roleId: System/ParentChild
-        targetRtId: 6a10f05c0000000000000a10
-        targetCkTypeId: EnergyIQ/Building
+        targetRtId: 6a10f05c0000000000000a72
+        targetCkTypeId: EnergyIQ/BuildingStorey
 
   - rtId: 6a10f05c0000000000000a27
     ckTypeId: EnergyIQ/Space
@@ -340,8 +409,8 @@ entities:
         value: 16  # Bedroom
     associations:
       - roleId: System/ParentChild
-        targetRtId: 6a10f05c0000000000000a10
-        targetCkTypeId: EnergyIQ/Building
+        targetRtId: 6a10f05c0000000000000a72
+        targetCkTypeId: EnergyIQ/BuildingStorey
 
   - rtId: 6a10f05c0000000000000a28
     ckTypeId: EnergyIQ/Space
@@ -356,8 +425,8 @@ entities:
         value: 9  # Staircase
     associations:
       - roleId: System/ParentChild
-        targetRtId: 6a10f05c0000000000000a10
-        targetCkTypeId: EnergyIQ/Building
+        targetRtId: 6a10f05c0000000000000a71
+        targetCkTypeId: EnergyIQ/BuildingStorey
 
   - rtId: 6a10f05c0000000000000a29
     ckTypeId: EnergyIQ/Space
@@ -372,8 +441,8 @@ entities:
         value: 6  # Storage
     associations:
       - roleId: System/ParentChild
-        targetRtId: 6a10f05c0000000000000a10
-        targetCkTypeId: EnergyIQ/Building
+        targetRtId: 6a10f05c0000000000000a70
+        targetCkTypeId: EnergyIQ/BuildingStorey
 
   - rtId: 6a10f05c0000000000000a2a
     ckTypeId: EnergyIQ/Space
@@ -388,8 +457,8 @@ entities:
         value: 15  # LivingRoom
     associations:
       - roleId: System/ParentChild
-        targetRtId: 6a10f05c0000000000000a10
-        targetCkTypeId: EnergyIQ/Building
+        targetRtId: 6a10f05c0000000000000a72
+        targetCkTypeId: EnergyIQ/BuildingStorey
 
   # Room temperature of the five room controllers (IRoomControllerV2 state tempActual, degC).
 
