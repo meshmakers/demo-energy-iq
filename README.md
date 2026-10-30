@@ -270,11 +270,14 @@ an ExternalSpace directly under the Site. Every site must model storeys — a ro
 (Fusch: storeys UG/EG/OG, AB#7889); a site without an entity of a type (Fusch: heat pump, tanks, pump, outdoor sensor)
 shows the widget's empty state. The room pickers ("Raum", "Raum (Licht)", "Raum (Beschattung)") stay as they were and are
 not limited to the picked site: the per-room charts show the picked room whatever the site.
-**Open:** the five tiles "Wärmepumpe Firmianstraße – …" read the Firmianstraße heat-pump meter through a fixed rtId
-whatever the site, until AB#7888 links a meter to the equipment it meters (EnergyIQ 2.14.0).
+The five tiles "Wärmepumpe – …" (AB#7888) read the heat-pump meter of the picked site: the follower goes one hop
+further, from the heat pump to the meter that measures it (EnergyIQ 2.14.0 `EquipmentMeters`, inbound `MeteredBy`) —
+Site → Building → BuildingStorey → Space → HeatPump → Meter, 5 hops, the MeshBoard maximum. Fusch has no heat pump, so
+the tiles show the empty state there.
 
 **Adding a site** (these three boards): Site → Building → BuildingStorey → Space, with sensors (`SpaceSensors`),
 luminaires and blinds (`SpaceElements`) on the rooms and plant (`ParentChild`) in a room, as in `rt-firmianstrasse.yaml`.
+The heat-pump meter needs `EquipmentMeters` → its HeatPump (EnergyIQ 2.14.0).
 
 ## CI/CD (Azure DevOps)
 

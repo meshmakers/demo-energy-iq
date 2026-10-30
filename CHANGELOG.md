@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+- AB#7888: **EnergyIQ 2.14.0** adds the association `EquipmentMeters`: `Meter` → `TechnicalSystem`, outbound
+  `MeteredEquipment` (ZeroOrOne), inbound `MeteredBy` (N) — the IFC assignment of a meter to the product it measures,
+  declared once on `Meter` (2.8.0 rule). `rt-firmianstrasse.yaml` links the Stromzähler Wärmepumpe (`…3007a8`) to the
+  HeatPump (`…60f1`). On **Heizung & Kühlung** the five heat-pump meter widgets (queries `…e206`–`…e20a`) drop the pin
+  `…3007a8` and bind the new follower `wpzaehler` (Site → Building → BuildingStorey → Space → HeatPump → Meter via
+  `MeteredBy`, 5 hops); titles back to "Wärmepumpe – …". Fusch has no heat pump: those widgets show the empty state.
+  Rollout order: CK 2.14.0 first, then the RT files. `ImportRt -r` keeps omitted attributes, so the removed
+  `RtIds` pins must be cleared once by GraphQL on existing tenants (steps in the PR).
 - AB#7693: Beschattung & Beleuchtung, the four bar charts (Einschaltquote, Schaltvorgänge, Ø Beschattung, Brenndauer)
   showed "Widget not configured": their configs had only `valueField`, which the bar chart does not accept. Three use a
   static `series` entry now. Brenndauer uses dynamic mode (`seriesGroupField: name`, `stackedBar`), because `valueScale`

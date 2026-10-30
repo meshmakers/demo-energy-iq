@@ -1,6 +1,6 @@
 # EnergyIQ Construction Kit - Developer Guide
 
-**Version:** EnergyIQ-2.7.0
+**Version:** EnergyIQ-2.14.0
 **Standards:** ISO 16739-1:2024 (IFC 4.3), ISO 4157, VDI 3814
 
 ## Quick Start
@@ -403,6 +403,8 @@ Common readings inherited from `Meter`:
 **Catalog anchor:** `Basic.Energy-1.0.1` is imported as a dependency. `GridConnection` carries an optional `FormalMeteringPoint` association to `Basic.Energy/MeteringPoint` so a grid-coupled meter can be linked to the formal energy-industry entity (Austrian/German EDA Zählpunktnummer + State + CarrierType) without forcing that semantic on every sub-meter.
 
 **Spatial wiring:** Room-scoped meters use `SpaceElements` (declared on `Meter`, inherited by Appliance/ChargingStation/GridConnection) to associate with the Space they physically sit in; `Space` declares `SpaceElements` against both `PassiveBuildingElement` and `Meter`. The `GridConnection` typically has no Space association (it lives at the building boundary). **Whole-floor sub-meters** (a Loxone "Verbrauch EG/OG/DG" measuring an entire storey) instead use `StoreyElements` (EnergyIQ-2.3.0) to anchor directly to their `BuildingStorey` — the floor is the meter's real scope, so anchoring it to one representative room would misattribute the consumption. `StoreyElements` is the storey-level counterpart of `SpaceElements` (IFC `IfcRelContainedInSpatialStructure` at the `IfcBuildingStorey` level).
+
+**What a meter measures (EnergyIQ-2.14.0, AB#7888):** placement and purpose are separate. `SpaceElements`/`StoreyElements` say where a meter hangs; the association `EquipmentMeters` says which plant equipment it measures. It goes from `Meter` (origin, outbound `MeteredEquipment`, at most one) to `TechnicalSystem` (target, inbound `MeteredBy`, any number of meters) and is declared once, on `Meter` (2.8.0 rule); subtypes inherit it. IFC analog: assignment of a flow meter/sensor to the product it measures (`IfcRelAssignsToProduct`). Example: the Firmianstraße `Stromzähler Wärmepumpe` (`…3007a8`) sits in the Technikraum like two other meters (`…3005a6`, `…3006a7`); only `EquipmentMeters → HeatPump` (`…60f1`) tells it apart. Board followers reach the meter from the heat pump with one inbound hop (`roleId: EnergyIQ/EquipmentMeters`, `direction: in`, `targetCkTypeId: EnergyIQ/Meter`), e.g. the Heizung & Kühlung follower `wpzaehler`: Site → Building → BuildingStorey → Space → HeatPump → Meter (5 hops, the MeshBoard maximum). A site whose heat-pump meter is not linked shows the empty state on those widgets.
 
 **Enums introduced for metering:**
 - `MeterCarrierType` (Electricity, Gas, Heat, Water, DistrictHeating, DistrictCooling, Other)

@@ -1,7 +1,7 @@
 # EnergyIQ Construction Kit Specification
 
-**Version:** EnergyIQ-2.0.0
-**Depends on:** Basic-[2.0,3.0)
+**Version:** EnergyIQ-2.14.0
+**Depends on:** Basic-[2.4,3.0), Basic.Energy-[1.9,2.0)
 
 ## Overview
 
@@ -182,6 +182,8 @@ Allowed associations: `SpaceSensors` (outdoor weather/irradiance), `SpaceElement
 All TechnicalSystem subtypes share these attributes from the abstract base:
 
 `Identifier`, `SystemType` (Enum), `IsRunning` (Boolean), `FaultState` (Boolean).
+
+Inbound from meters: `MeteredBy` (association `EquipmentMeters`, 2.14.0) lists the meters that measure the equipment, e.g. the heat-pump electricity sub-meter. It is declared on `Meter` only.
 
 Parent: `Building` via inherited `ParentChild`.
 
@@ -586,6 +588,7 @@ IFC: `IfcElectricFlowStorageDevice`.
 | ParentChild (Basic) | — | — | 1:N | Spatial / tree hierarchy |
 | SpaceElements | ContainedElements | ContainedInSpace | 1:N | BuildingElement in Space |
 | StoreyElements | ContainedStoreyElements | ContainedInStorey | 1:N | Whole-floor sub-meter in BuildingStorey (2.3.0) |
+| EquipmentMeters | MeteredBy | MeteredEquipment | 1:N | Meter → the TechnicalSystem it measures, e.g. heat-pump sub-meter → HeatPump (2.14.0; declared on Meter, IfcRelAssignsToProduct) |
 | SpaceSensors | ContainedSensors | LocatedInSpace | 1:N | Sensor in Space |
 | SpaceActuators | ContainedActuators | ActuatorInSpace | 1:N | Actuator in Space |
 | SpaceTerminals | ContainedTerminals | ContainedInSpace | 1:N | RoomTerminal in Space |
