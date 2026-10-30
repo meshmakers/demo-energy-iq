@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- AB#7693: Beschattung & Beleuchtung, the four bar charts (Einschaltquote, Schaltvorgänge, Ø Beschattung, Brenndauer)
+  showed "Widget not configured": their configs had only `valueField`, which the bar chart does not accept. Three use a
+  static `series` entry now. Brenndauer uses dynamic mode (`seriesGroupField: name`, `stackedBar`), because `valueScale`
+  (ms → h) applies only there (platform bug AB#7923).
 - AB#7692: Energie board, table "Aktuelle Leistungen": column title "Wirkleistung (kW)" instead of "(W)".
   `ActivePower` is kW in EnergyIQ; the values were right, only the label was wrong.
 - AB#7693: MeshBoards **Raumtemperaturen**, **Heizung & Kühlung** and **Beschattung & Beleuchtung** get the visible

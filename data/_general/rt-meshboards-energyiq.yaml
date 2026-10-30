@@ -2662,7 +2662,7 @@ entities:
         value: 6a4d5000000000000000b112
       - id: System.UI/DashboardWidget.Config
         value: |-
-          {"chartType": "bar", "categoryField": "name", "valueField": "dimminglevel_twavg", "showLegend": false, "showDataLabels": true, "dataLabelSuffix": " %", "queryName": "Licht-Einschaltquote je Leuchte", "queryRtId": "6a4d5000000000000000b112", "queryFamily": "streamData", "entitySelectorId": "leuchten"}
+          {"chartType": "bar", "categoryField": "name", "valueField": "dimminglevel_twavg", "showLegend": false, "showDataLabels": true, "dataLabelSuffix": " %", "queryName": "Licht-Einschaltquote je Leuchte", "queryRtId": "6a4d5000000000000000b112", "queryFamily": "streamData", "entitySelectorId": "leuchten", "series": [{"field": "dimminglevel_twavg", "name": "Einschaltquote"}]}
 
   - rtId: 6a4d5000000000000000b104
     ckTypeId: System.UI/DashboardWidget
@@ -2720,7 +2720,7 @@ entities:
         value: 6a4d5000000000000000b115
       - id: System.UI/DashboardWidget.Config
         value: |-
-          {"chartType": "bar", "categoryField": "name", "valueField": "dimminglevel_count", "showLegend": false, "showDataLabels": true, "queryName": "Licht-Schaltvorgänge je Leuchte", "queryRtId": "6a4d5000000000000000b115", "queryFamily": "streamData", "entitySelectorId": "leuchten"}
+          {"chartType": "bar", "categoryField": "name", "valueField": "dimminglevel_count", "showLegend": false, "showDataLabels": true, "queryName": "Licht-Schaltvorgänge je Leuchte", "queryRtId": "6a4d5000000000000000b115", "queryFamily": "streamData", "entitySelectorId": "leuchten", "series": [{"field": "dimminglevel_count", "name": "Schaltvorgänge"}]}
 
   - rtId: 6a4d5000000000000000b106
     ckTypeId: System.UI/DashboardWidget
@@ -2778,7 +2778,7 @@ entities:
         value: 6a4d5000000000000000b116
       - id: System.UI/DashboardWidget.Config
         value: |-
-          {"chartType": "bar", "categoryField": "name", "valueField": "position_avg", "showLegend": false, "showDataLabels": true, "dataLabelSuffix": " %", "queryName": "Ø Beschattung je Raffstore", "queryRtId": "6a4d5000000000000000b116", "queryFamily": "streamData", "entitySelectorId": "raffstores"}
+          {"chartType": "bar", "categoryField": "name", "valueField": "position_avg", "showLegend": false, "showDataLabels": true, "dataLabelSuffix": " %", "queryName": "Ø Beschattung je Raffstore", "queryRtId": "6a4d5000000000000000b116", "queryFamily": "streamData", "entitySelectorId": "raffstores", "series": [{"field": "position_avg", "name": "Ø Position"}]}
 
   # Burn-time bar chart (AB#4341): absolute operating hours per luminaire via the StateDuration
   # aggregation (IsOn = true) over the event-based status archive. valueScale 1/3600000 turns the
@@ -2810,7 +2810,7 @@ entities:
         value: 6a4d5000000000000000b117
       - id: System.UI/DashboardWidget.Config
         value: |-
-          {"chartType": "bar", "categoryField": "name", "valueField": "ison_stateduration", "valueScale": 2.7777777777777776e-7, "showLegend": false, "showDataLabels": true, "dataLabelSuffix": " h", "queryName": "Brenndauer je Leuchte", "queryRtId": "6a4d5000000000000000b117", "queryFamily": "streamData", "entitySelectorId": "leuchten"}
+          {"chartType": "stackedBar", "categoryField": "name", "valueField": "ison_stateduration", "valueScale": 2.7777777777777776e-07, "showLegend": false, "showDataLabels": true, "dataLabelSuffix": " h", "queryName": "Brenndauer je Leuchte", "queryRtId": "6a4d5000000000000000b117", "queryFamily": "streamData", "entitySelectorId": "leuchten", "seriesGroupField": "name"}
 
   - rtId: 6a4d5000000000000000b110
     ckTypeId: System/SimpleRtQuery
