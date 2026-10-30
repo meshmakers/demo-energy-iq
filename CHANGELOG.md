@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- AB#7692: Energie board, table "Aktuelle Leistungen": column title "Wirkleistung (kW)" instead of "(W)".
+  `ActivePower` is kW in EnergyIQ; the values were right, only the label was wrong.
 - AB#7693: MeshBoards **Raumtemperaturen**, **Heizung & Kühlung** and **Beschattung & Beleuchtung** get the visible
   site selector "Standort" on `EnergyIQ/Site` (default Firmianstraße). Hidden followers walk Site → Building →
   BuildingStorey → Space to the room sensors, heat pump, storage tanks, heating pump, luminaires and blinds, and Site →
