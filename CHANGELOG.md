@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- AB#7693: Beschattung & Beleuchtung drops the room pickers "Raum (Licht)" / "Raum (Beschattung)" (they did not
+  follow the site and showed one room). The two per-room line charts become site-wide heatmaps: light switches and
+  blind movements per day x hour (count of change rows), scoped by the `leuchten` / `raffstores` followers.
 - AB#7888: **EnergyIQ 2.14.0** adds the association `EquipmentMeters`: `Meter` → `TechnicalSystem`, outbound
   `MeteredEquipment` (ZeroOrOne), inbound `MeteredBy` (N) — the IFC assignment of a meter to the product it measures,
   declared once on `Meter` (2.8.0 rule). `rt-firmianstrasse.yaml` links the Stromzähler Wärmepumpe (`…3007a8`) to the

@@ -50,10 +50,10 @@ $schema: https://schemas.meshmakers.cloud/runtime-model.schema.json
 #                 (5 hops = the maximum; the five heat-pump meter widgets, AB#7888)
 #   leuchten      ... Space -SpaceElements-> Luminaire             (light table + 3 bar charts)
 #   raffstores    ... Space -SpaceElements-> ShadingDevice         (shading table + bar chart)
-# The room pickers `raum`, `lichtraum`, `beschattungsraum` stay visible and independent: a follower
-# has no picker, and a picker filter neither follows another selector's scope nor resets a pick that
-# no longer matches (platform gap: dependent picker), so the per-room line charts show the picked room
-# whatever the site.
+# Beschattung & Beleuchtung has no room pickers: the two former per-room line charts are site-wide
+# heatmaps (switches / blind movements per day x hour) on the `leuchten` / `raffstores` followers.
+# The `raum` picker on Raumtemperaturen stays visible and independent until the dependent picker
+# (AB#7893) is used there (AB#7926).
 #
 # Imported as Status=Created; om_importrt.ps1 activates the rollups after import
 # (provisions the CrateDB tables). Backfill of pre-existing history is optional:
@@ -2555,9 +2555,9 @@ entities:
         value: Beschattung & Beleuchtung
       - id: System/Description
         value: |-
-          Aktueller Licht- und Beschattungsstatus, Einschaltquote/Schaltvorgänge je Leuchte des gewählten Standorts und Verlauf je Raum. Hinweis: Die Raum-Verläufe folgen nicht dem Standort; die Räume werden separat gewählt.
+          Aktueller Licht- und Beschattungsstatus, Einschaltquote/Schaltvorgänge je Leuchte des gewählten Standorts und Aktivität je Stunde (Heatmaps).
           ---MESHBOARD_VARIABLES---
-          {"timeFilter": {"enabled": true, "selection": {"type": "relative", "relativeValue": 24, "relativeUnit": "hours"}}, "entitySelectors": [{"id": "standort", "label": "Standort", "ckTypeId": "EnergyIQ/Site", "attributeMappings": [{"attributePath": "name", "variableName": "standortName"}], "showInToolbar": true, "defaultRtId": "6789a00000000000000000a1"}, {"id": "lichtraum", "label": "Raum (Licht)", "ckTypeId": "EnergyIQ/Space", "attributeMappings": [{"attributePath": "name", "variableName": "lichtraumName"}], "showInToolbar": true, "defaultRtId": "6789a00000000000000011d1", "childScope": {"targetCkTypeId": "EnergyIQ/Luminaire", "roleId": "EnergyIQ/SpaceElements", "direction": "in"}}, {"id": "beschattungsraum", "label": "Raum (Beschattung)", "ckTypeId": "EnergyIQ/Space", "attributeMappings": [{"attributePath": "name", "variableName": "beschattungsraumName"}], "showInToolbar": true, "defaultRtId": "6789a00000000000000011d1", "childScope": {"targetCkTypeId": "EnergyIQ/ShadingDevice", "roleId": "EnergyIQ/SpaceElements", "direction": "in"}}, {"id": "leuchten", "label": "Leuchten", "ckTypeId": "EnergyIQ/Site", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"path": [{"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/Building"}, {"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/BuildingStorey"}, {"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/Space"}, {"roleId": "EnergyIQ/SpaceElements", "direction": "in", "targetCkTypeId": "EnergyIQ/Luminaire"}]}}, {"id": "raffstores", "label": "Raffstores", "ckTypeId": "EnergyIQ/Site", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"path": [{"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/Building"}, {"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/BuildingStorey"}, {"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/Space"}, {"roleId": "EnergyIQ/SpaceElements", "direction": "in", "targetCkTypeId": "EnergyIQ/ShadingDevice"}]}}], "autoRefreshSeconds": 300}
+          {"timeFilter": {"enabled": true, "selection": {"type": "relative", "relativeValue": 24, "relativeUnit": "hours"}}, "entitySelectors": [{"id": "standort", "label": "Standort", "ckTypeId": "EnergyIQ/Site", "attributeMappings": [{"attributePath": "name", "variableName": "standortName"}], "showInToolbar": true, "defaultRtId": "6789a00000000000000000a1"}, {"id": "leuchten", "label": "Leuchten", "ckTypeId": "EnergyIQ/Site", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"path": [{"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/Building"}, {"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/BuildingStorey"}, {"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/Space"}, {"roleId": "EnergyIQ/SpaceElements", "direction": "in", "targetCkTypeId": "EnergyIQ/Luminaire"}]}}, {"id": "raffstores", "label": "Raffstores", "ckTypeId": "EnergyIQ/Site", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"path": [{"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/Building"}, {"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/BuildingStorey"}, {"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/Space"}, {"roleId": "EnergyIQ/SpaceElements", "direction": "in", "targetCkTypeId": "EnergyIQ/ShadingDevice"}]}}], "autoRefreshSeconds": 300}
       - id: System.UI/Dashboard.Columns
         value: 12
       - id: System.UI/Dashboard.RowHeight
@@ -2660,9 +2660,9 @@ entities:
         targetCkTypeId: System.UI/Dashboard
     attributes:
       - id: System/Name
-        value: Licht – Einschaltgrad Verlauf (%)
+        value: Licht – Schaltvorgänge je Stunde
       - id: System.UI/DashboardWidget.Type
-        value: lineChart
+        value: heatmap
       - id: System.UI/DashboardWidget.Col
         value: 1
       - id: System.UI/DashboardWidget.Row
@@ -2679,7 +2679,7 @@ entities:
         value: 6a4d5000000000000000b113
       - id: System.UI/DashboardWidget.Config
         value: |-
-          {"chartType": "line", "categoryField": "timestamp", "seriesGroupField": "name", "valueField": "DimmingLevel", "showLegend": true, "legendPosition": "bottom", "showMarkers": false, "showDataBadge": true, "queryName": "Lichtstatus (Archiv)", "queryRtId": "6a4d5000000000000000b113", "queryFamily": "streamData", "entitySelectorId": "lichtraum", "resolutionAware": true, "requiredAggregation": "AVG"}
+          {"dateField": "timestamp", "aggregation": "count", "colorScheme": "heat", "showLegend": true, "legendPosition": "bottom", "decimalPlaces": 0, "queryName": "Lichtstatus (Archiv)", "queryRtId": "6a4d5000000000000000b113", "queryFamily": "streamData", "entitySelectorId": "leuchten"}
 
   - rtId: 6a4d5000000000000000b105
     ckTypeId: System.UI/DashboardWidget
@@ -2718,9 +2718,9 @@ entities:
         targetCkTypeId: System.UI/Dashboard
     attributes:
       - id: System/Name
-        value: Beschattung – Position Verlauf (%)
+        value: Beschattung – Bewegungen je Stunde
       - id: System.UI/DashboardWidget.Type
-        value: lineChart
+        value: heatmap
       - id: System.UI/DashboardWidget.Col
         value: 1
       - id: System.UI/DashboardWidget.Row
@@ -2737,7 +2737,7 @@ entities:
         value: 6a4d5000000000000000b114
       - id: System.UI/DashboardWidget.Config
         value: |-
-          {"chartType": "line", "categoryField": "timestamp", "seriesGroupField": "name", "valueField": "Position", "showLegend": true, "legendPosition": "bottom", "showMarkers": false, "showDataBadge": true, "queryName": "Beschattung (Archiv)", "queryRtId": "6a4d5000000000000000b114", "queryFamily": "streamData", "entitySelectorId": "beschattungsraum", "resolutionAware": true, "requiredAggregation": "AVG"}
+          {"dateField": "timestamp", "aggregation": "count", "colorScheme": "blue", "showLegend": true, "legendPosition": "bottom", "decimalPlaces": 0, "queryName": "Beschattung (Archiv)", "queryRtId": "6a4d5000000000000000b114", "queryFamily": "streamData", "entitySelectorId": "raffstores"}
 
   - rtId: 6a4d5000000000000000b107
     ckTypeId: System.UI/DashboardWidget
@@ -2966,7 +2966,7 @@ entities:
         value: Lichtstatus (Archiv)
       - id: System/Description
         value: >-
-          0/100 DimmingLevel time series from the LuminaireArchive; per-room scope via the lichtraum selector.
+          0/100 DimmingLevel rows from the LuminaireArchive (one row per change); the heatmap counts them per day x hour for the luminaires of the picked site.
       - id: System/Query.CkTypeId
         value: EnergyIQ/Luminaire
       - id: System/Query.NavigationFilterMode
@@ -2992,7 +2992,7 @@ entities:
         value: Beschattung (Archiv)
       - id: System/Description
         value: >-
-          Position time series from the ShadingDeviceArchive; per-room scope via the beschattungsraum selector.
+          Position rows from the ShadingDeviceArchive (one row per change); the heatmap counts them per day x hour for the blinds of the picked site.
       - id: System/Query.CkTypeId
         value: EnergyIQ/ShadingDevice
       - id: System/Query.NavigationFilterMode
