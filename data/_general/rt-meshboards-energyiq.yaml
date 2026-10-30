@@ -46,13 +46,14 @@ $schema: https://schemas.meshmakers.cloud/runtime-model.schema.json
 #   waermepumpe   ... Space -ParentChild-> HeatPump                (HP table + 4 HP charts)
 #   speicher      ... Space -ParentChild-> ThermalEnergyStorage    (storage table + chart)
 #   pumpe         ... Space -ParentChild-> Pump                    (pump table)
+#   wpzaehler     ... Space -ParentChild-> HeatPump -EquipmentMeters (in, MeteredBy)-> Meter
+#                 (5 hops = the maximum; the five heat-pump meter widgets, AB#7888)
 #   leuchten      ... Space -SpaceElements-> Luminaire             (light table + 3 bar charts)
 #   raffstores    ... Space -SpaceElements-> ShadingDevice         (shading table + bar chart)
 # The room pickers `raum`, `lichtraum`, `beschattungsraum` stay visible and independent: a follower
 # has no picker, and a picker filter neither follows another selector's scope nor resets a pick that
 # no longer matches (platform gap: dependent picker), so the per-room line charts show the picked room
-# whatever the site. Open: the five heat-pump meter
-# widgets keep the Firmianstraße meter pin until AB#7888 (see the Heizung & Kühlung header).
+# whatever the site.
 #
 # Imported as Status=Created; om_importrt.ps1 activates the rollups after import
 # (provisions the CrateDB tables). Backfill of pre-existing history is optional:
@@ -1863,10 +1864,12 @@ entities:
   # Dashboard: Heizung & Kühlung
   # Site selection (AB#7693): leader `standort` (EnergyIQ/Site); followers `waermepumpe`,
   # `speicher`, `pumpe` (Site -> Building -> Storey -> Space -> HeatPump/ThermalEnergyStorage/Pump).
-  # OPEN (AB#7888): the five heat-pump meter widgets stay pinned to the Firmianstraße meter
-  # 6789a00000000000003007a8 and are titled "Wärmepumpe Firmianstraße – …": no association tells the
-  # WP meter apart from the other Technikraum meters, all of which write rows. AB#7888 adds
-  # Meter -> TechnicalSystem (MeteredEquipment), then the path ends HeatPump -> Meter.
+  # Heat-pump meter (AB#7888): follower `wpzaehler` walks on from the heat pump to its meter through
+  # EnergyIQ 2.14.0 `EquipmentMeters` inbound (MeteredBy): Site -> Building -> Storey -> Space
+  # -> HeatPump -> Meter = 5 hops, the platform maximum (MAX_SCOPE_HOPS). The five meter widgets
+  # (queries ...e206-...e20a, no RtIds pin) bind it. Only meters linked to a heat pump are found, so
+  # the other Technikraum meters stay out; a site without a heat pump (Fusch) resolves empty and the
+  # widgets show the empty state. Adding a site: link its heat-pump meter with EquipmentMeters.
   # Bilanzierung note: the Loxone meters tick event-based (not uniformly sampled),
   # so kWh-in-window is NOT SUM×dt (that trick needs the 10-s simulator sampling).
   # Instead: Ø-Leistung = AVG of the samples, and the window balance is shown as
@@ -1879,9 +1882,9 @@ entities:
         value: Heizung & Kühlung
       - id: System/Description
         value: |-
-          Wärmepumpe, Warmwasser und Heizkreis des gewählten Standorts: aktuelle Anlagenwerte, Temperatur-Verläufe (Heizkreis, Sole, Warmwasser) und WP-Strombilanz über den gewählten Zeitraum. Die fünf Kacheln „Wärmepumpe Firmianstraße – …“ (Stromzähler der Wärmepumpe) zeigen unabhängig vom Standort immer Firmianstraße, bis AB#7888 den Zähler mit der Wärmepumpe verknüpft.
+          Wärmepumpe, Warmwasser und Heizkreis des gewählten Standorts: aktuelle Anlagenwerte, Temperatur-Verläufe (Heizkreis, Sole, Warmwasser) und WP-Strombilanz über den gewählten Zeitraum. Die fünf Kacheln „Wärmepumpe – …“ zeigen den Stromzähler der Wärmepumpe des gewählten Standorts; ein Standort ohne Wärmepumpe zeigt dort keine Daten.
           ---MESHBOARD_VARIABLES---
-          {"timeFilter": {"enabled": true, "selection": {"type": "relative", "relativeValue": 24, "relativeUnit": "hours"}}, "autoRefreshSeconds": 300, "entitySelectors": [{"id": "standort", "label": "Standort", "ckTypeId": "EnergyIQ/Site", "attributeMappings": [{"attributePath": "name", "variableName": "standortName"}], "showInToolbar": true, "defaultRtId": "6789a00000000000000000a1"}, {"id": "waermepumpe", "label": "Wärmepumpe", "ckTypeId": "EnergyIQ/Site", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"path": [{"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/Building"}, {"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/BuildingStorey"}, {"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/Space"}, {"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/HeatPump"}]}}, {"id": "speicher", "label": "Speicher", "ckTypeId": "EnergyIQ/Site", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"path": [{"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/Building"}, {"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/BuildingStorey"}, {"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/Space"}, {"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/ThermalEnergyStorage"}]}}, {"id": "pumpe", "label": "Pumpe", "ckTypeId": "EnergyIQ/Site", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"path": [{"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/Building"}, {"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/BuildingStorey"}, {"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/Space"}, {"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/Pump"}]}}]}
+          {"timeFilter": {"enabled": true, "selection": {"type": "relative", "relativeValue": 24, "relativeUnit": "hours"}}, "autoRefreshSeconds": 300, "entitySelectors": [{"id": "standort", "label": "Standort", "ckTypeId": "EnergyIQ/Site", "attributeMappings": [{"attributePath": "name", "variableName": "standortName"}], "showInToolbar": true, "defaultRtId": "6789a00000000000000000a1"}, {"id": "waermepumpe", "label": "Wärmepumpe", "ckTypeId": "EnergyIQ/Site", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"path": [{"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/Building"}, {"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/BuildingStorey"}, {"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/Space"}, {"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/HeatPump"}]}}, {"id": "speicher", "label": "Speicher", "ckTypeId": "EnergyIQ/Site", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"path": [{"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/Building"}, {"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/BuildingStorey"}, {"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/Space"}, {"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/ThermalEnergyStorage"}]}}, {"id": "pumpe", "label": "Pumpe", "ckTypeId": "EnergyIQ/Site", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"path": [{"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/Building"}, {"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/BuildingStorey"}, {"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/Space"}, {"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/Pump"}]}}, {"id": "wpzaehler", "label": "Stromzähler Wärmepumpe", "ckTypeId": "EnergyIQ/Site", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"path": [{"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/Building"}, {"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/BuildingStorey"}, {"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/Space"}, {"roleId": "System/ParentChild", "direction": "in", "targetCkTypeId": "EnergyIQ/HeatPump"}, {"roleId": "EnergyIQ/EquipmentMeters", "direction": "in", "targetCkTypeId": "EnergyIQ/Meter"}]}}]}
       - id: System.UI/Dashboard.Columns
         value: 12
       - id: System.UI/Dashboard.RowHeight
@@ -1897,7 +1900,7 @@ entities:
         targetCkTypeId: System.UI/Dashboard
     attributes:
       - id: System/Name
-        value: Wärmepumpe Firmianstraße – Ø-Leistung
+        value: Wärmepumpe – Ø-Leistung
       - id: System.UI/DashboardWidget.Type
         value: kpi
       - id: System.UI/DashboardWidget.Col
@@ -1916,7 +1919,7 @@ entities:
         value: 6a4b4000000000000000e207
       - id: System.UI/DashboardWidget.Config
         value: |-
-          {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "activepower_avg", "valueMultiplier": 1, "suffix": " kW", "queryName": "WP Ø-Leistung", "queryRtId": "6a4b4000000000000000e207", "queryFamily": "streamData"}
+          {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "activepower_avg", "valueMultiplier": 1, "suffix": " kW", "queryName": "WP Ø-Leistung", "queryRtId": "6a4b4000000000000000e207", "queryFamily": "streamData", "entitySelectorId": "wpzaehler"}
 
   - rtId: 6a4b4000000000000000e302
     ckTypeId: System.UI/DashboardWidget
@@ -1926,7 +1929,7 @@ entities:
         targetCkTypeId: System.UI/Dashboard
     attributes:
       - id: System/Name
-        value: Wärmepumpe Firmianstraße – Zählerstand Fensterbeginn
+        value: Wärmepumpe – Zählerstand Fensterbeginn
       - id: System.UI/DashboardWidget.Type
         value: kpi
       - id: System.UI/DashboardWidget.Col
@@ -1945,7 +1948,7 @@ entities:
         value: 6a4b4000000000000000e208
       - id: System.UI/DashboardWidget.Config
         value: |-
-          {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "importedenergy_min", "valueMultiplier": 1, "suffix": " kWh", "queryName": "WP Zählerstand Fensterbeginn", "queryRtId": "6a4b4000000000000000e208", "queryFamily": "streamData"}
+          {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "importedenergy_min", "valueMultiplier": 1, "suffix": " kWh", "queryName": "WP Zählerstand Fensterbeginn", "queryRtId": "6a4b4000000000000000e208", "queryFamily": "streamData", "entitySelectorId": "wpzaehler"}
 
   - rtId: 6a4b4000000000000000e303
     ckTypeId: System.UI/DashboardWidget
@@ -1955,7 +1958,7 @@ entities:
         targetCkTypeId: System.UI/Dashboard
     attributes:
       - id: System/Name
-        value: Wärmepumpe Firmianstraße – Zählerstand Fensterende
+        value: Wärmepumpe – Zählerstand Fensterende
       - id: System.UI/DashboardWidget.Type
         value: kpi
       - id: System.UI/DashboardWidget.Col
@@ -1974,7 +1977,7 @@ entities:
         value: 6a4b4000000000000000e209
       - id: System.UI/DashboardWidget.Config
         value: |-
-          {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "importedenergy_max", "valueMultiplier": 1, "suffix": " kWh", "queryName": "WP Zählerstand Fensterende", "queryRtId": "6a4b4000000000000000e209", "queryFamily": "streamData"}
+          {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "importedenergy_max", "valueMultiplier": 1, "suffix": " kWh", "queryName": "WP Zählerstand Fensterende", "queryRtId": "6a4b4000000000000000e209", "queryFamily": "streamData", "entitySelectorId": "wpzaehler"}
 
   - rtId: 6a4b4000000000000000e304
     ckTypeId: System.UI/DashboardWidget
@@ -2158,7 +2161,7 @@ entities:
         targetCkTypeId: System.UI/Dashboard
     attributes:
       - id: System/Name
-        value: Wärmepumpe Firmianstraße – Leistungsaufnahme
+        value: Wärmepumpe – Leistungsaufnahme
       - id: System.UI/DashboardWidget.Type
         value: lineChart
       - id: System.UI/DashboardWidget.Col
@@ -2177,7 +2180,7 @@ entities:
         value: 6a4b4000000000000000e206
       - id: System.UI/DashboardWidget.Config
         value: |-
-          {"chartType": "line", "categoryField": "timestamp", "seriesGroupField": "name", "valueField": "ActivePower", "showLegend": true, "legendPosition": "bottom", "showMarkers": false, "showDataBadge": true, "queryName": "Stromzähler Wärmepumpe (Archiv)", "queryRtId": "6a4b4000000000000000e206", "queryFamily": "streamData", "resolutionAware": true, "requiredAggregation": "AVG"}
+          {"chartType": "line", "categoryField": "timestamp", "seriesGroupField": "name", "valueField": "ActivePower", "showLegend": true, "legendPosition": "bottom", "showMarkers": false, "showDataBadge": true, "queryName": "Stromzähler Wärmepumpe (Archiv)", "queryRtId": "6a4b4000000000000000e206", "queryFamily": "streamData", "resolutionAware": true, "requiredAggregation": "AVG", "entitySelectorId": "wpzaehler"}
 
   - rtId: 6a4b4000000000000000e30b
     ckTypeId: System.UI/DashboardWidget
@@ -2187,7 +2190,7 @@ entities:
         targetCkTypeId: System.UI/Dashboard
     attributes:
       - id: System/Name
-        value: Wärmepumpe Firmianstraße – Energie kumuliert (Zählerstand)
+        value: Wärmepumpe – Energie kumuliert (Zählerstand)
       - id: System.UI/DashboardWidget.Type
         value: lineChart
       - id: System.UI/DashboardWidget.Col
@@ -2206,7 +2209,7 @@ entities:
         value: 6a4b4000000000000000e20a
       - id: System.UI/DashboardWidget.Config
         value: |-
-          {"chartType": "line", "categoryField": "timestamp", "seriesGroupField": "name", "valueField": "ImportedEnergy", "showLegend": true, "legendPosition": "bottom", "showMarkers": false, "showDataBadge": true, "queryName": "Stromzähler Wärmepumpe – Energie (Archiv)", "queryRtId": "6a4b4000000000000000e20a", "queryFamily": "streamData", "resolutionAware": true, "requiredAggregation": "MAX"}
+          {"chartType": "line", "categoryField": "timestamp", "seriesGroupField": "name", "valueField": "ImportedEnergy", "showLegend": true, "legendPosition": "bottom", "showMarkers": false, "showDataBadge": true, "queryName": "Stromzähler Wärmepumpe – Energie (Archiv)", "queryRtId": "6a4b4000000000000000e20a", "queryFamily": "streamData", "resolutionAware": true, "requiredAggregation": "MAX", "entitySelectorId": "wpzaehler"}
 
   - rtId: 6a4b4000000000000000e30c
     ckTypeId: System.UI/DashboardWidget
@@ -2416,16 +2419,13 @@ entities:
         value: Stromzähler Wärmepumpe (Archiv)
       - id: System/Description
         value: >-
-          WP electricity meter time series from the MeterArchive, pinned via RtIds to the Stromzähler Wärmepumpe (Firmianstraße). Known open point: the pin stays until AB#7888 links the meter to its heat pump.
+          WP electricity meter time series from the MeterArchive. No RtIds pin: the Heizung & Kühlung chart scopes it through the follower `wpzaehler` (the meters linked to the picked site's heat pump via EquipmentMeters, AB#7888).
       - id: System/Query.CkTypeId
         value: EnergyIQ/Meter
       - id: System/Query.NavigationFilterMode
         value: 0
       - id: System/StreamDataQuery.ArchiveRtId
         value: 6a0e000000000000000a0006
-      - id: System/StreamDataQuery.RtIds
-        value:
-          - 6789a00000000000003007a8
       - id: System/StreamDataQuery.Columns
         value:
           - ActivePower
@@ -2445,16 +2445,13 @@ entities:
         value: WP Ø-Leistung
       - id: System/Description
         value: >-
-          AVG of the event-based ActivePower samples of the WP meter over the query window (sample-weighted approximation, Loxone ticks on change).
+          AVG of the event-based ActivePower samples of the WP meter over the query window (sample-weighted approximation, Loxone ticks on change). No RtIds pin: scoped through the follower `wpzaehler` (AB#7888).
       - id: System/Query.CkTypeId
         value: EnergyIQ/Meter
       - id: System/Query.NavigationFilterMode
         value: 0
       - id: System/StreamDataQuery.ArchiveRtId
         value: '6a0e000000000000000a0006'
-      - id: System/StreamDataQuery.RtIds
-        value:
-          - 6789a00000000000003007a8
       - id: System/AggregationQueryColumns
         value:
           - ckRecordId: System/AggregationQueryColumn
@@ -2471,16 +2468,13 @@ entities:
         value: WP Zählerstand Fensterbeginn
       - id: System/Description
         value: >-
-          MIN ImportedEnergy (kWh counter) in the window = counter reading at window start.
+          MIN ImportedEnergy (kWh counter) in the window = counter reading at window start. No RtIds pin: scoped through the follower `wpzaehler` (AB#7888).
       - id: System/Query.CkTypeId
         value: EnergyIQ/Meter
       - id: System/Query.NavigationFilterMode
         value: 0
       - id: System/StreamDataQuery.ArchiveRtId
         value: '6a0e000000000000000a0011'
-      - id: System/StreamDataQuery.RtIds
-        value:
-          - 6789a00000000000003007a8
       - id: System/AggregationQueryColumns
         value:
           - ckRecordId: System/AggregationQueryColumn
@@ -2497,16 +2491,13 @@ entities:
         value: WP Zählerstand Fensterende
       - id: System/Description
         value: >-
-          MAX ImportedEnergy (kWh counter) in the window = counter reading at window end; Differenz zu Fensterbeginn = Verbrauch im Zeitraum.
+          MAX ImportedEnergy (kWh counter) in the window = counter reading at window end; Differenz zu Fensterbeginn = Verbrauch im Zeitraum. No RtIds pin: scoped through the follower `wpzaehler` (AB#7888).
       - id: System/Query.CkTypeId
         value: EnergyIQ/Meter
       - id: System/Query.NavigationFilterMode
         value: 0
       - id: System/StreamDataQuery.ArchiveRtId
         value: '6a0e000000000000000a0011'
-      - id: System/StreamDataQuery.RtIds
-        value:
-          - 6789a00000000000003007a8
       - id: System/AggregationQueryColumns
         value:
           - ckRecordId: System/AggregationQueryColumn
@@ -2523,16 +2514,13 @@ entities:
         value: Stromzähler Wärmepumpe – Energie (Archiv)
       - id: System/Description
         value: >-
-          WP kWh counter time series from the MeterEnergyArchive, pinned via RtIds. Used by the cumulative-energy chart.
+          WP kWh counter time series from the MeterEnergyArchive. Used by the cumulative-energy chart. No RtIds pin: scoped through the follower `wpzaehler` (AB#7888).
       - id: System/Query.CkTypeId
         value: EnergyIQ/Meter
       - id: System/Query.NavigationFilterMode
         value: 0
       - id: System/StreamDataQuery.ArchiveRtId
         value: 6a0e000000000000000a0011
-      - id: System/StreamDataQuery.RtIds
-        value:
-          - 6789a00000000000003007a8
       - id: System/StreamDataQuery.Columns
         value:
           - ImportedEnergy

@@ -49,3 +49,7 @@ types:
   # Whole-floor sub-meters anchor to their storey instead of a single room
   - id: ${this}/StoreyElements
     targetCkTypeId: ${this}/BuildingStorey
+  # Measures one plant equipment item (e.g. Stromzähler Wärmepumpe -> HeatPump), AB#7888.
+  # Declared only here on the origin side (2.8.0 rule); the equipment navigates it inbound as MeteredBy.
+  - id: ${this}/EquipmentMeters
+    targetCkTypeId: ${this}/TechnicalSystem

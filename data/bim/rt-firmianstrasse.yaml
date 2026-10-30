@@ -2989,6 +2989,11 @@ entities:
       - roleId: EnergyIQ/SpaceElements
         targetRtId: 6789a00000000000000015d5  # space-hg-eg-technik (Technikraum)
         targetCkTypeId: EnergyIQ/Space
+      # What it measures (EnergyIQ 2.14.0, AB#7888): the heat pump. Boards reach the meter from
+      # the heat pump via the inbound MeteredBy navigation.
+      - roleId: EnergyIQ/EquipmentMeters
+        targetRtId: 6789a00000000000000060f1  # Wärmepumpe (reversibel)
+        targetCkTypeId: EnergyIQ/HeatPump
 
   # --- 2× Wallbox in der Garage (Nebengebäude) ---
   - rtId: 6789a00000000000003010b1

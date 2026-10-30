@@ -1,0 +1,8 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+associationRoles:
+- id: EquipmentMeters
+  inboundName: MeteredBy
+  outboundName: MeteredEquipment
+  inboundMultiplicity: N
+  outboundMultiplicity: ZeroOrOne
+  description: "Assignment of a meter to the plant equipment it measures (e.g. the electricity sub-meter of a heat pump). IFC: assignment of an IfcFlowMeter/IfcSensor to the product it measures (IfcRelAssignsToProduct). Outbound MeteredEquipment goes Meter -> TechnicalSystem (at most one); inbound MeteredBy goes TechnicalSystem -> its meters. Independent of the spatial placement (SpaceElements/StoreyElements), which says where the meter hangs, not what it measures."
