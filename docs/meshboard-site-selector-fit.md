@@ -243,7 +243,7 @@ Checked read-only on prod-1 with the library's hop query:
 | DS → SystemSpaces → Storey → Space → sensor | 18 | 0 (no SystemSpaces) |
 | DS → PV → PVString → Building → Space → sensor | 0 | 5 (no storeys yet) |
 | Site → Building → Space → sensor | 0 | 5 |
-| **Site → Building → Storey → Space → sensor** (chosen) | **18** | **0 until AB#7889** |
+| **Site → Building → Storey → Space → sensor** (chosen) | **18** | **0 (5 with the storeys of AB#7889)** |
 
 Trade-off: the energy boards and the room boards have different leader types under the same label. A pick does not
 carry over from one kind of board to the other (it does not today either — each board keeps its own URL state), and the
@@ -252,15 +252,15 @@ boards depend on the spatial tree only, which every site has, and on no modellin
 
 Precondition per site: storeys. A fixed path cannot serve a room directly under a Building and a room under a storey at
 the same time. Fusch had rooms directly under its Building; Gerald decided that Fusch gets storeys (UG, EG, OG; story
-AB#7889), so both sites have Building → BuildingStorey → Space. Until AB#7889 is imported the room followers resolve
-an empty scope for Fusch, and the widgets show the empty state.
+AB#7889), so both sites have Building → BuildingStorey → Space. A tenant whose Fusch data still has rooms directly
+under the Building resolves an empty room scope for Fusch (empty state, never another site's rows).
 
 ### Followers
 
 All followers: `followsSelectorId: standort`, `showInToolbar: false`, no default; `childScope.path` starts with
 `System/ParentChild` in → Building, → BuildingStorey, → Space (3 hops) and adds one hop:
 
-| Follower | Last hop | Firmianstraße (prod-1) | Fusch after AB#7889 |
+| Follower | Last hop | Firmianstraße (prod-1) | Fusch (with AB#7889 storeys) |
 |----------|----------|------------------------|---------------------|
 | `raumsensoren` | `EnergyIQ/SpaceSensors` in → TemperatureSensor | 18 room sensors | 5 room sensors |
 | `aussensensor` | path Site → `System/ParentChild` in → ExternalSpace → `EnergyIQ/SpaceSensors` in → TemperatureSensor (2 hops) | `…10051a1` | empty (no outdoor sensor) |

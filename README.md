@@ -267,8 +267,9 @@ but on `EnergyIQ/Site` (default Firmianstraße): rooms, sensors and plant hang o
 DistributionSystem does not reach at every site. Followers walk **Site → Building → BuildingStorey → Space** and from
 the room to the room sensors, heat pump, storage tanks, pump, luminaires or blinds; the outdoor sensor is found through
 an ExternalSpace directly under the Site. Every site must model storeys — a room directly under a Building is not found
-(Fusch gets its storeys from AB#7889; until then the three boards show the empty state for Fusch). The room pickers
-("Raum", "Raum (Licht)", "Raum (Beschattung)") stay as they were and are not limited to the picked site.
+(Fusch: storeys UG/EG/OG, AB#7889); a site without an entity of a type (Fusch: heat pump, tanks, pump, outdoor sensor)
+shows the widget's empty state. The room pickers ("Raum", "Raum (Licht)", "Raum (Beschattung)") stay as they were and are
+not limited to the picked site: the per-room charts show the picked room whatever the site.
 **Open:** the five tiles "Wärmepumpe Firmianstraße – …" read the Firmianstraße heat-pump meter through a fixed rtId
 whatever the site, until AB#7888 links a meter to the equipment it meters (EnergyIQ 2.14.0).
 
