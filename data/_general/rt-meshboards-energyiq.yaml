@@ -343,7 +343,7 @@ entities:
         value: Energie
       - id: System/Description
         value: |-
-          Energieübersicht des gewählten Standorts: Netzbezug, PV-Produktion, Wallboxen, Geräte und Batteriespeicher aus den Stream-Data-Archiven + aktuelle Leistungen der Zähler des Standorts.
+          Energieübersicht des gewählten Standorts: Netzbezug, PV-Produktion, Wallboxen, Geräte und Batteriespeicher aus den Stream-Data-Archiven + aktuelle Leistungen der Zähler des Standorts. Heatmap "Netzbezug – Stunde × Tag": mittlere Netzleistung je Stunde der letzten 30 Tage (eigenes Zeitfenster, unabhängig vom Zeitraum oben).
           ---MESHBOARD_VARIABLES---
           {"timeFilter": {"enabled": true, "selection": {"type": "relative", "relativeValue": 24, "relativeUnit": "hours"}}, "autoRefreshSeconds": 300, "entitySelectors": [{"id": "standort", "label": "Standort", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [{"attributePath": "name", "variableName": "standortName"}], "showInToolbar": true, "defaultRtId": "6789a00000000000006000d3", "filters": [{"attributePath": "systemType", "operator": "EQUALS", "comparisonValue": "ELECTRICAL"}]}, {"id": "netz", "label": "Netzanschluss", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"targetCkTypeId": "EnergyIQ/GridConnection", "roleId": "EnergyIQ/SystemMembers", "direction": "out"}}, {"id": "pv", "label": "PV-Anlage", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"targetCkTypeId": "EnergyIQ/PhotovoltaicSystem", "roleId": "EnergyIQ/SystemMembers", "direction": "out"}}, {"id": "wallboxen", "label": "Wallboxen", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"targetCkTypeId": "EnergyIQ/ChargingStation", "roleId": "EnergyIQ/SystemMembers", "direction": "out"}}, {"id": "geraete", "label": "Geräte", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"targetCkTypeId": "EnergyIQ/Appliance", "roleId": "EnergyIQ/SystemMembers", "direction": "out"}}, {"id": "batterie", "label": "Batterie", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"path": [{"roleId": "EnergyIQ/SystemMembers", "direction": "out", "targetCkTypeId": "EnergyIQ/PhotovoltaicSystem"}, {"roleId": "EnergyIQ/SystemMembers", "direction": "out", "targetCkTypeId": "EnergyIQ/BatteryStorage"}]}}, {"id": "zaehler", "label": "Zähler", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"targetCkTypeId": "EnergyIQ/Meter", "roleId": "EnergyIQ/SystemMembers", "direction": "out"}}]}
       - id: System.UI/Dashboard.Columns
@@ -527,6 +527,40 @@ entities:
         value: |-
           {"columns": [{"field": "name", "title": "Zähler / Verbraucher"}, {"field": "activePower", "title": "Wirkleistung (kW)"}], "pageSize": 15, "sortable": true, "queryName": "Aktuelle Leistungen", "queryRtId": "6a4aa4cc22664f2b26c67e64", "queryFamily": "runtime", "entitySelectorId": "zaehler"}
 
+  # Heatmap "Netzbezug – Stunde × Tag" (AB#7942): mean net grid power per Europe/Vienna hour over its own
+  # 30-day window, from the 1-hour rollup GridConnectionRollup1h (weighted mean Σ activepower_avg_sum /
+  # Σ activepower_avg_count = the exact hourly mean of the raw rows). Rollup rows are stamped at the bucket
+  # END, so they are shifted back by 60 min before bucketing. ActivePower is signed: feed-in hours show ≤ 0
+  # (ImportPower, AB#7925, is not live). The unit sits in the title: the heatmap legend has no unit option.
+  - rtId: 6a4aa4fa22664f2b26c67e83
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4aa4fa22664f2b26c67e7c
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Netzbezug – Stunde × Tag (Ø Netzleistung kW, Einspeisung ≤ 0)
+      - id: System.UI/DashboardWidget.Type
+        value: heatmap
+      - id: System.UI/DashboardWidget.Col
+        value: 1
+      - id: System.UI/DashboardWidget.Row
+        value: 19
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 12
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 12
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: systemQuery
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: 6a4aa4cc22664f2b26c67e6a
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"dateField": "timestamp", "valueField": "activepower_avg_sum", "weightField": "activepower_avg_count", "aggregation": "weightedAvg", "timestampIsBucketEnd": true, "bucketWidthMinutes": 60, "timeWindow": {"value": 30, "unit": "days"}, "colorScheme": "heat", "showLegend": true, "legendPosition": "bottom", "decimalPlaces": 2, "queryName": "Netzbezug je Stunde (Rollup 1 h)", "queryRtId": "6a4aa4cc22664f2b26c67e6a", "queryFamily": "streamData", "entitySelectorId": "netz"}
+
   - rtId: 6a4aa4cc22664f2b26c67e5f
     ckTypeId: System/SimpleSdQuery
     attributes:
@@ -682,6 +716,37 @@ entities:
               - id: System/SortOrder
                 value: 1
 
+  - rtId: 6a4aa4cc22664f2b26c67e6a
+    ckTypeId: System/SimpleSdQuery
+    attributes:
+      - id: System/Name
+        value: Netzbezug je Stunde (Rollup 1 h)
+      - id: System/Description
+        value: >-
+          1-hour rows of GridConnectionRollup1h (EnergyIQ/GridConnection): activepower_avg_sum + activepower_avg_count.
+          The Energie MeshBoard heatmap divides the sum by the count per hour (weighted mean = exact hourly mean of the
+          raw ActivePower rows; 720 rows for 30 days). Rows come back stamped at the bucket end (window_end); the time
+          filter and the sort use window_start.
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/GridConnection
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/StreamDataQuery.ArchiveRtId
+        value: '6a4aa4cc22664f2b26c67e6b'
+      - id: System/StreamDataQuery.Columns
+        value:
+          - activepower_avg_sum
+          - activepower_avg_count
+      - id: System/Query.Sorting
+        value:
+          - ckRecordId: System/SortOrderItem
+            attributes:
+              - id: System/AttributePath
+                # rollups have no `timestamp` column (sorting on it fails); rows come back stamped at window_end
+                value: window_start
+              - id: System/SortOrder
+                value: 1
+
   # 5-minute AVG/MIN/MAX rollup on ActivePower (function: 0=AVG, 1=MIN, 2=MAX). Columns below
   # mirrors the RollupColumnGenerator derivation and MUST be kept in sync with Aggregations[].
   - rtId: 6a4aa4cc22664f2b26c67e65
@@ -757,6 +822,52 @@ entities:
                 value: ActivePower
               - id: System.StreamData/CkRollupAggregation.Function
                 value: 2
+
+  # 1-hour AVG rollup on ActivePower (AB#7942) for the Energie heatmap "Netzbezug – Stunde × Tag":
+  # one row per GridConnection and UTC hour (sum + count, so Σsum/Σcount is the exact hourly mean of
+  # the raw rows). Europe/Vienna offsets are whole hours, so UTC hour buckets are Vienna hour buckets,
+  # DST days included. 30 days = 720 rows instead of 8,640 5-min rows (the 5-min query took 5-6 s on
+  # test-2: 3.5 MB uncompressed GraphQL). Columns mirror the RollupColumnGenerator output.
+  - rtId: 6a4aa4cc22664f2b26c67e6b
+    ckTypeId: System.StreamData/RollupArchive
+    rtWellKnownName: GridConnectionRollup1h
+    attributes:
+      - id: System.StreamData/Archive.TargetCkTypeId
+        value: EnergyIQ/GridConnection
+      - id: System.StreamData/Archive.Status
+        value: 0
+      - id: System.StreamData/Archive.Columns
+        value:
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: activepower_avg_sum
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: activepower_avg_count
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: true
+      - id: System.StreamData/RollupArchive.SourceArchiveRtId
+        value: '6a0e000000000000000a0007'
+      - id: System.StreamData/RollupArchive.BucketSizeMs
+        value: 3600000
+      - id: System.StreamData/RollupArchive.WatermarkLagMs
+        value: 120000
+      - id: System.StreamData/RollupArchive.Aggregations
+        value:
+          - ckRecordId: System.StreamData/CkRollupAggregation
+            attributes:
+              - id: System.StreamData/CkRollupAggregation.SourcePath
+                value: ActivePower
+              - id: System.StreamData/CkRollupAggregation.Function
+                value: 0
 
   # 5-minute AVG/MIN/MAX rollup on TotalCurrentPower (function: 0=AVG, 1=MIN, 2=MAX). Columns below
   # mirrors the RollupColumnGenerator derivation and MUST be kept in sync with Aggregations[].

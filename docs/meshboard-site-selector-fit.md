@@ -322,3 +322,61 @@ no valve widget, and `raumsensoren` follows `SpaceSensors` only.
 - "Aktueller Lichtstatus" / "Aktuelle Beschattung" and the four bar charts no longer include Fusch luminaires and blinds
   (prod-1: 28 → 18 luminaires, 14 → 8 blinds); the Firmianstraße values are the same.
 - Warmwasserspeicher chart: one extra empty legend entry (Heizpuffer). All other widgets read the same rtIds as before.
+
+## Part 4: grid heatmap "Netzbezug – Stunde × Tag" (AB#7942, 2026-10-31)
+
+The Energie board gets a heatmap of the grid power of the picked site: one cell per Europe/Vienna hour and day over
+the **last 30 days**, independent of the board's Zeitraum (widget `…67e83`, query `…67e6a`, rollup `…67e6b`).
+
+### What a cell shows and why
+
+- **Value: the mean net grid power of that hour in kW** (numerically the net kWh of that hour). The column is
+  `ActivePower` of the GridConnectionArchive, which is **signed**: import > 0, feed-in < 0. An hour with more feed-in
+  than draw shows **≤ 0**. The import-only column `ImportPower` (AB#7925) is not live yet; when it is, the query switches
+  to it and the cell becomes pure grid draw.
+- **No field filter `ActivePower > 0`.** Averaging only the positive rows would overstate the hour: a half-hour of
+  1 kW draw plus a half-hour of feed-in would show 1 kW instead of the real mean.
+- **Data path: the 1-hour rollup `GridConnectionRollup1h`** (AVG → `activepower_avg_sum` + `activepower_avg_count` per
+  GridConnection and UTC hour). The widget uses `aggregation: weightedAvg` (Σ sum / Σ count per cell), so the cell is the
+  **exact** mean of the raw rows, not a mean of means. Europe/Vienna offsets are whole hours, so every UTC hour bucket
+  lies inside one Vienna hour, DST days included.
+- **Rollup rows are stamped at the bucket end** (`timestamp` = `window_end`); `timestampIsBucketEnd: true` +
+  `bucketWidthMinutes: 60` shift each row back to its bucket start before the hour/day bucketing. The server-side time
+  filter and the query sort use `window_start` (a rollup has no `timestamp` column; sorting on it fails).
+- **Own window:** `timeWindow: {value: 30, unit: days}`; the widget shows the badge "Last 30 days".
+- **Unit:** the heatmap legend has no unit option, so the unit sits in the widget title
+  ("Ø Netzleistung kW, Einspeisung ≤ 0") — accepted by Frigg (2026-10-31).
+- **Orientation:** the widget puts days on the x axis and hours on the y axis (fixed by the widget); it still reads as
+  hour × day — accepted by Frigg.
+- **Site:** bound to the follower `netz` (DS → GridConnection); no rtId pin. A site without a grid connection resolves an
+  empty scope and shows the empty state.
+
+### Why not the 5-minute rollup
+
+The first build read `GridConnectionRollup5m` (8,640 rows / 30 days). Measured on test-2 (Firmianstraße, Studio,
+3 runs each): the stream-data request took **5.3 / 6.3 / 4.9 s** when replayed alone (median 5.3 s; server first byte
+0.7–1.3 s) and **5.8–7.0 s** inside "Refresh All". The response was **3.5 MB of uncompressed JSON** for 7,487 rows
+(~486 B/row: rtId, ckTypeId, timestamp, creation/change dates and a cells connection); the download, not the server,
+was the time. An hour × day heatmap needs one row per hour, so it reads the 1-hour rollup (720 rows / 30 days).
+
+### DST day 2026-10-25 (25-hour day)
+
+The widget gives the repeated wall-clock hour its own row **"02:00 (2)"** (AB#7956, verified on the Beschattung board).
+On test-2 the Firmianstraße grid archive has **no rows from 2026-10-25T00:59:58Z to 02:00:03Z** — exactly the repeated
+hour 02:00–03:00 CET — while the hour before (02:00–03:00 CEST, 00:00–01:00Z) has the normal 700 rows. So the source
+lost that hour; the heatmap shows the normal 02:00 cell for 25 Oct and no "02:00 (2)" row (the row appears only when
+data falls into it). Nothing is dropped or moved to another day by the widget. Source-data gap: Bug AB#7968. Accepted as
+the documented behaviour of this AC (Frigg, 2026-10-31).
+
+### Fusch on test-2
+
+The Fusch GridConnection `…0a03` has **0 rows** in the GridConnectionArchive on test-2 (the Fusch live flow runs on
+prod-1 only), so on test-2 the heatmap shows the empty state for Fusch. The Fusch check runs on prod-1 data after
+Gerald's go.
+
+### Rollout
+
+New entities in `rt-meshboards-energyiq.yaml`: rollup `…67e6b` (`GridConnectionRollup1h`), query `…67e6a`, widget
+`…67e83`; the Energie board description mentions the heatmap. After the import: `ActivateArchive -id
+6a4aa4cc22664f2b26c67e6b` (also in `scripts/om_importrt.ps1`) and `BackfillRollup -id 6a4aa4cc22664f2b26c67e6b` for
+the existing history (otherwise the heatmap fills up hour by hour from the activation on).

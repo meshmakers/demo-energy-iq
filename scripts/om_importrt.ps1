@@ -60,6 +60,7 @@ octo-cli -c ImportRt -f (Join-Path $dataPath "_queries/_trees.yaml")
 octo-cli -c ImportRt -f (Join-Path $dataPath "_general/rt-meshboards-energyiq.yaml") -w -r
 octo-cli -c ActivateArchive -id 6a4a9fe67e487162fbe3860f  # TemperatureSensorRollup5m
 octo-cli -c ActivateArchive -id 6a4aa4cc22664f2b26c67e65  # GridConnectionRollup5m
+octo-cli -c ActivateArchive -id 6a4aa4cc22664f2b26c67e6b  # GridConnectionRollup1h (AB#7942, Energie heatmap)
 octo-cli -c ActivateArchive -id 6a4aa4cc22664f2b26c67e66  # PhotovoltaicSystemRollup5m
 octo-cli -c ActivateArchive -id 6a4aa4cc22664f2b26c67e67  # ChargingStationRollup5m
 octo-cli -c ActivateArchive -id 6a4aa4cc22664f2b26c67e68  # ApplianceRollup5m
