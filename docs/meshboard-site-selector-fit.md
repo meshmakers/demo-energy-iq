@@ -359,6 +359,31 @@ The first build read `GridConnectionRollup5m` (8,640 rows / 30 days). Measured o
 (~486 B/row: rtId, ckTypeId, timestamp, creation/change dates and a cells connection); the download, not the server,
 was the time. An hour × day heatmap needs one row per hour, so it reads the 1-hour rollup (720 rows / 30 days).
 
+### Measured on test-2 (2026-10-31, Firmianstraße, 1-hour rollup)
+
+Studio in Chrome, timing fields only, 3 runs each:
+
+| Measurement | Run 1 | Run 2 | Run 3 | Median |
+|-------------|-------|-------|-------|--------|
+| "Refresh All Widgets" click → heatmap rendered | 0.80 s | 1.11 s | 1.30 s | **1.11 s** |
+| its stream-data request (inside the refresh) | 0.70 s | 1.01 s | 1.22 s | 1.01 s |
+| same request replayed alone | 0.76 s | 0.62 s | 0.65 s | **0.65 s** |
+
+Response 303 KB, 636 hour rows (the archive has gaps), client render after the response 77–87 ms. Picking the site in
+the `standort` picker re-renders the heatmap with all 636 cells in 2.8 s, while all seven widgets reload.
+
+Spot checks (cell = Σ sum / Σ count of the 1-h rollup; reference = AVG(ActivePower) of the raw archive over the exact
+hour [from, to), same rtId):
+
+| Cell (Europe/Vienna) | UTC hour | Raw AVG (rows) | Rollup Σsum/Σcount | Heatmap label |
+|----------------------|----------|----------------|--------------------|---------------|
+| 28 Oct 03:00 (night) | 02:00Z | 1.249690 (697) | 871.034 / 697 = 1.249690 | 1,25 |
+| 28 Oct 12:00 (midday) | 11:00Z | 0.291289 (707) | 205.941 / 707 = 0.291289 | 0,29 |
+| 28 Oct 19:00 (evening) | 18:00Z | 1.165856 (701) | 817.265 / 701 = 1.165856 | 1,17 |
+| 25 Oct 02:00 (CEST) | 00:00Z | 1.224624 (700) | 857.237 / 700 = 1.224624 | 1,22 |
+
+All values match exactly (0 % deviation). The labels are rounded to `decimalPlaces: 2`.
+
 ### DST day 2026-10-25 (25-hour day)
 
 The widget gives the repeated wall-clock hour its own row **"02:00 (2)"** (AB#7956, verified on the Beschattung board).
