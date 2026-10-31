@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- AB#7942: Energie board gets the heatmap **"Netzbezug – Stunde × Tag"**: the mean net grid power (kW) of the picked
+  site per Europe/Vienna hour × day over its own window of the last 30 days (badge "Last 30 days", independent of the
+  board Zeitraum), bound to the follower `netz`. The cell is `ActivePower` (signed: feed-in hours show ≤ 0), because
+  `ImportPower` (AB#7925) is not live; no `ActivePower > 0` filter, because averaging only positive rows overstates the
+  hour. New 1-hour rollup **`GridConnectionRollup1h`** (`…67e6b`, AVG → sum/count on GridConnectionArchive) read with
+  `weightedAvg` (Σ sum / Σ count = exact hourly mean), `timestampIsBucketEnd` + `bucketWidthMinutes: 60`; query `…67e6a`
+  (sorted on `window_start`), widget `…67e83`. The 5-min rollup took 5–6 s on test-2 (3.5 MB uncompressed). Needs the
+  octo-meshboard heatmap options of AB#7956. Rollout: import, `ActivateArchive` + `BackfillRollup` of `…67e6b`. Unit in
+  the title (the legend has no unit option). Details, DST day and the Fusch test-2 gap:
+  `docs/meshboard-site-selector-fit.md` Part 4.
 - AB#7693: Beschattung & Beleuchtung drops the room pickers "Raum (Licht)" / "Raum (Beschattung)" (they did not
   follow the site and showed one room). The two per-room line charts become site-wide heatmaps: light switches and
   blind movements per day x hour (count of change rows), scoped by the `leuchten` / `raffstores` followers.
