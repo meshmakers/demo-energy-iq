@@ -330,7 +330,8 @@ the **last 30 days**, independent of the board's Zeitraum (widget `…67e83`, qu
 
 ### What a cell shows and why
 
-- **Value: the mean net grid power of that hour in kW** (numerically the net kWh of that hour). The column is
+- **Value: the mean net grid power of that hour in kW** (sample-weighted mean of the raw rows; it estimates the net kWh
+  of that hour only if the samples cover the hour evenly, which gaps or irregular sampling break). The column is
   `ActivePower` of the GridConnectionArchive, which is **signed**: import > 0, feed-in < 0. An hour with more feed-in
   than draw shows **≤ 0**. The import-only column `ImportPower` (AB#7925) is not live yet; when it is, the query switches
   to it and the cell becomes pure grid draw.
@@ -396,8 +397,7 @@ the documented behaviour of this AC (Frigg, 2026-10-31).
 ### Fusch on test-2
 
 The Fusch GridConnection `…0a03` has **0 rows** in the GridConnectionArchive on test-2 (the Fusch live flow runs on
-prod-1 only), so on test-2 the heatmap shows the empty state for Fusch. The Fusch check runs on prod-1 data after
-Gerald's go.
+prod-1 only), so on test-2 the heatmap shows the empty state for Fusch; the cells for Fusch come from prod-1 data.
 
 ### Rollout
 
