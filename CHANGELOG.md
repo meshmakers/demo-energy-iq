@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- AB#8040: **Firmianstraße grid connection reachable from its Site.** New ExternalSpace "Netzanschluss Firmianstraße"
+  (`6789a00000000000000052e8`, `ParentChild` child of Site `6789a00000000000000000a1`); GridConnection "Hausanschluss"
+  (`6789a00000000000003000a1`) anchors to it via `SpaceElements`, the same site model as Fusch. Before, the
+  GridConnection had no spatial anchor and no path led from the Site to it. Data prerequisite for the site comparison
+  AB#7948 (blocked by AB#8039). Tenant data only (`data/bim/rt-firmianstrasse.yaml`); no blueprint, board or archive change.
+  Note: `rt-firmianstrasse.yaml` is not in sync with the live energyiq tenant (e.g. Space Pset thermal values are written
+  live). A full-file `ImportRt -r` therefore resets live values to the file and is not a no-op; add single entities
+  with a minimal file or the entity tools instead.
+
 - AB#7996: **EnergyIQ.Base 1.0.2** makes the install warning-free: the Eigenverbrauch KPI formula on Energiebilanz
   is `max(0, $pvEnergyKwh - $gridExportKwh)` instead of the `${...}` form, which the blueprint install read as two
   unknown blueprint variables (2 warnings on 1.0.1, value unchanged). MeshBoard evaluates both forms identically

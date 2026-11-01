@@ -204,7 +204,8 @@ Distinct from `Space` — does not carry Pset_* records or interior sensor oblig
 | NetFloorArea | Double? | Outdoor area (m²) |
 
 Parent: `Site`, `Building`, or `BuildingStorey` via inherited `ParentChild`.
-Allowed associations: `SpaceSensors` (outdoor weather/irradiance), `SpaceElements` (outdoor luminaires, shading).
+Allowed associations: `SpaceSensors` (outdoor weather/irradiance), `SpaceElements` (outdoor luminaires, shading, and outdoor meters such as `GridConnection` and `ChargingStation`, EnergyIQ 2.6.0).
+Site model for the grid connection: every site anchors its `GridConnection` via `SpaceElements` to an ExternalSpace "Netzanschluss <site>" under the `Site` (`ParentChild`), so a path query from the Site reaches its grid meter (Fusch, Firmianstraße since AB#8040).
 
 ---
 
