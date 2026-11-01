@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- AB#7996: **EnergyIQ.Base 1.0.1** fixes the install of 1.0.0, which failed with "RtCkTypeId 'System/Query' not found"
+  on a fresh test-2 tenant: the `_trees` query used the former abstract `System/Query` type, which no longer exists in
+  System 2.8.0 (the entity was missing on energyiq for the same reason). It is now a `System/SimpleRtQuery` with
+  the same rtId (`seed-data/queries/_trees.yaml`); the seed check no longer allows `System/Query`. Do not install 1.0.0.
+
 - AB#7996: **Blueprint `EnergyIQ.Base-1.0.0`.** The product content - 19 RawArchives, 14 RollupArchives, 5 MeshBoards
   (37 widgets, 33 queries), the `_trees` query and the tree navigation - ships as a blueprint
   (`src/blueprints/EnergyIQ.Base/`), published by CI after the CK step (`validate-and-publish-blueprints`: main ->

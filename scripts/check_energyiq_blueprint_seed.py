@@ -31,7 +31,6 @@ ALLOWED_CK_TYPES = {
     "System.UI/Dashboard",
     "System.UI/DashboardWidget",
     "System.UI/TreeNavigationConfiguration",
-    "System/Query",
     "System/SimpleRtQuery",
     "System/SimpleSdQuery",
     "System/AggregationSdQuery",
