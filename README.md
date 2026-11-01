@@ -308,7 +308,7 @@ a site's rtIds or to the Loxone CK).
 ```powershell
 octo-cli -c EnableCommunication
 octo-cli -c EnableStreamData
-octo-cli -c InstallBlueprint -b EnergyIQ.Base-1.0.0          # new tenant, or adopts existing ImportRt content (same rtIds)
+octo-cli -c InstallBlueprint -b EnergyIQ.Base-<version>      # new tenant, or adopts existing ImportRt content (same rtIds)
 octo-cli -c PreviewBlueprintUpdate -tv EnergyIQ.Base-<new>   # always look at the diff first
 octo-cli -c UpdateBlueprint -tv EnergyIQ.Base-<new>
 octo-cli -c ListBlueprintInstallations
