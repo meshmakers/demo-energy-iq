@@ -382,6 +382,12 @@ The physical components stay `TreeNode`s and are anchored in the **spatial** tre
 
 `PhotovoltaicSystem` aggregates: `TotalRatedPowerKWp`, `TotalCurrentPowerKW`, `TotalEnergyProducedKWh`, `GridFeedIn`, `SelfConsumption`.
 
+`GridFeedIn` and `SelfConsumption` are **simulator-only** (AB#7925): only `rt-simulation-adapters.yaml` writes them, as
+independent scalings of one random base value, so they are not an energy balance; no live site writes them and no
+board reads them. They stay in the CK and the PhotovoltaicSystemArchive for simulator tenants and lab users. The
+Energiebilanz board derives feed-in from the grid meter (Integral of the computed column `ExportPower`) and
+self-consumption as PV energy minus feed-in.
+
 ## Energy Metering (NEW in v2.1.0)
 
 Residential energy monitoring uses a `Meter`-rooted hierarchy that complements the renewable-energy aggregates above. `Meter` is concrete and serves directly for generic sub-meters (e.g. per-floor electricity sub-metering fed via Loxone); three specialised subtypes carry shape-specific attributes for grid coupling, EV charging, and individually metered appliances.
@@ -516,7 +522,7 @@ Per-type archives provision CrateDB tables for time-series storage. Defined in `
 | ApplianceArchive (`6a0e…0009`) | `EnergyIQ/Appliance` | `ActivePower` |
 | PVStringArchive (`6a0e…000a`) | `EnergyIQ/PVString` | `CurrentPower` |
 | InverterArchive (`6a0e…000b`) | `EnergyIQ/Inverter` | `DcPower`, `AcPower` |
-| PhotovoltaicSystemArchive (`6a0e…000c`) | `EnergyIQ/PhotovoltaicSystem` | `TotalCurrentPower`, `GridFeedIn`, `SelfConsumption` |
+| PhotovoltaicSystemArchive (`6a0e…000c`) | `EnergyIQ/PhotovoltaicSystem` | `TotalCurrentPower`, `GridFeedIn`, `SelfConsumption` (the last two simulator-only, AB#7925) |
 | BatteryStorageArchive (`6a0e…000d`) | `EnergyIQ/BatteryStorage` | `StateOfCharge`, `ChargingPower` |
 
 `Path` references the **display name at the target type**, not the global attribute id. `TargetCkTypeId` matches exactly (no derived types), which is why each concrete `Meter` subtype (GridConnection / ChargingStation / Appliance) has its own archive.

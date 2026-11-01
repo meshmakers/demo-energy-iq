@@ -567,8 +567,15 @@ Container. Parent: `Building`.
 | TotalRatedPowerKWp | Double? |
 | TotalCurrentPowerKW | Double? |
 | TotalEnergyProducedKWh | Double? |
-| GridFeedIn, SelfConsumption | Double? (kW) |
+| GridFeedIn, SelfConsumption | Double? (kW) — simulator-only, see note |
 | IsRunning, FaultState | Boolean? |
+
+> **Note (AB#7925):** `GridFeedIn` and `SelfConsumption` are written only by the demo simulator
+> (`rt-simulation-adapters.yaml`), as independent scalings of one random base value — they are **not an energy
+> balance**. No live source (Loxone Firmianstraße, Loxone/SHRDZM Fusch) writes them, and **no board reads them**.
+> The attributes and the PhotovoltaicSystemArchive columns stay for simulator tenants and lab users. Feed-in and
+> self-consumption on the Energiebilanz board come from the grid meter: feed-in = Integral(`ExportPower`) on the
+> GridConnectionArchive, self-consumption = PV energy − feed-in (`docs/meshboard-site-selector-fit.md`).
 
 ### PVString (TreeNode → PhotovoltaicSystem)
 

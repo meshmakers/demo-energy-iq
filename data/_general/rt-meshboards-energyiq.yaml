@@ -1174,22 +1174,30 @@ entities:
                 value: 2
 
   # ============================================================
-  # Dashboard: Energiebilanz (cumulated kWh over the time filter)
+  # Dashboard: Energiebilanz (energy in kWh over the board window)
   #
-  # Each KPI runs a persistent AggregationSdQuery (SUM of the value column,
-  # optionally sign-filtered) bound to the board time filter and to a follower of
-  # the `standort` selector, and converts the kW-sample sum to kWh via the KPI
-  # valueMultiplier 10/3600. "Batterie entladen" uses the NEGATED multiplier on the
-  # < 0-filtered sum to display positive kWh discharged.
+  # Every kWh tile is the step integral (AggregationType 7 = Integral, AB#7918/AB#7919) of a
+  # power column in kW over the board window [from, to): result column <column>_integral in
+  # kW x h = kWh, so the KPIs use valueMultiplier 1. The integral weights each row by how long
+  # it held (last observation carried forward), so 5-s grid rows, on-change PV/battery rows and
+  # 10-s simulator rows all give the right energy. An empty window yields null and the KPI shows
+  # its empty state "–", never 0.
   #
-  # LIMIT: 10/3600 is only correct for rows written exactly every 10 s (the demo
-  # simulator, rt-simulation-adapters.yaml). Live sites do not write that way:
-  # grid rows (Loxone Firmianstraße, SHRDZM Fusch) arrive about every 5 s (kWh shown
-  # about 2x too high), PV and battery rows are written on change (kWh off in either
-  # direction: Firmianstraße several times too high, Fusch PV too low). A correct
-  # figure needs a time-weighted energy integral in the
-  # aggregation query (platform gap, AB#7692 comment). Measurements per KPI and site:
-  # docs/meshboard-site-selector-fit.md, section "Energiebilanz kWh".
+  #   PV-Erzeugung      = Integral(TotalCurrentPower)   PV archive      selector pv
+  #   Einspeisung       = Integral(ExportPower)         grid archive    selector netz
+  #   Netzbezug         = Integral(ImportPower)         grid archive    selector netz
+  #   Batterie geladen  = Integral(ChargePower)         battery archive selector batterie
+  #   Batterie entladen = Integral(DischargePower)      battery archive selector batterie
+  #   Eigenverbrauch    = max(0, PV-Erzeugung - Einspeisung)   formula KPI (AB#7950)
+  #
+  # ImportPower/ExportPower/ChargePower/DischargePower are computed archive columns (AB#4189,
+  # rt-archives-energyiq.yaml) — the sign split is never a field filter (a filter drops rows
+  # and breaks the step integral). The PV, Einspeisung, Netzbezug and battery KPIs publish their
+  # value as board variables (pvEnergyKwh, gridExportKwh, gridImportKwh, batteryChargeKwh,
+  # batteryDischargeKwh) for the Eigenverbrauch formula and later gauges (AB#7943).
+  # The PV columns SelfConsumption/GridFeedIn are simulator-only and not read by this board.
+  # Formulas, clamp and the measured cross-check: docs/meshboard-site-selector-fit.md,
+  # section "Energiebilanz kWh".
   # ============================================================
   - rtId: 6a4aaf1922664f2b26c67ecc
     ckTypeId: System.UI/Dashboard
@@ -1198,7 +1206,7 @@ entities:
         value: Energiebilanz
       - id: System/Description
         value: |-
-          Kumulierte Energiebilanz des gewählten Standorts über den gewählten Zeitraum: PV-Produktion, Eigenverbrauch, Netzeinspeisung, Netzbezug sowie geladene/entladene Batterie-Energie. Werte in kWh = SUM der kW-Samples × 10/3600 — nur korrekt bei Samples im 10-s-Raster (Simulator); bei Live-Daten (5-s- oder änderungsgetriebene Samples) ungenau, meist zu hoch.
+          Kumulierte Energiebilanz des gewählten Standorts über den gewählten Zeitraum: PV-Erzeugung, Eigenverbrauch, Einspeisung, Netzbezug sowie geladene/entladene Batterie-Energie. Werte in kWh = zeitgewichtetes Integral der Leistung über den Zeitraum (jeder Messwert zählt so lange, bis der nächste kommt); Eigenverbrauch = PV-Erzeugung − Einspeisung. Ohne Daten im Zeitraum zeigt eine Kachel „–“.
           ---MESHBOARD_VARIABLES---
           {"timeFilter": {"enabled": true, "selection": {"type": "relative", "relativeValue": 24, "relativeUnit": "hours"}}, "autoRefreshSeconds": 300, "entitySelectors": [{"id": "standort", "label": "Standort", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [{"attributePath": "name", "variableName": "standortName"}], "showInToolbar": true, "defaultRtId": "6789a00000000000006000d3", "filters": [{"attributePath": "systemType", "operator": "EQUALS", "comparisonValue": "ELECTRICAL"}]}, {"id": "netz", "label": "Netzanschluss", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"targetCkTypeId": "EnergyIQ/GridConnection", "roleId": "EnergyIQ/SystemMembers", "direction": "out"}}, {"id": "pv", "label": "PV-Anlage", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"targetCkTypeId": "EnergyIQ/PhotovoltaicSystem", "roleId": "EnergyIQ/SystemMembers", "direction": "out"}}, {"id": "batterie", "label": "Batterie", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"path": [{"roleId": "EnergyIQ/SystemMembers", "direction": "out", "targetCkTypeId": "EnergyIQ/PhotovoltaicSystem"}, {"roleId": "EnergyIQ/SystemMembers", "direction": "out", "targetCkTypeId": "EnergyIQ/BatteryStorage"}]}}]}
       - id: System.UI/Dashboard.Columns
@@ -1216,7 +1224,7 @@ entities:
         targetCkTypeId: System.UI/Dashboard
     attributes:
       - id: System/Name
-        value: PV-Produktion
+        value: PV-Erzeugung
       - id: System.UI/DashboardWidget.Type
         value: kpi
       - id: System.UI/DashboardWidget.Col
@@ -1235,7 +1243,7 @@ entities:
         value: 6a4aaddc22664f2b26c67ec4
       - id: System.UI/DashboardWidget.Config
         value: |-
-          {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "totalcurrentpower_sum", "valueMultiplier": 0.002777777777777778, "suffix": " kWh", "queryName": "PV-Produktion kumuliert", "queryRtId": "6a4aaddc22664f2b26c67ec4", "queryFamily": "streamData", "entitySelectorId": "pv"}
+          {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "totalcurrentpower_integral", "valueMultiplier": 1, "suffix": " kWh", "decimalPlaces": 1, "outputVariableName": "pvEnergyKwh", "queryName": "PV-Erzeugung Energie", "queryRtId": "6a4aaddc22664f2b26c67ec4", "queryFamily": "streamData", "entitySelectorId": "pv"}
 
   - rtId: 6a4aaf1922664f2b26c67ece
     ckTypeId: System.UI/DashboardWidget
@@ -1245,7 +1253,7 @@ entities:
         targetCkTypeId: System.UI/Dashboard
     attributes:
       - id: System/Name
-        value: Eigenverbrauch (PV)
+        value: Eigenverbrauch
       - id: System.UI/DashboardWidget.Type
         value: kpi
       - id: System.UI/DashboardWidget.Col
@@ -1257,14 +1265,14 @@ entities:
       - id: System.UI/DashboardWidget.RowSpan
         value: 3
       - id: System.UI/DashboardWidget.DataSourceType
-        value: systemQuery
+        value: static
       - id: System.UI/DashboardWidget.DataSourceCkTypeId
         value: ''
       - id: System.UI/DashboardWidget.DataSourceRtId
-        value: 6a4aaddc22664f2b26c67ec5
+        value: ''
       - id: System.UI/DashboardWidget.Config
         value: |-
-          {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "selfconsumption_sum", "valueMultiplier": 0.002777777777777778, "suffix": " kWh", "queryName": "Eigenverbrauch kumuliert", "queryRtId": "6a4aaddc22664f2b26c67ec5", "queryFamily": "streamData", "entitySelectorId": "pv"}
+          {"valueAttribute": "", "valueMode": "formula", "formula": "max(0, ${pvEnergyKwh} - ${gridExportKwh})", "suffix": " kWh", "decimalPlaces": 1, "comparisonText": "PV-Erzeugung − Einspeisung"}
 
   - rtId: 6a4aaf1922664f2b26c67ecf
     ckTypeId: System.UI/DashboardWidget
@@ -1274,7 +1282,7 @@ entities:
         targetCkTypeId: System.UI/Dashboard
     attributes:
       - id: System/Name
-        value: Netzeinspeisung
+        value: Einspeisung
       - id: System.UI/DashboardWidget.Type
         value: kpi
       - id: System.UI/DashboardWidget.Col
@@ -1293,7 +1301,7 @@ entities:
         value: 6a4aaddc22664f2b26c67ec6
       - id: System.UI/DashboardWidget.Config
         value: |-
-          {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "gridfeedin_sum", "valueMultiplier": 0.002777777777777778, "suffix": " kWh", "queryName": "Netzeinspeisung kumuliert", "queryRtId": "6a4aaddc22664f2b26c67ec6", "queryFamily": "streamData", "entitySelectorId": "pv"}
+          {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "exportpower_integral", "valueMultiplier": 1, "suffix": " kWh", "decimalPlaces": 1, "outputVariableName": "gridExportKwh", "queryName": "Einspeisung Energie", "queryRtId": "6a4aaddc22664f2b26c67ec6", "queryFamily": "streamData", "entitySelectorId": "netz"}
 
   - rtId: 6a4aaf1922664f2b26c67ed0
     ckTypeId: System.UI/DashboardWidget
@@ -1322,7 +1330,7 @@ entities:
         value: 6a4aaddc22664f2b26c67ec7
       - id: System.UI/DashboardWidget.Config
         value: |-
-          {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "activepower_sum", "valueMultiplier": 0.002777777777777778, "suffix": " kWh", "queryName": "Netzbezug kumuliert", "queryRtId": "6a4aaddc22664f2b26c67ec7", "queryFamily": "streamData", "entitySelectorId": "netz"}
+          {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "importpower_integral", "valueMultiplier": 1, "suffix": " kWh", "decimalPlaces": 1, "outputVariableName": "gridImportKwh", "queryName": "Netzbezug Energie", "queryRtId": "6a4aaddc22664f2b26c67ec7", "queryFamily": "streamData", "entitySelectorId": "netz"}
 
   - rtId: 6a4aaf1922664f2b26c67ed1
     ckTypeId: System.UI/DashboardWidget
@@ -1351,7 +1359,7 @@ entities:
         value: 6a4aaddc22664f2b26c67ec8
       - id: System.UI/DashboardWidget.Config
         value: |-
-          {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "chargingpower_sum", "valueMultiplier": 0.002777777777777778, "suffix": " kWh", "queryName": "Batterie geladen kumuliert", "queryRtId": "6a4aaddc22664f2b26c67ec8", "queryFamily": "streamData", "entitySelectorId": "batterie"}
+          {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "chargepower_integral", "valueMultiplier": 1, "suffix": " kWh", "decimalPlaces": 1, "outputVariableName": "batteryChargeKwh", "queryName": "Batterie geladen Energie", "queryRtId": "6a4aaddc22664f2b26c67ec8", "queryFamily": "streamData", "entitySelectorId": "batterie"}
 
   - rtId: 6a4aaf1922664f2b26c67ed2
     ckTypeId: System.UI/DashboardWidget
@@ -1380,18 +1388,17 @@ entities:
         value: 6a4aaddc22664f2b26c67ec9
       - id: System.UI/DashboardWidget.Config
         value: |-
-          {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "chargingpower_sum", "valueMultiplier": -0.002777777777777778, "suffix": " kWh", "queryName": "Batterie entladen kumuliert", "queryRtId": "6a4aaddc22664f2b26c67ec9", "queryFamily": "streamData", "entitySelectorId": "batterie"}
+          {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "dischargepower_integral", "valueMultiplier": 1, "suffix": " kWh", "decimalPlaces": 1, "outputVariableName": "batteryDischargeKwh", "queryName": "Batterie entladen Energie", "queryRtId": "6a4aaddc22664f2b26c67ec9", "queryFamily": "streamData", "entitySelectorId": "batterie"}
 
-  # SUM of the TotalCurrentPower kW samples — × 10/3600 = kWh (operator 2=LessThan, 4=GreaterThan).
+  # Integral (AggregationType 7) of the PV power: kW x h = kWh.
   - rtId: 6a4aaddc22664f2b26c67ec4
     ckTypeId: System/AggregationSdQuery
     attributes:
       - id: System/Name
-        value: PV-Produktion kumuliert
+        value: PV-Erzeugung Energie
       - id: System/Description
         value: >-
-          SUM of the uniformly sampled (10 s) TotalCurrentPower kW values over the query window —
-          multiply by 10/3600 for kWh. Used by the Energiebilanz MeshBoard KPI.
+          Integral of TotalCurrentPower (kW) over the query window = PV energy in kWh (result totalcurrentpower_integral). Window and entity come from the board (time filter, standort follower). Used by the Energiebilanz MeshBoard KPI.
       - id: System/Query.CkTypeId
         value: EnergyIQ/PhotovoltaicSystem
       - id: System/Query.NavigationFilterMode
@@ -1405,68 +1412,17 @@ entities:
               - id: System/AttributePath
                 value: TotalCurrentPower
               - id: System/AggregationType
-                value: 4
+                value: 7
 
-  # SUM of the SelfConsumption kW samples — × 10/3600 = kWh (operator 2=LessThan, 4=GreaterThan).
-  - rtId: 6a4aaddc22664f2b26c67ec5
-    ckTypeId: System/AggregationSdQuery
-    attributes:
-      - id: System/Name
-        value: Eigenverbrauch kumuliert
-      - id: System/Description
-        value: >-
-          SUM of the uniformly sampled (10 s) SelfConsumption kW values over the query window —
-          multiply by 10/3600 for kWh. Used by the Energiebilanz MeshBoard KPI.
-      - id: System/Query.CkTypeId
-        value: EnergyIQ/PhotovoltaicSystem
-      - id: System/Query.NavigationFilterMode
-        value: 0
-      - id: System/StreamDataQuery.ArchiveRtId
-        value: '6a0e000000000000000a000c'
-      - id: System/AggregationQueryColumns
-        value:
-          - ckRecordId: System/AggregationQueryColumn
-            attributes:
-              - id: System/AttributePath
-                value: SelfConsumption
-              - id: System/AggregationType
-                value: 4
-
-  # SUM of the GridFeedIn kW samples — × 10/3600 = kWh (operator 2=LessThan, 4=GreaterThan).
+  # Integral of the computed grid column ExportPower = feed-in kWh.
   - rtId: 6a4aaddc22664f2b26c67ec6
     ckTypeId: System/AggregationSdQuery
     attributes:
       - id: System/Name
-        value: Netzeinspeisung kumuliert
+        value: Einspeisung Energie
       - id: System/Description
         value: >-
-          SUM of the uniformly sampled (10 s) GridFeedIn kW values over the query window —
-          multiply by 10/3600 for kWh. Used by the Energiebilanz MeshBoard KPI.
-      - id: System/Query.CkTypeId
-        value: EnergyIQ/PhotovoltaicSystem
-      - id: System/Query.NavigationFilterMode
-        value: 0
-      - id: System/StreamDataQuery.ArchiveRtId
-        value: '6a0e000000000000000a000c'
-      - id: System/AggregationQueryColumns
-        value:
-          - ckRecordId: System/AggregationQueryColumn
-            attributes:
-              - id: System/AttributePath
-                value: GridFeedIn
-              - id: System/AggregationType
-                value: 4
-
-  # SUM of the positive ActivePower kW samples — × 10/3600 = kWh (operator 2=LessThan, 4=GreaterThan).
-  - rtId: 6a4aaddc22664f2b26c67ec7
-    ckTypeId: System/AggregationSdQuery
-    attributes:
-      - id: System/Name
-        value: Netzbezug kumuliert
-      - id: System/Description
-        value: >-
-          SUM of the uniformly sampled (10 s) ActivePower kW values over the query window —
-          multiply by 10/3600 for kWh. Used by the Energiebilanz MeshBoard KPI.
+          Integral of the computed column ExportPower (kW, the negative part of ActivePower) = grid feed-in in kWh (result exportpower_integral). Window and entity come from the board (time filter, standort follower). Used by the Energiebilanz MeshBoard KPI.
       - id: System/Query.CkTypeId
         value: EnergyIQ/GridConnection
       - id: System/Query.NavigationFilterMode
@@ -1478,30 +1434,47 @@ entities:
           - ckRecordId: System/AggregationQueryColumn
             attributes:
               - id: System/AttributePath
-                value: ActivePower
+                value: ExportPower
               - id: System/AggregationType
-                value: 4
-      - id: System/Query.FieldFilter
+                value: 7
+
+  # Integral of the computed grid column ImportPower = import kWh.
+  # No field filter (the SUM version filtered on the sign). ImportRt -r keeps an omitted (or empty)
+  # FieldFilter, so a tenant that had the SUM version needs one GraphQL update (fieldFilter: []).
+  - rtId: 6a4aaddc22664f2b26c67ec7
+    ckTypeId: System/AggregationSdQuery
+    attributes:
+      - id: System/Name
+        value: Netzbezug Energie
+      - id: System/Description
+        value: >-
+          Integral of the computed column ImportPower (kW, the positive part of ActivePower) = grid import in kWh (result importpower_integral). Window and entity come from the board (time filter, standort follower). Used by the Energiebilanz MeshBoard KPI.
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/GridConnection
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/StreamDataQuery.ArchiveRtId
+        value: '6a0e000000000000000a0007'
+      - id: System/AggregationQueryColumns
         value:
-          - ckRecordId: System/FieldFilter
+          - ckRecordId: System/AggregationQueryColumn
             attributes:
               - id: System/AttributePath
-                value: ActivePower
-              - id: System/FieldFilter.Operator
-                value: 4
-              - id: System/ComparisonValue
-                value: '0' 
+                value: ImportPower
+              - id: System/AggregationType
+                value: 7
 
-  # SUM of the positive ChargingPower kW samples — × 10/3600 = kWh (operator 2=LessThan, 4=GreaterThan).
+  # Integral of the computed battery column ChargePower = charged kWh.
+  # No field filter (the SUM version filtered on the sign). ImportRt -r keeps an omitted (or empty)
+  # FieldFilter, so a tenant that had the SUM version needs one GraphQL update (fieldFilter: []).
   - rtId: 6a4aaddc22664f2b26c67ec8
     ckTypeId: System/AggregationSdQuery
     attributes:
       - id: System/Name
-        value: Batterie geladen kumuliert
+        value: Batterie geladen Energie
       - id: System/Description
         value: >-
-          SUM of the uniformly sampled (10 s) ChargingPower kW values over the query window —
-          multiply by 10/3600 for kWh. Used by the Energiebilanz MeshBoard KPI.
+          Integral of the computed column ChargePower (kW, >= 0) = energy charged in kWh (result chargepower_integral). Window and entity come from the board (time filter, standort follower). Used by the Energiebilanz MeshBoard KPI.
       - id: System/Query.CkTypeId
         value: EnergyIQ/BatteryStorage
       - id: System/Query.NavigationFilterMode
@@ -1513,30 +1486,21 @@ entities:
           - ckRecordId: System/AggregationQueryColumn
             attributes:
               - id: System/AttributePath
-                value: ChargingPower
+                value: ChargePower
               - id: System/AggregationType
-                value: 4
-      - id: System/Query.FieldFilter
-        value:
-          - ckRecordId: System/FieldFilter
-            attributes:
-              - id: System/AttributePath
-                value: ChargingPower
-              - id: System/FieldFilter.Operator
-                value: 4
-              - id: System/ComparisonValue
-                value: '0' 
+                value: 7
 
-  # SUM of the negative ChargingPower kW samples — × 10/3600 = kWh (operator 2=LessThan, 4=GreaterThan).
+  # Integral of the computed battery column DischargePower = discharged kWh (positive).
+  # No field filter (the SUM version filtered on the sign). ImportRt -r keeps an omitted (or empty)
+  # FieldFilter, so a tenant that had the SUM version needs one GraphQL update (fieldFilter: []).
   - rtId: 6a4aaddc22664f2b26c67ec9
     ckTypeId: System/AggregationSdQuery
     attributes:
       - id: System/Name
-        value: Batterie entladen kumuliert
+        value: Batterie entladen Energie
       - id: System/Description
         value: >-
-          SUM of the uniformly sampled (10 s) ChargingPower kW values over the query window —
-          multiply by 10/3600 for kWh. Used by the Energiebilanz MeshBoard KPI.
+          Integral of the computed column DischargePower (kW, >= 0) = energy discharged in kWh, shown positive (result dischargepower_integral). Window and entity come from the board (time filter, standort follower). Used by the Energiebilanz MeshBoard KPI.
       - id: System/Query.CkTypeId
         value: EnergyIQ/BatteryStorage
       - id: System/Query.NavigationFilterMode
@@ -1548,19 +1512,9 @@ entities:
           - ckRecordId: System/AggregationQueryColumn
             attributes:
               - id: System/AttributePath
-                value: ChargingPower
+                value: DischargePower
               - id: System/AggregationType
-                value: 4
-      - id: System/Query.FieldFilter
-        value:
-          - ckRecordId: System/FieldFilter
-            attributes:
-              - id: System/AttributePath
-                value: ChargingPower
-              - id: System/FieldFilter.Operator
-                value: 2
-              - id: System/ComparisonValue
-                value: '0' 
+                value: 7
 
 
   # --- Rollups for the Heizung & Kühlung board (resolution-aware charts) ---
