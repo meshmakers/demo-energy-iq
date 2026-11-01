@@ -34,6 +34,7 @@ selector drive it with data configuration only.
 | Geräte | SimpleSdQuery, ApplianceArchive (stream) | Appliance rtIds | no: F1/F2 |
 | Batteriespeicher | SimpleSdQuery, BatteryStorageArchive (stream) | BatteryStorage rtIds | no: two hops DS -> PV -> Battery (F6) |
 | Aktuelle Leistungen | SimpleRtQuery EnergyIQ/Meter (runtime) | Meters of the site | no: runtime query (F3) |
+| Tagesprofil (AB#7944) | 5 SimpleSdQuery series (PV, grid, battery archives) + 3 formula series | PV, GridConnection, BatteryStorage rtIds | yes since AB#7951: each query series follows its own selector (`pv`, `netz`, `batterie`); see Part 5 |
 
 A polymorphic scope (`childScope` target `EnergyIQ/Meter`, base of GridConnection, ChargingStation,
 Appliance) would fan out rtIds that have no rows in the queried per-type archive and produce ghost
@@ -511,3 +512,67 @@ New entities in `rt-meshboards-energyiq.yaml`: rollup `…67e6b` (`GridConnectio
 `…67e83`; the Energie board description mentions the heatmap. After the import: `ActivateArchive -id
 6a4aa4cc22664f2b26c67e6b` (also in `scripts/om_importrt.ps1`) and `BackfillRollup -id 6a4aa4cc22664f2b26c67e6b` for
 the existing history (otherwise the heatmap fills up hour by hour from the activation on).
+
+## Part 5: Tagesprofil – womit wird der Verbrauch gedeckt? (AB#7944, 2026-11-01)
+
+Stacked area chart on the Energie board (widget `…e001`, full width at row 19, above the 30-day heatmap, which moved
+to row 28): for the board window (pick one day in the time filter) it splits the site's consumption
+per time bucket into **direkt aus PV**, **aus Batterie** and **aus Netz**, with **PV-Erzeugung** as a line over the
+stack. Wireframe: artboard "Energie – Übersicht", section "Tagesprofil".
+
+### Series and formulas (average kW per bucket)
+
+The line chart computes formula series per time bucket from its other series (octo-meshboard AB#7951 multi-query,
+AB#7952 formula series). Formula series cannot use the primary query's series as operands, so every operand is its
+own query series; the primary query (PV) is hidden (`primarySeries.visible: false`).
+
+| Key | Legend | Kind | Source (selector) | Shown |
+|-----|--------|------|-------------------|-------|
+| `PV` | PV-Erzeugung | query, `TotalCurrentPower` | PV-Produktion (Archiv) `…67e60`, PhotovoltaicSystemArchive `…000c` (`pv`) | line over the stack (`stacked: false`) |
+| `Import` | Netzbezug | query, `ImportPower` | Netzbezug Leistung (Archiv) `…e002`, GridConnectionArchive `…0007` (`netz`) | hidden operand |
+| `Export` | Einspeisung | query, `ExportPower` | Einspeisung Leistung (Archiv) `…e003`, GridConnectionArchive `…0007` (`netz`) | hidden operand |
+| `Charge` | Batterie Laden | query, `ChargePower` | Batterie Ladeleistung (Archiv) `…e004`, BatteryStorageArchive `…000d` (`batterie`) | hidden operand |
+| `Discharge` | Batterie Entladen | query, `DischargePower` | Batterie Entladeleistung (Archiv) `…e005`, BatteryStorageArchive `…000d` (`batterie`) | hidden operand |
+| `PvDirect` | direkt aus PV | formula `max(0, $PV - $Export - $Charge)` | — | stacked (1st) |
+| `Battery` | aus Batterie | formula `$Discharge` | — | stacked (2nd) |
+| `Grid` | aus Netz | formula `$Import` | — | stacked (3rd) |
+
+Consumption = Grid + Battery + PV direct = Import − Export + PV + Discharge − Charge (energy balance at the site's
+grid connection; decided by Frigg on AB#7944, not `min(consumption, PV)`: with that the grid share would no longer be
+the grid import when the battery charges from the grid). The four power columns are the computed archive columns of
+AB#7925 (table in "Energiebilanz kWh via Integral" above); no second set of kWh queries.
+
+**Clamp rule.** Grid and battery are non-negative by construction (computed columns). PV direct is clamped at 0:
+in a bucket where Export + Charge exceed PV (the battery charges from the grid, or PV and grid meter are not in sync)
+PV direct is 0 instead of negative, and the stacks then add up to `Import + Discharge`, which is more than the balance
+by the clamped amount. The 1 % check counts such buckets separately.
+
+**Gaps, not zeros.** A bucket in which an operand has no value, and a non-finite result, is a gap ("–" in the
+tooltip); it never pulls the stack to 0. A query series whose selector scope is empty (no battery at the site) has
+no values at all, so every formula that uses it is a gap and its legend entry reads "(no data)".
+
+### Waits for AB#8046 (Studio, predecessor)
+
+The merged line chart (octo-frontend-libraries `f94079d3`) does not yet offer three things the story and the
+wireframe need. No workaround in this repo (Frigg, 2026-11-01):
+
+1. **Fusch (no battery):** `Charge`/`Discharge` have an empty scope, so *aus Batterie* and *direkt aus PV* are gaps
+   at Fusch instead of 0 and PV direct. Needs a per-series "missing source = 0" option (`missingAsZero`); then
+   `Charge`/`Discharge` get it and the AC "battery 0, PV direct + grid add up" holds.
+2. **Fixed 15-minute buckets:** the bucket count follows the widget width (about one bucket per 2 px, at least 50),
+   so the buckets of one day are narrower than 15 min. 96 (92/100 on DST days) buckets need a fixed, DST-correct
+   bucket size.
+3. **Colours and the dashed PV line:** colours come from the chart palette and the PV line is solid; the wireframe
+   colours (PV #F2C46D, battery #0F766E, grid #2563EB, PV line #8A5300 dashed) need per-series colour and line style.
+
+### Prerequisites and checks
+
+- The grid and battery shares need the computed columns `ImportPower`/`ExportPower` and `ChargePower`/`DischargePower`
+  on the active archives of the tenant (AB#8002, AB#7997). Until a column exists its query series fails and every
+  formula that uses it is a gap.
+- *aus Batterie* for a live Loxone battery (Firmianstraße) needs `DischargePower` with the `DischargingPower` branch
+  (AB#7997). With the simulator-only fallback formula `if(chargingpower < 0, -chargingpower, 0)` (see "Two battery
+  conventions" above) the battery share shows 0 for Firmianstraße and its discharge lands in no stack.
+- Checks per change: `scripts/check_energyiq_blueprint_seed.py`, `octo-bpm -c validate` and `-c validateVersion`.
+  The per-bucket 1 % check (stacks vs Import − Export + PV + Discharge − Charge, two sample days) and the test-2
+  evidence are attached to the pull request of AB#7944.
