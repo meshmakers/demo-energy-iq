@@ -206,6 +206,10 @@ entities:
           # Computed (AB#4189/AB#7925): grid import in kW, >= 0. Integral(ImportPower) = Netzbezug kWh.
           - ckRecordId: System.StreamData/CkArchiveColumn
             attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: ''
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
               - id: System.StreamData/CkArchiveColumn.Name
                 value: ImportPower
               - id: System.StreamData/CkArchiveColumn.Formula
@@ -217,6 +221,10 @@ entities:
           # Computed (AB#4189/AB#7925): grid feed-in in kW, >= 0. Integral(ExportPower) = Netzeinspeisung kWh.
           - ckRecordId: System.StreamData/CkArchiveColumn
             attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: ''
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
               - id: System.StreamData/CkArchiveColumn.Name
                 value: ExportPower
               - id: System.StreamData/CkArchiveColumn.Formula
@@ -383,6 +391,10 @@ entities:
           # Computed (AB#4189/AB#7925): charging power in kW, >= 0. Integral(ChargePower) = Batterie geladen kWh.
           - ckRecordId: System.StreamData/CkArchiveColumn
             attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: ''
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
               - id: System.StreamData/CkArchiveColumn.Name
                 value: ChargePower
               - id: System.StreamData/CkArchiveColumn.Formula
@@ -410,6 +422,10 @@ entities:
           # with the simulator-only formula 'if(chargingpower < 0, -chargingpower, 0)'.
           - ckRecordId: System.StreamData/CkArchiveColumn
             attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: ''
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
               - id: System.StreamData/CkArchiveColumn.Name
                 value: DischargePower
               - id: System.StreamData/CkArchiveColumn.Formula

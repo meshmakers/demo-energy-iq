@@ -7,6 +7,11 @@
   unknown blueprint variables (2 warnings on 1.0.1, value unchanged). MeshBoard evaluates both forms identically
   (`rewriteFormula`, octo-meshboard spec "rewrites ${x} and $x to safe identifiers"). The seed check now rejects
   `${name}` except blueprint variables (`${octo.*}`); README/CLAUDE.md state the rule.
+  1.0.2 also completes the four computed archive columns (ImportPower/ExportPower on GridConnectionArchive,
+  ChargePower/DischargePower on BatteryStorageArchive) with `Path: ''` and `Required: false`, as `AddComputedColumn`
+  writes them: without them a fresh tenant could not activate those two archives (500, "Attribute value cannot be
+  null ... 'Path'") and the tenant's recompute tick failed every minute. This also affected `om_importrt.ps1` on any
+  fresh tenant since AB#7925. Platform part: AB#8034. The seed check now requires Path and Required on every column.
 
 - AB#7996: **EnergyIQ.Base 1.0.1** fixes the install of 1.0.0, which failed with "RtCkTypeId 'System/Query' not found"
   on a fresh test-2 tenant: the `_trees` query used the former abstract `System/Query` type, which no longer exists in

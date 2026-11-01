@@ -261,6 +261,8 @@ navigation from the blueprint `src/blueprints/EnergyIQ.Base/`, not from `ImportR
 - **`$name`, not `${name}`, in board formulas/variables.** The install claims `${...}` for blueprint
   variables (warning "Unknown blueprint variable"); MeshBoard evaluates `$name` identically. Only
   `${octo.*}` may use braces; the seed check fails otherwise.
+- **Computed archive columns:** `Path: ''` + `Required: false` + Name/Formula/ResultType; otherwise
+  activation fails (AB#8034). Enforced by the seed check.
 - **Tenant data stays out:** `data/bim/*` (sites, rooms, devices, site price/CO2), adapters, deployment sites,
   Loxone/MQTT/AI configurations, secrets, pipelines (no pipeline in 1.0.0).
 - **Archives:** activation is a manual post-install step until AB#7991 (`ActivateArchive`, RawArchives

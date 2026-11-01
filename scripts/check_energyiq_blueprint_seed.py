@@ -11,6 +11,7 @@ Checks:
    fails, because its keys would escape the line checks.
 2b. No ${name} reference except blueprint variables (${octo.*}): the install interpolates ${...} in
    every string value, so MeshBoard formulas/variables must use $name.
+2c. Every System.StreamData/CkArchiveColumn record declares Path and Required (computed: Path '').
 3. No secret attribute values (Password, ClientSecret, ApiKey, Token, Secret).
 4. No rtId appears twice across the seed files.
 5. scripts/om_importrt.ps1 imports exactly the seed files from the blueprint folder
@@ -131,6 +132,27 @@ def main() -> int:
                 if rt_id in seen_rt_ids:
                     errors.append(f"{f}:{no}: rtId {rt_id} already used in {seen_rt_ids[rt_id]}")
                 seen_rt_ids[rt_id] = f"{f}:{no}"
+
+    # Every archive column record must carry Path and Required, computed columns included
+    # (Path '' like AddComputedColumn writes it). Without them the import only warns, and
+    # ActivateArchive plus the tenant's recompute tick fail with "Attribute value cannot be null
+    # ... 'Path'" (AB#7996, platform Bug AB#8034).
+    column_marker = re.compile(r"^\s*-\s*ckRecordId:\s*System\.StreamData/CkArchiveColumn\s*$")
+    block_end = re.compile(r"^\s*-\s*(ckRecordId|rtId):")
+    for f in to_scan:
+        lines = (BP_DIR / f).read_text(encoding="utf-8").splitlines()
+        for start, line in enumerate(lines):
+            if not column_marker.match(line):
+                continue
+            block = []
+            for nxt in lines[start + 1:]:
+                if block_end.match(nxt):
+                    break
+                block.append(nxt)
+            text = "\n".join(l for l in block if not l.lstrip().startswith("#"))
+            for attr in ("CkArchiveColumn.Path", "CkArchiveColumn.Required"):
+                if attr not in text:
+                    errors.append(f"{f}:{start + 1}: archive column record without {attr} (computed columns: Path '')")
 
     script = IMPORT_SCRIPT.read_text(encoding="utf-8")
     imported = set(re.findall(r'Join-Path \$seedPath "([^"]+)"', script))

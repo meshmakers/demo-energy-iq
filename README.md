@@ -304,6 +304,11 @@ know (it leaves the text unchanged, but the install is no longer clean). The Mes
 syntax accepts both forms and evaluates them identically (octo-meshboard `rewriteFormula`), so the seed uses
 `$name`; only real blueprint variables (`${octo.*}`) keep the braces. The seed check enforces it.
 
+**Computed archive columns declare `Path: ''` and `Required: false`** next to Name/Formula/ResultType,
+exactly what `AddComputedColumn` writes. Without them the seed import only warns, and `ActivateArchive`
+(and the tenant's recompute tick) fail with `Attribute value cannot be null … 'Path'` (platform Bug AB#8034).
+The seed check enforces it.
+
 **What stays tenant data** (in `data/`, imported per tenant, never in the blueprint): sites and their
 digital twin (`data/bim/*`, including the site price and CO2 values), adapters and deployment sites,
 Loxone/MQTT/AI configurations, anything with a secret, and pipelines (every current pipeline is bound to
