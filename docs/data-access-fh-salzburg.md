@@ -55,7 +55,7 @@ Erfassungsbeginn auf prod-1: **Juli 2026**.
 | `EnergyIQ/ShadingDevice` | 8 (Raffstores) | `Position` (%), `SlatAngle` |
 | `EnergyIQ/Meter` | Etagen- + Geräte-Unterzähler (EG/OG/DG, IT-Schrank, Technikraum, Wärmepumpe) | `ActivePower` (kW), `ImportedEnergy` (kWh) |
 | `EnergyIQ/GridConnection` | Hausanschluss | `ActivePower` (kW, signiert: <0 = Einspeisung) |
-| `EnergyIQ/PhotovoltaicSystem` | 1 (18,4 kWp) | `TotalCurrentPower`, `GridFeedIn`, `SelfConsumption` |
+| `EnergyIQ/PhotovoltaicSystem` | 1 (18,4 kWp) | `TotalCurrentPower`, `GridFeedIn`, `SelfConsumption` (die letzten beiden nur Simulator, siehe unten) |
 | `EnergyIQ/BatteryStorage` | 1 (15 kWh) | `StateOfCharge` (%), `ChargingPower`, `IsCharging`/`IsDischarging` |
 | `EnergyIQ/ChargingStation` | 2 Wallboxen | `ActivePower`, `ImportedEnergy` |
 | `EnergyIQ/HeatPump` | 1 (reversibel) | `SupplyTemp`, `ReturnTemp`, `SourceInlet/OutletTemp` (Sole), `HotGasTemp`, `PowerConsumption`, … |
@@ -87,7 +87,7 @@ passende Auflösung liefert.
 | `6a0e000000000000000a0009` ApplianceArchive | Appliance | ActivePower |
 | `6a0e000000000000000a000a` PVStringArchive | PVString | CurrentPower |
 | `6a0e000000000000000a000b` InverterArchive | Inverter | DcPower, AcPower |
-| `6a0e000000000000000a000c` PhotovoltaicSystemArchive | PhotovoltaicSystem | TotalCurrentPower, GridFeedIn, SelfConsumption |
+| `6a0e000000000000000a000c` PhotovoltaicSystemArchive | PhotovoltaicSystem | TotalCurrentPower, GridFeedIn, SelfConsumption (die letzten beiden nur Simulator) |
 | `6a0e000000000000000a000d` BatteryStorageArchive | BatteryStorage | StateOfCharge, ChargingPower |
 | `6a0e000000000000000a000e` HeatPumpArchive | HeatPump | SupplyTemp, ReturnTemp, CoolingSupplyTemp, SourceInletTemp, SourceOutletTemp, HotGasTemp, PowerConsumption |
 | `6a0e000000000000000a000f` ThermalEnergyStorageArchive | ThermalEnergyStorage | StorageTempTop |
@@ -209,6 +209,11 @@ Query-Objekt nötig. Für Chart-artige Abfragen über lange Zeiträume wählt
 - **Vorzeichen-Konventionen:** `GridConnection.ActivePower` < 0 = Einspeisung;
   Batterie: `ChargingPower`/`DischargingPower` getrennt ausgewiesen, dazu die
   Flags `IsCharging`/`IsDischarging`.
+- **`GridFeedIn` / `SelfConsumption` (PhotovoltaicSystem) nur Simulator:** Die beiden Spalten schreibt nur der
+  Demo-Simulator, als voneinander unabhängige Skalierungen eines Zufallswerts – sie sind **keine Energiebilanz**.
+  Die Live-Standorte schreiben sie nicht (Spalten leer), und kein Board liest sie. Einspeisung und Eigenverbrauch
+  ergeben sich aus dem Netzzähler: Einspeisung = negativer Anteil von `GridConnection.ActivePower` über die Zeit
+  integriert, Eigenverbrauch = PV-Energie − Einspeisung (so rechnet das Energiebilanz-Board, AB#7925).
 - **Historie** beginnt mit der prod-1-Inbetriebnahme im Juli 2026 und wächst seither
   kontinuierlich.
 - Einige Sensoren sind bewusst ohne Datenquelle (Technikraum/Werkstatt/Waschküche

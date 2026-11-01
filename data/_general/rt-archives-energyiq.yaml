@@ -180,7 +180,11 @@ entities:
               - id: System.StreamData/CkArchiveColumn.Indexed
                 value: true
 
-  # Grid coupling point, signed ActivePower (+ import / − export)
+  # Grid coupling point, signed ActivePower (+ import / − export).
+  # ImportPower / ExportPower split the sign into two non-negative computed columns so the
+  # Energiebilanz board integrates them (AggregationType Integral). Never split the sign with a
+  # field filter: a filter drops rows and the step integral then carries the last positive value
+  # across an export period (AB#7919). Formulas use the physical (lower-case) column names.
   - rtId: 6a0e000000000000000a0007
     ckTypeId: System.StreamData/RawArchive
     rtWellKnownName: GridConnectionArchive
@@ -199,6 +203,28 @@ entities:
                 value: false
               - id: System.StreamData/CkArchiveColumn.Indexed
                 value: true
+          # Computed (AB#4189/AB#7925): grid import in kW, >= 0. Integral(ImportPower) = Netzbezug kWh.
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Name
+                value: ImportPower
+              - id: System.StreamData/CkArchiveColumn.Formula
+                value: 'if(activepower > 0, activepower, 0)'
+              - id: System.StreamData/CkArchiveColumn.ResultType
+                value: 3
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: false
+          # Computed (AB#4189/AB#7925): grid feed-in in kW, >= 0. Integral(ExportPower) = Netzeinspeisung kWh.
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Name
+                value: ExportPower
+              - id: System.StreamData/CkArchiveColumn.Formula
+                value: 'if(activepower < 0, -activepower, 0)'
+              - id: System.StreamData/CkArchiveColumn.ResultType
+                value: 3
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: false
 
   # Wallbox charging power (one row per ChargingStation update)
   - rtId: 6a0e000000000000000a0008
@@ -327,7 +353,7 @@ entities:
               - id: System.StreamData/CkArchiveColumn.Indexed
                 value: false
 
-  # Battery state of charge + charging power (one row per BatteryStorage update)
+  # Battery state of charge + charging/discharging power (one row per BatteryStorage update)
   - rtId: 6a0e000000000000000a000d
     ckTypeId: System.StreamData/RawArchive
     rtWellKnownName: BatteryStorageArchive
@@ -352,6 +378,44 @@ entities:
                 value: ChargingPower
               - id: System.StreamData/CkArchiveColumn.Required
                 value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: false
+          # Computed (AB#4189/AB#7925): charging power in kW, >= 0. Integral(ChargePower) = Batterie geladen kWh.
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Name
+                value: ChargePower
+              - id: System.StreamData/CkArchiveColumn.Formula
+                value: 'if(chargingpower > 0, chargingpower, 0)'
+              - id: System.StreamData/CkArchiveColumn.ResultType
+                value: 3
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: false
+          # Ingested (AB#7925): positive discharging power in kW. Live Loxone sites write
+          # ChargingPower >= 0 and DischargingPower >= 0 as two attributes (rt-pipelines-loxone.yaml,
+          # em-battery / em-battery-discharge); the simulator writes a signed ChargingPower instead.
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Path
+                value: DischargingPower
+              - id: System.StreamData/CkArchiveColumn.Required
+                value: false
+              - id: System.StreamData/CkArchiveColumn.Indexed
+                value: false
+          # Computed (AB#4189/AB#7925): discharging power in kW, >= 0, for both conventions — the
+          # negative part of a signed ChargingPower (simulator) or the positive DischargingPower
+          # (live Loxone). Integral(DischargePower) = Batterie entladen kWh.
+          # An archive that was activated before DischargingPower was added has no such column
+          # (no ingested-column add on an active archive yet, AB#7997); there the column is added
+          # with the simulator-only formula 'if(chargingpower < 0, -chargingpower, 0)'.
+          - ckRecordId: System.StreamData/CkArchiveColumn
+            attributes:
+              - id: System.StreamData/CkArchiveColumn.Name
+                value: DischargePower
+              - id: System.StreamData/CkArchiveColumn.Formula
+                value: 'if(chargingpower < 0, -chargingpower, if(dischargingpower > 0, dischargingpower, 0))'
+              - id: System.StreamData/CkArchiveColumn.ResultType
+                value: 3
               - id: System.StreamData/CkArchiveColumn.Indexed
                 value: false
 

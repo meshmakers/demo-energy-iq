@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- AB#7925: **Energiebilanz kWh tiles show the real energy for every site.** The six tiles are stream-data **Integral**
+  queries (AggregationType 7, kW × h = kWh, `valueMultiplier: 1`) instead of SUM × 10/3600, which was right only for
+  10-s simulator rows (live: grid about 2x, PV up to 3.7x, battery 7x too high). New computed archive columns (AB#4189):
+  `ImportPower`/`ExportPower` on GridConnectionArchive, `ChargePower`/`DischargePower` on BatteryStorageArchive, plus
+  the ingested column `DischargingPower` (live Loxone batteries write discharge separately). Einspeisung now reads the
+  grid meter (selector `netz`) instead of the simulator-only PV column `GridFeedIn`; Eigenverbrauch is a formula KPI
+  `max(0, PV − Einspeisung)`; query `…ec5` (SelfConsumption) is removed. KPIs publish `pvEnergyKwh`, `gridExportKwh`,
+  `gridImportKwh`, `batteryChargeKwh`, `batteryDischargeKwh` for the AB#7943 gauges. Tile labels follow the wireframe
+  (PV-Erzeugung, Einspeisung). `SelfConsumption`/`GridFeedIn` stay, documented as simulator-only. Activated archives
+  get the columns with `AddComputedColumn` (not by re-import); "Batterie entladen" stays 0 for Firmianstraße on
+  existing tenants until an ingested column can be added to an active archive (AB#7997). Existing tenants also need the
+  old sign filters of `…ec7`–`…ec9` cleared once (AB#8005). Formulas, cross-check and rollout:
+  `docs/meshboard-site-selector-fit.md`, "Energiebilanz kWh via Integral (AB#7925)".
+
 - AB#7942: Energie board gets the heatmap **"Netzbezug – Stunde × Tag"**: the mean net grid power (kW) of the picked
   site per Europe/Vienna hour × day over its own window of the last 30 days (badge "Last 30 days", independent of the
   board Zeitraum), bound to the follower `netz`. The cell is `ActivePower` (signed: feed-in hours show ≤ 0), because

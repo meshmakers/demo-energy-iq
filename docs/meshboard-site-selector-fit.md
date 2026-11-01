@@ -47,6 +47,9 @@ legend entries (see the header of the YAML); PhotovoltaicSystem and BatteryStora
 | Netzbezug | AggregationSdQuery, GridConnectionArchive | GridConnection rtIds | partly: scoped by hidden selector `netz` (this PR), not by a visible one |
 | Batterie geladen / entladen (2 KPIs) | AggregationSdQuery, BatteryStorageArchive | BatteryStorage rtIds | no: two hops (F6) |
 
+(State of AB#7692 part 1. Since AB#7925 the tiles are Integral queries — Einspeisung reads the GridConnectionArchive
+via `netz`, Eigenverbrauch is a formula KPI; see "Energiebilanz kWh via Integral (AB#7925)".)
+
 ### Raumtemperaturen (6a4a9f277e487162fbe3860a)
 
 | Widget | Query | One selector? |
@@ -85,6 +88,9 @@ the three Luminaire grouping bar charts, the ShadingDevice bar chart and both ta
 No workaround (app code, custom widget, per-site copy pipeline, second board) was built.
 
 ## Energiebilanz kWh = SUM(kW) x 10/3600 (2026-10-28; measured in Part 2 below)
+
+> Superseded by AB#7925 (Integral queries, section "Energiebilanz kWh via Integral (AB#7925)"). Kept as the record
+> of why the factor was wrong.
 
 The factor assumes exactly one row every 10 s per entity. It holds only for uniformly sampled
 archives.
@@ -154,12 +160,12 @@ produces no ghost series (header of the YAML).
 | Energie | Geräte | SimpleSdQuery ApplianceArchive (stream) | `geraete` | empty scope → no data |
 | Energie | Batteriespeicher (Ladeleistung) | SimpleSdQuery BatteryStorageArchive (stream) | `batterie` | empty scope → no data |
 | Energie | Aktuelle Leistungen | SimpleRtQuery EnergyIQ/Meter (runtime) | `zaehler` | 2 rows |
-| Energiebilanz | PV-Produktion | AggregationSdQuery PhotovoltaicSystemArchive SUM | `pv` | see kWh |
-| Energiebilanz | Eigenverbrauch (PV) | AggregationSdQuery SUM SelfConsumption | `pv` | column not written for Fusch → no value |
-| Energiebilanz | Netzeinspeisung | AggregationSdQuery SUM GridFeedIn | `pv` | column not written for Fusch → no value |
-| Energiebilanz | Netzbezug | AggregationSdQuery GridConnectionArchive SUM ActivePower > 0 | `netz` | see kWh |
-| Energiebilanz | Batterie geladen | AggregationSdQuery BatteryStorageArchive SUM > 0 | `batterie` | empty scope → no data |
-| Energiebilanz | Batterie entladen | AggregationSdQuery BatteryStorageArchive SUM < 0 | `batterie` | empty scope → no data |
+| Energiebilanz | PV-Erzeugung | AggregationSdQuery PhotovoltaicSystemArchive Integral `TotalCurrentPower` (AB#7925) | `pv` | Loxone data |
+| Energiebilanz | Eigenverbrauch | formula KPI `max(0, PV − Einspeisung)` (AB#7925) | — (board variables) | from PV and grid |
+| Energiebilanz | Einspeisung | AggregationSdQuery GridConnectionArchive Integral `ExportPower` (AB#7925) | `netz` | SHRDZM data |
+| Energiebilanz | Netzbezug | AggregationSdQuery GridConnectionArchive Integral `ImportPower` (AB#7925) | `netz` | SHRDZM data |
+| Energiebilanz | Batterie geladen | AggregationSdQuery BatteryStorageArchive Integral `ChargePower` (AB#7925) | `batterie` | empty scope → "–" |
+| Energiebilanz | Batterie entladen | AggregationSdQuery BatteryStorageArchive Integral `DischargePower` (AB#7925) | `batterie` | empty scope → "–" |
 
 Validation of the configuration (without a Studio run): the selectors of both boards were run
 through the library's own pure helpers at octo-frontend-libraries `origin/main` (`resolveFollowLeader`,
@@ -218,6 +224,108 @@ description and the YAML state the limit, and the correct figure is a platform g
 AggregationSdQuery (time-weighted integral ∫P dt over the query window, LOCF — `TimeWeightedAverage` exists but needs
 a rollup and the KPI cannot multiply it by the window length). Reported to Odin on AB#7692. Whether the KPIs should
 show nothing until then is open for the developer.
+
+## Energiebilanz kWh via Integral (AB#7925, 2026-11-01)
+
+The six kWh tiles are the **step integral** of a power column over the board window `[from, to)` (AggregationSdQuery
+column with `AggregationType` 7 = Integral, System 2.8.0, AB#7918/AB#7919). Each row holds until the next row of the
+same entity or the window end, the last row before `from` opens the window (at most 35 days back), several entities are
+summed. kW × h = kWh, so every KPI reads `<column>_integral` with `valueMultiplier: 1`. The cadence of the source no
+longer matters: 5-s grid rows, on-change PV and battery rows and 10-s simulator rows give the same energy for the same
+power.
+
+| Tile | Formula | Archive (selector) | Query / widget |
+|------|---------|--------------------|----------------|
+| PV-Erzeugung | Integral(`TotalCurrentPower`) | PhotovoltaicSystemArchive `…000c` (`pv`) | `…ec4` / `…ecd`, publishes `pvEnergyKwh` |
+| Eigenverbrauch | `max(0, ${pvEnergyKwh} - ${gridExportKwh})` | — (formula KPI, AB#7950) | — / `…ece` |
+| Einspeisung | Integral(`ExportPower`) | GridConnectionArchive `…0007` (`netz`) | `…ec6` / `…ecf`, publishes `gridExportKwh` |
+| Netzbezug | Integral(`ImportPower`) | GridConnectionArchive `…0007` (`netz`) | `…ec7` / `…ed0`, publishes `gridImportKwh` |
+| Batterie geladen | Integral(`ChargePower`) | BatteryStorageArchive `…000d` (`batterie`) | `…ec8` / `…ed1`, publishes `batteryChargeKwh` |
+| Batterie entladen | Integral(`DischargePower`) | BatteryStorageArchive `…000d` (`batterie`) | `…ec9` / `…ed2`, publishes `batteryDischargeKwh` |
+
+The query `…ec5` (SUM of `SelfConsumption`) is deleted: Eigenverbrauch needs no query. No query or widget of the board
+reads `SelfConsumption` or `GridFeedIn` (simulator-only columns, never written by a live site). The published variable
+names are meant for the gauges of AB#7943 (Autarkie, Eigenverbrauchsquote) — do not rename them, nor the computed
+columns, without updating AB#7943/AB#7944/AB#7948.
+
+**Computed columns (AB#4189)** split the sign into non-negative power columns; formulas use the physical (lower-case)
+column names:
+
+| Archive | Column | Formula |
+|---------|--------|---------|
+| GridConnectionArchive `…0007` | `ImportPower` | `if(activepower > 0, activepower, 0)` |
+| GridConnectionArchive `…0007` | `ExportPower` | `if(activepower < 0, -activepower, 0)` |
+| BatteryStorageArchive `…000d` | `ChargePower` | `if(chargingpower > 0, chargingpower, 0)` |
+| BatteryStorageArchive `…000d` | `DischargePower` | `if(chargingpower < 0, -chargingpower, if(dischargingpower > 0, dischargingpower, 0))` |
+
+Never a field filter for the sign: a filter drops rows, and the step integral would carry the last positive value
+across an export period. A NULL power counts 0 for its interval; a window without rows yields null.
+
+**Two battery conventions.** The simulator writes a signed `ChargingPower` (− = discharging). Loxone Firmianstraße
+writes `ChargingPower` ≥ 0 and a separate `DischargingPower` ≥ 0 (`rt-pipelines-loxone.yaml`, `em-battery` /
+`em-battery-discharge`). `DischargePower` covers both, so the seed adds the ingested column `DischargingPower` to the
+BatteryStorageArchive. An archive that was activated before that column existed (test-2, prod-1) cannot get an ingested
+column yet (AB#7997); there `DischargePower` is added with the simulator-only formula `if(chargingpower < 0,
+-chargingpower, 0)` and **"Batterie entladen" shows 0 kWh for Firmianstraße until AB#7997** — then add the column and
+switch the formula with `UpdateComputedColumnFormula`.
+
+**Empty state and clamp.** A query KPI whose Integral is null (empty window, empty scope — Fusch has no battery) shows
+"–" (octo-meshboard AB#7921) and publishes no variable. The formula KPI is "–" while one of its variables is missing, so
+Eigenverbrauch is "–" when PV or Einspeisung has no data; it is never NaN, and `max(0, …)` clamps a negative difference
+(rounding, PV and grid meter not in sync) to 0. Eigenverbrauch ≤ PV and Eigenverbrauch + Einspeisung = PV hold by
+construction whenever Einspeisung ≤ PV.
+
+### Cross-check, full day 2026-10-31 (Europe/Vienna, `[2026-10-30T23:00Z, 2026-10-31T23:00Z)`)
+
+"Platform" = the Integral query on the tenant; "rows" = an independent step integral (LOCF, same rules) computed from the
+rows exported with `ExportArchiveData` (carry row from the hour before the window); "old" = the former SUM × 10/3600.
+
+| Site (tenant) | Figure | Rows | Platform | Independent | Old |
+|---------------|--------|------|----------|-------------|-----|
+| Firmianstraße (test-2) | PV | 9 520 | 23.117 kWh | 23.117 kWh | 71.90 |
+| Firmianstraße (test-2) | Netz netto (ActivePower) | 16 823 | 28.805 kWh | 28.805 kWh (29.015 import − 0.210 export) | — |
+| Firmianstraße (test-2) | Batterie geladen (ChargingPower) | 5 506 | 7.266 kWh | 7.266 kWh | 13.96 |
+| Fusch (prod-1, read-only) | PV | 3 044 | 23.948 kWh | 23.948 kWh | 22.86 |
+| Fusch (prod-1, read-only) | Netz netto (ActivePower) | 17 268 | −18.423 kWh | −18.423 kWh (3.539 import − 21.962 export) | — |
+
+Energy balance: Firmianstraße Eigenverbrauch = 23.117 − 0.210 = 22.907 kWh ≤ PV; Fusch 23.948 − 21.962 = 1.986 kWh ≤ PV.
+No PV energy counter exists for either site (Fusch `TotalEnergyProduced` reads 0 on prod-1, Firmianstraße has none) and
+the Firmianstraße GridConnection has no `ImportedEnergy`/`ExportedEnergy` register, so these figures are checked against
+the independent integral of the exported rows (agreement to the last digit shown). Fusch had no grid and no PV rows on
+test-2 (since 2026-09-01), so its tiles show "–" there, which is correct; Fusch is checked on prod-1 read-only.
+
+**Fusch against the meter registers (prod-1, read-only, 2026-11-01).** `ImportedEnergy` / `ExportedEnergy` of
+GridConnection `6a10f05c0000000000000a03` read at 09:31:34Z and 10:18:14Z (SHRDZM delivers in batches, so the window is
+bounded by the last archived reading before each read: `[09:31:25.6Z, 10:18:10.6Z)`, 46.7 min, 554 rows):
+
+| Figure | Register delta | Step integral of the rows | Deviation |
+|--------|----------------|---------------------------|-----------|
+| Einspeisung (`ExportedEnergy`) | 1.555 kWh | 1.544 kWh | −0.7 % |
+| Netzbezug (`ImportedEnergy`) | 0.000 kWh | 0.000 kWh (site exported the whole window) | — |
+
+The platform Integral of `ActivePower` over the read window gives −1.538 kWh, identical to the rows (−1.538). The
+window fell in a PV-surplus hour, so it checks the export side; the import side over a 45-min window was measured on
+the same meter for AB#7690/AB#7918 (0.929 vs 0.924 kWh, +0.5 %; 0.1976 vs 0.197 kWh, +0.3 %) and is an integration
+test of the platform (`StreamDataIntegralIntegrationTests`).
+
+### Rollout notes
+
+- Computed columns on an **activated** archive are added with `octo-cli -c AddComputedColumn` (backfill), not by
+  re-importing `rt-archives-energyiq.yaml`. The backfill runs inside the request (AB#8002): on test-2 energyiq
+  (2026-11-01, grid 748k / battery 944k rows) the client timeout and then the asset-repo itself cancelled the CrateDB
+  jobs ("Job killed"), `ExportPower` and `ImportPower` went `Failed` and the asset-repo missed its readiness and
+  liveness probes. All four columns were removed again; **on test-2 they are re-added once AB#8002 is deployed**, one
+  at a time. Until then the test-2 tiles Netzbezug, Einspeisung and both battery tiles show the query error
+  "references unknown columns" and Eigenverbrauch shows "–"; PV-Erzeugung works.
+- The seed path (archive imported with the computed columns and `DischargingPower`, then `ActivateArchive`) was not run
+  in this story: local services predated System 2.8.0 and the local octo-cli logins had expired. It is covered by the
+  first EnergyIQ blueprint install on a fresh tenant (AB#7991).
+- `ImportRt -r` keeps attributes a file omits — also an empty list: the former sign filters of `…ec7`–`…ec9` stay on a
+  tenant that had them (Bug AB#8005; done by hand on test-2, prod-1 needs AB#8005 or the same step with Gerald's go).
+  Clear them once:
+  `mutation { runtime { systemAggregationSdQuerys { update(entities: [{rtId: "6a4aaddc22664f2b26c67ec7", item: {fieldFilter: []}}, {rtId: "6a4aaddc22664f2b26c67ec8", item: {fieldFilter: []}}, {rtId: "6a4aaddc22664f2b26c67ec9", item: {fieldFilter: []}}]) { rtId } } } }`
+- Delete the orphaned query `…ec5` on tenants that have it.
+- Staging/prod only through the EnergyIQ blueprint, each step with Gerald's go.
 
 ## Part 3: room boards (AB#7693, 2026-10-30)
 
