@@ -1,0 +1,12 @@
+$schema: https://schemas.meshmakers.cloud/construction-kit-elements.schema.json
+attributes:
+# Site cost and CO2 factors (AB#7947) - data basis for the site comparison (cost and CO2).
+# No defaultValues on purpose: an empty attribute means "use the documented default"
+# (docs/construction-kit.md, section "Energy price and CO2 factor"), so a later change of the
+# default reaches every site that never set its own value.
+- id: EnergyPrice
+  valueType: Double
+  description: "Energy price of grid electricity in EUR/kWh NET (excl. VAT), energy and supply component only - no grid fees, no taxes or levies, no feed-in revenue. Stored unrounded (e.g. 0.2345). Empty = documented default 0.1600 EUR/kWh net, a demo reference, not a business tariff: Eurostat household band DC (nrg_pc_204_c), Austria 2025, energy and supply component."
+- id: Co2Factor
+  valueType: Double
+  description: "CO2 emission factor of grid electricity in kg CO2-eq/kWh (direct + upstream, incl. imports and grid losses). Empty = documented default 0.152 kg/kWh (Umweltbundesamt REP-0989, Datenstand 2025, 'Stromaufbringung Oesterreich', generation year 2023)."

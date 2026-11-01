@@ -20,6 +20,13 @@ entities:
         value: 13.0333
       - id: EnergyIQ/RefElevation
         value: 424.0
+      # AB#7947 (EnergyIQ 2.15.0): demo values, not taken from a supply contract.
+      # EnergyPrice = EUR/kWh net (excl. VAT), energy component only; Co2Factor = kg CO2-eq/kWh.
+      # Defaults when empty: docs/construction-kit.md "Energy price and CO2 factor".
+      - id: EnergyIQ/EnergyPrice
+        value: 0.2345
+      - id: EnergyIQ/Co2Factor
+        value: 0.152
 
   # ============================================================
   # BUILDING 1 - Hauptgebäude

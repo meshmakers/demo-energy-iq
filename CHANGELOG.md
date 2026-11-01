@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- AB#7947: **EnergyIQ 2.15.0** adds two optional `Site` attributes for the site comparison (cost and CO2):
+  `EnergyPrice` (Double, EUR/kWh net, energy component only — no VAT, grid fees, taxes or feed-in revenue) and
+  `Co2Factor` (Double, kg CO2-eq/kWh), in the new `attributes/tariff.yaml`. No `defaultValues`: an empty attribute
+  means the documented default (0.1600 EUR/kWh net = Eurostat household band DC `nrg_pc_204_c`, Austria 2025, energy and supply component, a demo reference;
+  0.152 kg/kWh = Umweltbundesamt REP-0989, Austrian supply mix), see `docs/construction-kit.md`. Additive minor
+  bump, no migration; dependencies resolve to `Basic-2.5.0`, `Basic.Energy-1.10.0`, `System-2.7.0` as for 2.14.0.
+  Demo seed values on the two Sites (Firmianstraße 0.2345, Fusch 0.1987 EUR/kWh net, both 0.152 kg/kWh).
+  Rollout order: CK 2.15.0 first (catalog via CI, then update the tenant's EnergyIQ), then import
+  `rt-firmianstrasse.yaml` / `rt-fusch.yaml`. test-2 via CI; staging/prod only via blueprint with Gerald's go.
+
 - AB#7942: Energie board gets the heatmap **"Netzbezug – Stunde × Tag"**: the mean net grid power (kW) of the picked
   site per Europe/Vienna hour × day over its own window of the last 30 days (badge "Last 30 days", independent of the
   board Zeitraum), bound to the follower `netz`. The cell is `ActivePower` (signed: feed-in hours show ≤ 0), because
