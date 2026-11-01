@@ -311,12 +311,10 @@ test of the platform (`StreamDataIntegralIntegrationTests`).
 ### Rollout notes
 
 - Computed columns on an **activated** archive are added with `octo-cli -c AddComputedColumn` (backfill), not by
-  re-importing `rt-archives-energyiq.yaml`. The backfill runs inside the request (AB#8002): on test-2 energyiq
-  (2026-11-01, grid 748k / battery 944k rows) the client timeout and then the asset-repo itself cancelled the CrateDB
-  jobs ("Job killed"), `ExportPower` and `ImportPower` went `Failed` and the asset-repo missed its readiness and
-  liveness probes. All four columns were removed again; **on test-2 they are re-added once AB#8002 is deployed**, one
-  at a time. Until then the test-2 tiles Netzbezug, Einspeisung and both battery tiles show the query error
-  "references unknown columns" and Eigenverbrauch shows "–"; PV-Erzeugung works.
+  re-importing `rt-archives-energyiq.yaml`. Until AB#8002 the backfill runs inside the request and a large archive
+  can be cancelled half-way (on test-2 energyiq the first attempt failed and was rolled back), so add the columns after
+  AB#8002 is deployed, one at a time, and check `computedState`. Without the columns the tiles Netzbezug, Einspeisung
+  and both battery tiles show "references unknown columns"; PV-Erzeugung works.
 - The seed path (archive imported with the computed columns and `DischargingPower`, then `ActivateArchive`) was not run
   in this story: local services predated System 2.8.0 and the local octo-cli logins had expired. It is covered by the
   first EnergyIQ blueprint install on a fresh tenant (AB#7991).
