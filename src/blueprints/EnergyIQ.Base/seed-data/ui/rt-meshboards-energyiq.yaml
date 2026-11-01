@@ -343,7 +343,7 @@ entities:
         value: Energie
       - id: System/Description
         value: |-
-          Energieübersicht des gewählten Standorts: Netzbezug, PV-Produktion, Wallboxen, Geräte und Batteriespeicher aus den Stream-Data-Archiven + aktuelle Leistungen der Zähler des Standorts. Heatmap "Netzbezug – Stunde × Tag": mittlere Netzleistung je Stunde der letzten 30 Tage (eigenes Zeitfenster, unabhängig vom Zeitraum oben).
+          Energieübersicht des gewählten Standorts: Netzbezug, PV-Produktion, Wallboxen, Geräte und Batteriespeicher aus den Stream-Data-Archiven + aktuelle Leistungen der Zähler des Standorts. Tagesprofil: womit der Verbrauch je Zeitabschnitt gedeckt wird (direkt aus PV, aus Batterie, aus Netz, gestapelt) mit der PV-Erzeugung als Linie – für einen Tag den Zeitraum oben auf diesen Tag setzen. Heatmap "Netzbezug – Stunde × Tag": mittlere Netzleistung je Stunde der letzten 30 Tage (eigenes Zeitfenster, unabhängig vom Zeitraum oben).
           ---MESHBOARD_VARIABLES---
           {"timeFilter": {"enabled": true, "selection": {"type": "relative", "relativeValue": 24, "relativeUnit": "hours"}}, "autoRefreshSeconds": 300, "entitySelectors": [{"id": "standort", "label": "Standort", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [{"attributePath": "name", "variableName": "standortName"}], "showInToolbar": true, "defaultRtId": "6789a00000000000006000d3", "filters": [{"attributePath": "systemType", "operator": "EQUALS", "comparisonValue": "ELECTRICAL"}]}, {"id": "netz", "label": "Netzanschluss", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"targetCkTypeId": "EnergyIQ/GridConnection", "roleId": "EnergyIQ/SystemMembers", "direction": "out"}}, {"id": "pv", "label": "PV-Anlage", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"targetCkTypeId": "EnergyIQ/PhotovoltaicSystem", "roleId": "EnergyIQ/SystemMembers", "direction": "out"}}, {"id": "wallboxen", "label": "Wallboxen", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"targetCkTypeId": "EnergyIQ/ChargingStation", "roleId": "EnergyIQ/SystemMembers", "direction": "out"}}, {"id": "geraete", "label": "Geräte", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"targetCkTypeId": "EnergyIQ/Appliance", "roleId": "EnergyIQ/SystemMembers", "direction": "out"}}, {"id": "batterie", "label": "Batterie", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"path": [{"roleId": "EnergyIQ/SystemMembers", "direction": "out", "targetCkTypeId": "EnergyIQ/PhotovoltaicSystem"}, {"roleId": "EnergyIQ/SystemMembers", "direction": "out", "targetCkTypeId": "EnergyIQ/BatteryStorage"}]}}, {"id": "zaehler", "label": "Zähler", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"targetCkTypeId": "EnergyIQ/Meter", "roleId": "EnergyIQ/SystemMembers", "direction": "out"}}]}
       - id: System.UI/Dashboard.Columns
@@ -546,7 +546,7 @@ entities:
       - id: System.UI/DashboardWidget.Col
         value: 1
       - id: System.UI/DashboardWidget.Row
-        value: 19
+        value: 28
       - id: System.UI/DashboardWidget.ColSpan
         value: 12
       - id: System.UI/DashboardWidget.RowSpan
@@ -560,6 +560,150 @@ entities:
       - id: System.UI/DashboardWidget.Config
         value: |-
           {"dateField": "timestamp", "valueField": "activepower_avg_sum", "weightField": "activepower_avg_count", "aggregation": "weightedAvg", "timestampIsBucketEnd": true, "bucketWidthMinutes": 60, "timeWindow": {"value": 30, "unit": "days"}, "colorScheme": "heat", "showLegend": true, "legendPosition": "bottom", "decimalPlaces": 2, "queryName": "Netzbezug je Stunde (Rollup 1 h)", "queryRtId": "6a4aa4cc22664f2b26c67e6a", "queryFamily": "streamData", "entitySelectorId": "netz"}
+
+  # Tagesprofil (AB#7944): how the site's consumption is covered, stacked per time bucket of the board
+  # window (pick one day in the time filter). Energy balance per bucket (average kW):
+  #   aus Netz       = $Import                          ImportPower    (grid archive,    selector netz)
+  #   aus Batterie   = $Discharge                       DischargePower (battery archive, selector batterie)
+  #   direkt aus PV  = max(0, $PV - $Export - $Charge)  PV archive TotalCurrentPower minus ExportPower and ChargePower
+  #   Verbrauch      = sum of the three stacks          (= Import - Export + PV + Discharge - Charge unless clamped)
+  # PV-Erzeugung is the visible PV query series drawn as a line over the stack. The operands are query series
+  # (formula series cannot use the primary query, AB#7952); the primary query (PV) is hidden. A bucket in which an
+  # operand has no value is a gap, never 0. Formulas, clamp rule and checks: docs/meshboard-site-selector-fit.md,
+  # section "Tagesprofil".
+  - rtId: 6a4b7944000000000000e001
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4aa4fa22664f2b26c67e7c
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Tagesprofil – womit wird der Verbrauch gedeckt? (kW)
+      - id: System.UI/DashboardWidget.Type
+        value: lineChart
+      - id: System.UI/DashboardWidget.Col
+        value: 1
+      - id: System.UI/DashboardWidget.Row
+        value: 19
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 12
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 9
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: systemQuery
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: 6a4aa4cc22664f2b26c67e60
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"chartType": "area", "stacked": true, "categoryField": "timestamp", "seriesGroupField": "name", "valueField": "TotalCurrentPower", "showLegend": true, "legendPosition": "bottom", "showMarkers": false, "showDataBadge": false, "valueAxisTitle": "kW", "queryName": "PV-Produktion (Archiv)", "queryRtId": "6a4aa4cc22664f2b26c67e60", "queryFamily": "streamData", "entitySelectorId": "pv", "primarySeries": {"visible": false}, "additionalSeries": [{"kind": "query", "key": "PV", "label": "PV-Erzeugung", "stacked": false, "valueField": "TotalCurrentPower", "dataSource": {"type": "persistentQuery", "queryRtId": "6a4aa4cc22664f2b26c67e60", "queryName": "PV-Produktion (Archiv)", "queryFamily": "streamData", "entitySelectorId": "pv"}}, {"kind": "query", "key": "Import", "label": "Netzbezug", "visible": false, "valueField": "ImportPower", "dataSource": {"type": "persistentQuery", "queryRtId": "6a4b7944000000000000e002", "queryName": "Netzbezug Leistung (Archiv)", "queryFamily": "streamData", "entitySelectorId": "netz"}}, {"kind": "query", "key": "Export", "label": "Einspeisung", "visible": false, "valueField": "ExportPower", "dataSource": {"type": "persistentQuery", "queryRtId": "6a4b7944000000000000e003", "queryName": "Einspeisung Leistung (Archiv)", "queryFamily": "streamData", "entitySelectorId": "netz"}}, {"kind": "query", "key": "Charge", "label": "Batterie Laden", "visible": false, "valueField": "ChargePower", "dataSource": {"type": "persistentQuery", "queryRtId": "6a4b7944000000000000e004", "queryName": "Batterie Ladeleistung (Archiv)", "queryFamily": "streamData", "entitySelectorId": "batterie"}}, {"kind": "query", "key": "Discharge", "label": "Batterie Entladen", "visible": false, "valueField": "DischargePower", "dataSource": {"type": "persistentQuery", "queryRtId": "6a4b7944000000000000e005", "queryName": "Batterie Entladeleistung (Archiv)", "queryFamily": "streamData", "entitySelectorId": "batterie"}}, {"kind": "formula", "key": "PvDirect", "label": "direkt aus PV", "formula": "max(0, $PV - $Export - $Charge)"}, {"kind": "formula", "key": "Battery", "label": "aus Batterie", "formula": "$Discharge"}, {"kind": "formula", "key": "Grid", "label": "aus Netz", "formula": "$Import"}]}
+
+  # Power time series of the computed grid/battery columns (AB#7925) for the Tagesprofil operands (AB#7944).
+  - rtId: 6a4b7944000000000000e002
+    ckTypeId: System/SimpleSdQuery
+    attributes:
+      - id: System/Name
+        value: Netzbezug Leistung (Archiv)
+      - id: System/Description
+        value: >-
+          Time series of the computed column ImportPower (kW, the positive part of ActivePower) from the GridConnectionArchive. Operand Import of the Energie MeshBoard Tagesprofil (entity from the standort follower netz).
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/GridConnection
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/StreamDataQuery.ArchiveRtId
+        value: '6a0e000000000000000a0007'
+      - id: System/StreamDataQuery.Columns
+        value:
+          - ImportPower
+      - id: System/Query.Sorting
+        value:
+          - ckRecordId: System/SortOrderItem
+            attributes:
+              - id: System/AttributePath
+                value: timestamp
+              - id: System/SortOrder
+                value: 1
+
+  - rtId: 6a4b7944000000000000e003
+    ckTypeId: System/SimpleSdQuery
+    attributes:
+      - id: System/Name
+        value: Einspeisung Leistung (Archiv)
+      - id: System/Description
+        value: >-
+          Time series of the computed column ExportPower (kW, the negative part of ActivePower, positive) from the GridConnectionArchive. Operand Export of the Energie MeshBoard Tagesprofil (entity from the standort follower netz).
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/GridConnection
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/StreamDataQuery.ArchiveRtId
+        value: '6a0e000000000000000a0007'
+      - id: System/StreamDataQuery.Columns
+        value:
+          - ExportPower
+      - id: System/Query.Sorting
+        value:
+          - ckRecordId: System/SortOrderItem
+            attributes:
+              - id: System/AttributePath
+                value: timestamp
+              - id: System/SortOrder
+                value: 1
+
+  - rtId: 6a4b7944000000000000e004
+    ckTypeId: System/SimpleSdQuery
+    attributes:
+      - id: System/Name
+        value: Batterie Ladeleistung (Archiv)
+      - id: System/Description
+        value: >-
+          Time series of the computed column ChargePower (kW, >= 0) from the BatteryStorageArchive. Operand Charge of the Energie MeshBoard Tagesprofil (entity from the standort follower batterie).
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/BatteryStorage
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/StreamDataQuery.ArchiveRtId
+        value: '6a0e000000000000000a000d'
+      - id: System/StreamDataQuery.Columns
+        value:
+          - ChargePower
+      - id: System/Query.Sorting
+        value:
+          - ckRecordId: System/SortOrderItem
+            attributes:
+              - id: System/AttributePath
+                value: timestamp
+              - id: System/SortOrder
+                value: 1
+
+  - rtId: 6a4b7944000000000000e005
+    ckTypeId: System/SimpleSdQuery
+    attributes:
+      - id: System/Name
+        value: Batterie Entladeleistung (Archiv)
+      - id: System/Description
+        value: >-
+          Time series of the computed column DischargePower (kW, >= 0) from the BatteryStorageArchive. Operand Discharge of the Energie MeshBoard Tagesprofil (entity from the standort follower batterie).
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/BatteryStorage
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/StreamDataQuery.ArchiveRtId
+        value: '6a0e000000000000000a000d'
+      - id: System/StreamDataQuery.Columns
+        value:
+          - DischargePower
+      - id: System/Query.Sorting
+        value:
+          - ckRecordId: System/SortOrderItem
+            attributes:
+              - id: System/AttributePath
+                value: timestamp
+              - id: System/SortOrder
+                value: 1
 
   - rtId: 6a4aa4cc22664f2b26c67e5f
     ckTypeId: System/SimpleSdQuery

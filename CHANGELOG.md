@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+- AB#7944: **Energie board "Tagesprofil – womit wird der Verbrauch gedeckt?"** (EnergyIQ.Base **1.1.0**). A stacked
+  area chart (widget `…e001`) splits the site's consumption per time bucket of the board window into *direkt aus PV*
+  = `max(0, $PV - $Export - $Charge)`, *aus Batterie* = `$Discharge` and *aus Netz* = `$Import`, with *PV-Erzeugung* as
+  a line over the stack (formula series, octo-meshboard AB#7951/AB#7952). Operands are hidden query series on the
+  AB#7925 computed columns; four new power queries `…e002`–`…e005` (ImportPower, ExportPower, ChargePower,
+  DischargePower). The heatmap moved down one block. A missing operand is a gap, never 0. Waits for AB#8046 (Studio):
+  0 instead of gaps for a site without battery (Fusch), fixed 15-minute buckets, wireframe colours and the dashed PV
+  line. Needs the computed columns on active archives (AB#8002/AB#7997) for the grid and battery shares. Formulas,
+  clamp rule and sources: `docs/meshboard-site-selector-fit.md`, Part 5.
+
 - AB#8040: **Firmianstraße grid connection reachable from its Site.** New ExternalSpace "Netzanschluss Firmianstraße"
   (`6789a00000000000000052e8`, `ParentChild` child of Site `6789a00000000000000000a1`); GridConnection "Hausanschluss"
   (`6789a00000000000003000a1`) anchors to it via `SpaceElements`, the same site model as Fusch. Before, the
