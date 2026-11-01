@@ -237,7 +237,7 @@ power.
 | Tile | Formula | Archive (selector) | Query / widget |
 |------|---------|--------------------|----------------|
 | PV-Erzeugung | Integral(`TotalCurrentPower`) | PhotovoltaicSystemArchive `…000c` (`pv`) | `…ec4` / `…ecd`, publishes `pvEnergyKwh` |
-| Eigenverbrauch | `max(0, ${pvEnergyKwh} - ${gridExportKwh})` | — (formula KPI, AB#7950) | — / `…ece` |
+| Eigenverbrauch | `max(0, $pvEnergyKwh - $gridExportKwh)` (`$name` form since EnergyIQ.Base 1.0.2) | — (formula KPI, AB#7950) | — / `…ece` |
 | Einspeisung | Integral(`ExportPower`) | GridConnectionArchive `…0007` (`netz`) | `…ec6` / `…ecf`, publishes `gridExportKwh` |
 | Netzbezug | Integral(`ImportPower`) | GridConnectionArchive `…0007` (`netz`) | `…ec7` / `…ed0`, publishes `gridImportKwh` |
 | Batterie geladen | Integral(`ChargePower`) | BatteryStorageArchive `…000d` (`batterie`) | `…ec8` / `…ed1`, publishes `batteryChargeKwh` |

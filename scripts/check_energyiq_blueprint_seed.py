@@ -9,6 +9,8 @@ Checks:
    adapters, deployment sites, pipelines and Loxone/MQTT/AI configurations fail the check.
 2a. Block style only: a flow-style list item (`- {...}`, `- [...]`) or an inline `entities: [...]`
    fails, because its keys would escape the line checks.
+2b. No ${name} reference except blueprint variables (${octo.*}): the install interpolates ${...} in
+   every string value, so MeshBoard formulas/variables must use $name.
 3. No secret attribute values (Password, ClientSecret, ApiKey, Token, Secret).
 4. No rtId appears twice across the seed files.
 5. scripts/om_importrt.ps1 imports exactly the seed files from the blueprint folder
@@ -50,6 +52,10 @@ SECRET_NAME = re.compile(r"(Password|ClientSecret|ApiKey|AccessToken|Token|Secre
 # above; the runtime-model seed files use block style only, so these forms are rejected outright.
 # (JSON inside quoted string values, e.g. the dashboard selector blobs, is not affected.)
 FLOW_STYLE = re.compile(r"^\s*(-\s*[\{\[]|entities\s*:\s*[\{\[])")
+# The blueprint engine interpolates ${name} in every string value at install and warns on an unknown
+# name ("Unknown blueprint variable"). MeshBoard formulas and variable references therefore use the
+# $name form in the seed; only blueprint variables (${octo.*}) may use the braces (AB#7996).
+BRACED_REFERENCE = re.compile(r"\$\{\s*([\w.]+)\s*\}")
 ATTRIBUTE_ID_KEY = re.compile(r"^\s*(-\s*)?['\"]?id['\"]?\s*:\s*(.*)$")
 
 
@@ -106,6 +112,12 @@ def main() -> int:
                     errors.append(f"{f}:{no}: ckTypeId in a form the check cannot verify: {line.strip()}")
                 elif m.group(2) not in ALLOWED_CK_TYPES:
                     errors.append(f"{f}:{no}: ckTypeId {m.group(2)} is not product content (allow-list)")
+            for ref in BRACED_REFERENCE.findall(line):
+                if not ref.startswith("octo."):
+                    errors.append(
+                        f"{f}:{no}: '${{{ref}}}' would be read as a blueprint variable at install; "
+                        f"write MeshBoard references as ${ref}"
+                    )
             a = ATTRIBUTE_ID_KEY.match(line)
             if a and SECRET_NAME.search(a.group(2).split("#", 1)[0]):
                 errors.append(f"{f}:{no}: secret attribute in the seed: {line.strip()}")

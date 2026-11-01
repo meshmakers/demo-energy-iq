@@ -298,6 +298,12 @@ dependencies are not resolved on install). No pipelines in 1.0.0.
 install). `scripts/om_importrt.ps1` imports the same files for the local dev loop.
 `scripts/check_energyiq_blueprint_seed.py` (run by CI) enforces this and the content rule below.
 
+**Board formulas and variables use `$name` in the seed, never `${name}`.** The blueprint install
+interpolates `${...}` in every string value and warns `Unknown blueprint variable` for any name it does not
+know (it leaves the text unchanged, but the install is no longer clean). The MeshBoard formula and variable
+syntax accepts both forms and evaluates them identically (octo-meshboard `rewriteFormula`), so the seed uses
+`$name`; only real blueprint variables (`${octo.*}`) keep the braces. The seed check enforces it.
+
 **What stays tenant data** (in `data/`, imported per tenant, never in the blueprint): sites and their
 digital twin (`data/bim/*`, including the site price and CO2 values), adapters and deployment sites,
 Loxone/MQTT/AI configurations, anything with a secret, and pipelines (every current pipeline is bound to

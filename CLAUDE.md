@@ -258,6 +258,9 @@ navigation from the blueprint `src/blueprints/EnergyIQ.Base/`, not from `ImportR
 - **Bump on every seed change.** Raise `blueprintId` in `blueprint.yaml` (patch: content fix, minor: new
   board/query/archive); CI fails with OCTO-BP100 otherwise. Raise the `EnergyIQ`/`Basic`/`Basic.Energy`
   floors together with `ckModel.yaml` (the engine installs a floor as the exact version).
+- **`$name`, not `${name}`, in board formulas/variables.** The install claims `${...}` for blueprint
+  variables (warning "Unknown blueprint variable"); MeshBoard evaluates `$name` identically. Only
+  `${octo.*}` may use braces; the seed check fails otherwise.
 - **Tenant data stays out:** `data/bim/*` (sites, rooms, devices, site price/CO2), adapters, deployment sites,
   Loxone/MQTT/AI configurations, secrets, pipelines (no pipeline in 1.0.0).
 - **Archives:** activation is a manual post-install step until AB#7991 (`ActivateArchive`, RawArchives

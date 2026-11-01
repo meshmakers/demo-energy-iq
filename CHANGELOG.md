@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- AB#7996: **EnergyIQ.Base 1.0.2** makes the install warning-free: the Eigenverbrauch KPI formula on Energiebilanz
+  is `max(0, $pvEnergyKwh - $gridExportKwh)` instead of the `${...}` form, which the blueprint install read as two
+  unknown blueprint variables (2 warnings on 1.0.1, value unchanged). MeshBoard evaluates both forms identically
+  (`rewriteFormula`, octo-meshboard spec "rewrites ${x} and $x to safe identifiers"). The seed check now rejects
+  `${name}` except blueprint variables (`${octo.*}`); README/CLAUDE.md state the rule.
+
 - AB#7996: **EnergyIQ.Base 1.0.1** fixes the install of 1.0.0, which failed with "RtCkTypeId 'System/Query' not found"
   on a fresh test-2 tenant: the `_trees` query used the former abstract `System/Query` type, which no longer exists in
   System 2.8.0 (the entity was missing on energyiq for the same reason). It is now a `System/SimpleRtQuery` with
