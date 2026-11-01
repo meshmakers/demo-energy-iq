@@ -38,7 +38,10 @@ src/EnergyIqCkModel/
     ├── enums/                # Enumeration definitions (~10 enums)
     ├── records/              # Complex value type definitions (incl. Pset_* records)
     └── associations/         # Relationship definitions (~16 associations)
-data/bim/                     # RT (Runtime) model examples
+src/blueprints/EnergyIQ.Base/ # Blueprint (AB#7996): archives, rollups, boards, queries, tree nav
+├── blueprint.yaml
+└── seed-data/                # the ONLY copy of these files (om_importrt.ps1 reads them too)
+data/bim/                     # RT (Runtime) model examples - tenant data, never in the blueprint
 └── rt-firmianstrasse.yaml    # Demo property in Salzburg (~140 entities)
 ```
 
@@ -199,7 +202,7 @@ cd scripts && pwsh om_initialize_tenant.ps1
    (`6a0e…0001`–`…000d`, AB#3442: room sensors, light, shading, energy
    consumption + production — see `docs/developer-guide.md` "Archives (Stream
    Data)"), the simulation pipelines, the `_trees` query, the three **MeshBoards**
-   (`rt-meshboards-energyiq.yaml`: "Raumtemperaturen" + "Energie" + "Energiebilanz" — dashboards,
+   (`src/blueprints/EnergyIQ.Base/seed-data/ui/rt-meshboards-energyiq.yaml`: "Raumtemperaturen" + "Energie" + "Energiebilanz" — dashboards,
    widgets, persistent queries and six 5-minute AVG/MIN/MAX rollups, which are
    activated like the raw archives; the rollups are required by the
    resolution-aware line charts because raw archives declare no grain), the
@@ -242,6 +245,29 @@ recreates those with the new RtIds). Both endpoints require the deployed
 controls exist again. See `data/mappings/README.md`. The nodes
 (`ExportDataPointMappings@1` / `ImportDataPointMappings@1`) live in
 `octo-mesh-adapter`.
+
+## EnergyIQ.Base blueprint (AB#7996)
+
+Shared tenants (test-2, staging-1, prod-1) get the boards, queries, archives, rollups and tree
+navigation from the blueprint `src/blueprints/EnergyIQ.Base/`, not from `ImportRt`. Rules:
+
+- **One copy.** Edit the seed files in `src/blueprints/EnergyIQ.Base/seed-data/` (listed one by one in
+  `seedDataPaths`; never `../data/...`, never globs). `scripts/om_importrt.ps1` imports the same files.
+  `scripts/check_energyiq_blueprint_seed.py` (CI) fails on an unlisted file, a non-product CK type, a
+  secret attribute, a duplicate rtId or a second copy in `data/`.
+- **Bump on every seed change.** Raise `blueprintId` in `blueprint.yaml` (patch: content fix, minor: new
+  board/query/archive); CI fails with OCTO-BP100 otherwise. Raise the `EnergyIQ`/`Basic`/`Basic.Energy`
+  floors together with `ckModel.yaml` (the engine installs a floor as the exact version).
+- **Tenant data stays out:** `data/bim/*` (sites, rooms, devices, site price/CO2), adapters, deployment sites,
+  Loxone/MQTT/AI configurations, secrets, pipelines (no pipeline in 1.0.0).
+- **Archives:** activation is a manual post-install step until AB#7991 (`ActivateArchive`, RawArchives
+  first). `Archive.Columns` is seed-owned: do not change the columns of an existing archive or an existing
+  RollupArchive definition through the blueprint until AB#7997 + AB#8002 (columns) and AB#7992/AB#7993
+  (rollups) - add a new archive/rollup with a new rtId instead. Do not install on a tenant whose active
+  archives lack the AB#7925 computed columns (energyiq on test-2/prod-1) until AB#7997 + AB#8002.
+- **Release:** `main` publishes to the private catalog (test-2). staging-1/prod-1 only from an `r*` tag and
+  with Gerald's go per cluster in the session; `DumpTenant` first, entity counts per in-scope type
+  before/after. No `ImportRt` of these files against staging or prod.
 
 ## Documentation
 

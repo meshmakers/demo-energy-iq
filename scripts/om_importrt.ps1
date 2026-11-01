@@ -10,6 +10,10 @@
 # working directory.
 
 $dataPath = Join-Path $PSScriptRoot "../data"
+# Product content (archives, rollups, boards, queries, tree navigation) lives in the
+# EnergyIQ.Base blueprint (AB#7996) - one copy, imported from there for the dev loop.
+# Site data, adapters and pipelines stay in data/.
+$seedPath = Join-Path $PSScriptRoot "../src/blueprints/EnergyIQ.Base/seed-data"
 
 octo-cli -c EnableCommunication   # auto-applies System.Communication blueprint (seeds pool + mesh adapter)
 octo-cli -c EnableStreamData
@@ -24,7 +28,7 @@ octo-cli -c EnableStreamData
 # not-yet-activated archive. ActivateArchive provisions each CrateDB table so it
 # can accept writes (needs CrateDB reachable). The simulation and Loxone sample
 # pipelines write into these archives.
-octo-cli -c ImportRt -f (Join-Path $dataPath "_general/rt-archives-energyiq.yaml") -w -r
+octo-cli -c ImportRt -f (Join-Path $seedPath "archives/rt-archives-energyiq.yaml") -w -r
 octo-cli -c ActivateArchive -id 6a0e000000000000000a0001  # TemperatureSensor
 octo-cli -c ActivateArchive -id 6a0e000000000000000a0002  # HumiditySensor
 octo-cli -c ActivateArchive -id 6a0e000000000000000a0003  # CO2Sensor
@@ -49,7 +53,7 @@ octo-cli -c ActivateArchive -id 6a0e000000000000000a0013  # ShadingDeviceStatusA
 octo-cli -c ImportRt -f (Join-Path $dataPath "_pipelines/rt-simulation-adapters.yaml") -w
 
 # --- Queries ----------------------------------------------------------------
-octo-cli -c ImportRt -f (Join-Path $dataPath "_queries/_trees.yaml")
+octo-cli -c ImportRt -f (Join-Path $seedPath "queries/_trees.yaml")
 
 # --- UI: MeshBoards ----------------------------------------------------------
 # "Raumtemperaturen" + "Energie" dashboards with their persistent queries and
@@ -57,7 +61,7 @@ octo-cli -c ImportRt -f (Join-Path $dataPath "_queries/_trees.yaml")
 # rollups are required by the resolution-aware line charts). -r/Upsert so
 # re-runs update the boards in place. The rollups are activated below like the
 # raw archives; backfill of pre-existing history is optional (BackfillRollup).
-octo-cli -c ImportRt -f (Join-Path $dataPath "_general/rt-meshboards-energyiq.yaml") -w -r
+octo-cli -c ImportRt -f (Join-Path $seedPath "ui/rt-meshboards-energyiq.yaml") -w -r
 octo-cli -c ActivateArchive -id 6a4a9fe67e487162fbe3860f  # TemperatureSensorRollup5m
 octo-cli -c ActivateArchive -id 6a4aa4cc22664f2b26c67e65  # GridConnectionRollup5m
 octo-cli -c ActivateArchive -id 6a4aa4cc22664f2b26c67e6b  # GridConnectionRollup1h (AB#7942, Energie heatmap)
@@ -78,7 +82,7 @@ octo-cli -c ActivateArchive -id 6a4b4000000000000000e007  # ShadingDeviceRollup5
 # (AB#4262) + the switchable "Systems" perspective rooting on DistributionSystem (AB#4263).
 # Requires System.UI >= 2.3.0 (auto-distributed by octo-platform-services). -r/Upsert so
 # re-runs update the already-seeded singleton.
-octo-cli -c ImportRt -f (Join-Path $dataPath "_general/rt-tree-navigation.yaml") -w -r
+octo-cli -c ImportRt -f (Join-Path $seedPath "ui/rt-tree-navigation.yaml") -w -r
 
 # --- BIM --------------------------------------------------------------------
 octo-cli -c ImportRt -f (Join-Path $dataPath "bim/rt-firmianstrasse.yaml") -w
