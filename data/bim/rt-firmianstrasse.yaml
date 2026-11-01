@@ -1783,6 +1783,22 @@ entities:
         targetRtId: 6789a00000000000000000a1
         targetCkTypeId: EnergyIQ/Site
 
+  # Grid connection point of the site (AB#8040): anchor of GridConnection "Hausanschluss",
+  # like "Netzanschluss Fusch" in rt-fusch.yaml.
+  - rtId: 6789a00000000000000052e8
+    ckTypeId: EnergyIQ/ExternalSpace
+    attributes:
+      - id: EnergyIQ/GlobalId
+        value: ext-firmianstrasse-netzanschluss
+      - id: System/Name
+        value: Netzanschluss Firmianstraße
+      - id: System/Description
+        value: Netzanschlusspunkt am Standort Firmianstraße, Anker des Hausanschlusses
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6789a00000000000000000a1
+        targetCkTypeId: EnergyIQ/Site
+
   # Outdoor weather sensors, hosted by the Garten ExternalSpace (IFC: external
   # spatial element hosting free-field sensors). Fed live by Loxone via the
   # directControlMappings "outdoor-temp" / "outdoor-humidity" in rt-pipelines-loxone.yaml.
@@ -2866,6 +2882,12 @@ entities:
         value: 2  # Bidirectional
       - id: EnergyIQ/IsMainConnection
         value: true
+    associations:
+      # Spatial anchor (AB#8040): Site -> ExternalSpace "Netzanschluss Firmianstraße" -> GridConnection,
+      # the same site model as Fusch, so a path query from the Site reaches its grid connection.
+      - roleId: EnergyIQ/SpaceElements
+        targetRtId: 6789a00000000000000052e8
+        targetCkTypeId: EnergyIQ/ExternalSpace
 
   # --- 4× Stockwerks-Stromzähler (Loxone-Untermeter) ---
   # Whole-floor sub-meters: anchored to their BuildingStorey via StoreyElements

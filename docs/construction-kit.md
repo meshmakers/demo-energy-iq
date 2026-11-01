@@ -205,6 +205,7 @@ Distinct from `Space` — does not carry Pset_* records or interior sensor oblig
 
 Parent: `Site`, `Building`, or `BuildingStorey` via inherited `ParentChild`.
 Allowed associations: `SpaceSensors` (outdoor weather/irradiance), `SpaceElements` (outdoor luminaires, shading).
+Site model for the grid connection: every site anchors its `GridConnection` via `SpaceElements` to an ExternalSpace "Netzanschluss <site>" under the `Site` (`ParentChild`), so a path query from the Site reaches its grid meter (Fusch, Firmianstraße since AB#8040).
 
 ---
 
