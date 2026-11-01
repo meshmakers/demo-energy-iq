@@ -565,10 +565,14 @@ wireframe need. No workaround in this repo (Frigg, 2026-11-01):
 3. **Colours and the dashed PV line:** colours come from the chart palette and the PV line is solid; the wireframe
    colours (PV #F2C46D, battery #0F766E, grid #2563EB, PV line #8A5300 dashed) need per-series colour and line style.
 
-### Verification
+### Prerequisites and checks
 
-Done locally: `scripts/check_energyiq_blueprint_seed.py` OK, `octo-bpm -c validate` OK, `octo-bpm -c validateVersion`
-VALID (1.1.0 over published 1.0.2). test-2 (energyiq) on 2026-11-01: the deployed Studio has AB#7951 but not yet the
-AB#7952 formula series; the GridConnectionArchive has only `ExportPower` (backfilling), `ImportPower` and the battery
-columns are missing until AB#8002/AB#7997. The board therefore renders the full split only after those land; the
-measured check (two sample days, 1 % per bucket) is attached to the PR once the columns exist.
+- The grid and battery shares need the computed columns `ImportPower`/`ExportPower` and `ChargePower`/`DischargePower`
+  on the active archives of the tenant (AB#8002, AB#7997). Until a column exists its query series fails and every
+  formula that uses it is a gap.
+- *aus Batterie* for a live Loxone battery (Firmianstraße) needs `DischargePower` with the `DischargingPower` branch
+  (AB#7997). With the simulator-only fallback formula `if(chargingpower < 0, -chargingpower, 0)` (see "Two battery
+  conventions" above) the battery share shows 0 for Firmianstraße and its discharge lands in no stack.
+- Checks per change: `scripts/check_energyiq_blueprint_seed.py`, `octo-bpm -c validate` and `-c validateVersion`.
+  The per-bucket 1 % check (stacks vs Import − Export + PV + Discharge − Charge, two sample days) and the test-2
+  evidence are attached to the pull request of AB#7944.
