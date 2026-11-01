@@ -1,6 +1,6 @@
 # EnergyIQ Construction Kit Specification
 
-**Version:** EnergyIQ-2.14.0
+**Version:** EnergyIQ-2.15.0
 **Depends on:** Basic-[2.4,3.0), Basic.Energy-[1.9,2.0)
 
 ## Overview
@@ -71,8 +71,39 @@ IFC: `IfcSite`.
 | RefLatitude | Double? | Latitude (WGS84) |
 | RefLongitude | Double? | Longitude (WGS84) |
 | RefElevation | Double? | Elevation above sea level (m) |
+| EnergyPrice | Double? | Energy price of grid electricity, EUR/kWh net (excl. VAT), energy component only *(2.15.0)* |
+| Co2Factor | Double? | CO2 emission factor of grid electricity, kg CO2-eq/kWh *(2.15.0)* |
 
 Children: `Building`, `ExternalSpace` via inherited `ParentChild`.
+
+#### Energy price and CO2 factor *(2.15.0, AB#7947)*
+
+Defaults decided on AB#7947 (2026-11-01).
+
+`EnergyPrice` and `Co2Factor` are the data basis of the site comparison (cost and CO2) on the Energiebilanz
+board. Both are optional, `TenantOwned` and maintained per site by the site admin in Refinery Studio. An **empty attribute
+means "use the default below"**; the CK deliberately sets no `defaultValues`, so a later change of the default
+reaches every site that never set its own value. Consumers (queries, boards) apply the default themselves.
+
+| Attribute | Unit | Default when empty | Meaning and source |
+|-----------|------|--------------------|--------------------|
+| `EnergyPrice` | EUR/kWh net | **0.1600** | **Net** (excl. VAT; the target users are companies, which reclaim VAT), **energy price only**: the energy and supply component of the electricity bill. Not included: VAT, grid fees (Netznutzung, Netzverlust, Messentgelt), taxes and levies (Elektrizitätsabgabe, Erneuerbaren-Förderbeitrag), and no feed-in revenue for exported PV energy. Source, **used as a demo reference, not a business tariff**: Eurostat household band DC (`nrg_pc_204_c`, 2,500–4,999 kWh/a), Austria, year 2025, "Energy and supply" = 0.1600 EUR/kWh. Gross equivalent at 20 % VAT: 0.1920 EUR/kWh (for information only; do not enter gross values). |
+| `Co2Factor` | kg CO2-eq/kWh | **0.152** | Austrian electricity supply mix ("Stromaufbringung Österreich": domestic generation plus imports, direct 123 g + upstream 29 g, 6 % grid losses). Source: Umweltbundesamt, *Harmonisierte österreichische direkte und vorgelagerte THG-Emissionsfaktoren für relevante Energieträger & Technologien*, REP-0989, Datenstand 2025 (generation year 2023), table 4. |
+
+Rules:
+
+- Store the price as given, unrounded, with at least 4 decimals (e.g. `0.2345`); the attribute is a `Double`, so no
+  rounding happens in the CK or in the database.
+- Enter net prices. A contract quoted gross (households): divide by 1.20 before entering it. Enter only the energy
+  component (Energiepreis/Arbeitspreis of the supplier), not the total price per kWh of the bill.
+- Show the unit as "EUR/kWh net" wherever the value is displayed (tiles, tooltips).
+- `Co2Factor` of a supplier with its own Stromkennzeichnung (e.g. 100 % renewable) may be entered per site; the
+  default stays the national supply mix.
+- The seed values in `data/bim/rt-firmianstrasse.yaml` (0.2345 EUR/kWh) and `data/bim/rt-fusch.yaml`
+  (0.1987 EUR/kWh, both net) are demo values, not taken from a supply contract; both use the default CO2 factor 0.152.
+- Both attributes are `ownership: TenantOwned` (AB#5187): the site admin owns the value. A re-import of the seed
+  files (`ImportRt -r`) or a blueprint re-apply keeps a value that already exists on the site; the seed value is
+  only the initial value of a new site or of a site without a value. The values are still exported (`ExportRt`).
 
 ---
 

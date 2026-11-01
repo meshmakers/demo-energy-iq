@@ -21,4 +21,11 @@ types:
   - id: ${this}/RefElevation
     name: RefElevation
     isOptional: true
+  # Cost and CO2 factors for the site comparison (AB#7947); empty = documented default
+  - id: ${this}/EnergyPrice
+    name: EnergyPrice
+    isOptional: true
+  - id: ${this}/Co2Factor
+    name: Co2Factor
+    isOptional: true
   # Children (Building) via inherited System/ParentChild from Basic/Tree
