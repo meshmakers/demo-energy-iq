@@ -507,7 +507,7 @@ OccupancyTimePerDay: 8.0
 
 ## Archives (Stream Data)
 
-Per-type archives provision CrateDB tables for time-series storage. Defined in `data/_general/rt-archives-energyiq.yaml` (13 RawArchives since AB#3442):
+Per-type archives provision CrateDB tables for time-series storage. Defined in `src/blueprints/EnergyIQ.Base/seed-data/archives/rt-archives-energyiq.yaml` (shipped by the `EnergyIQ.Base` blueprint since AB#7996; 13 RawArchives since AB#3442):
 
 | Archive (rtId) | TargetCkTypeId | Columns (Paths) |
 |---|---|---|
@@ -800,15 +800,20 @@ src/EnergyIqCkModel/ConstructionKit/
                                 #   RoomTerminal+subtypes / HeatPump / ThermalEnergyStorage /
                                 #   Schedule / DistributionSystem / unchanged PV chain)
 
+src/blueprints/EnergyIQ.Base/          # blueprint (AB#7996) - the only copy of these files
+├── blueprint.yaml
+└── seed-data/
+    ├── archives/rt-archives-energyiq.yaml   # per-type stream-data archives
+    ├── ui/rt-meshboards-energyiq.yaml       # MeshBoards, widgets, queries, rollups
+    ├── ui/rt-tree-navigation.yaml
+    └── queries/_trees.yaml
+
 data/
 ├── _general/
-│   ├── rt-archives-energyiq.yaml      # 13 per-type stream-data archives
 │   ├── rt-adapters-mesh.yaml
 │   └── rt-autoincrement.yaml
 ├── _pipelines/
 │   └── rt-simulation-adapters.yaml    # simulation targeting Sensor/Actuator entities
-├── _queries/
-│   └── _trees.yaml
 └── bim/
     └── rt-firmianstrasse.yaml          # ~140 entities, the v2 demo property
 ```

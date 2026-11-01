@@ -80,6 +80,12 @@ stages:
                 '**/*Tests.csproj'
                 !'**/*SystemTests.csproj'
               testRunTitle: 'CI'
+          # ---- Blueprint seed guard (AB#7996) ----
+          # Unconditional and ahead of every publish: product content only (allow-listed
+          # CK types, no site data, no secrets), every seed file listed in seedDataPaths,
+          # and om_importrt.ps1 reads the same single copy. Stdlib only.
+          - script: python3 scripts/check_energyiq_blueprint_seed.py
+            displayName: 'Check EnergyIQ.Base blueprint seed'
           # ---- CK model: validate + publish through the shared step (AB#5121) ----
           # Version and schema gate on every build, then main -> PrivateGitHubCatalog
           # (test-2), r* tags -> private AND PublicGitHubCatalog (prod-1 reads ONLY the
@@ -102,6 +108,18 @@ stages:
             parameters:
               constructionKitPaths:
                 - 'src/EnergyIqCkModel/ConstructionKit'
+          # ---- Blueprint: validate + publish through the shared step (AB#7996) ----
+          # Runs AFTER the CK step, so the EnergyIQ floor in blueprint.yaml resolves
+          # against a model this run has already published. Same routing: schema and
+          # version gate (OCTO-BP100/101/103) on every branch, main ->
+          # PrivateGitHubBlueprintCatalog (test-2), r* tags -> private AND
+          # PublicGitHubBlueprintCatalog (prod-1 reads only the public catalog); every
+          # other branch validates only. A changed seed file needs a version bump in
+          # blueprint.yaml, or this step fails with OCTO-BP100.
+          - template: templates/steps/validate-and-publish-blueprints.yml@pipelineTemplates
+            parameters:
+              blueprintPaths:
+                - 'src/blueprints/EnergyIQ.Base'
 #          - template: build-and-push-docker-image.yml
 #            parameters:
 #              PublicRegistryServiceConnection: $(DockerRegistryPublicAcrConnection)

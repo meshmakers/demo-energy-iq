@@ -57,7 +57,10 @@ Imports the following Construction Kits:
 ./om_importrt.ps1
 ```
 
-Imports:
+Imports (archives, rollups, boards, queries and tree navigation from the `EnergyIQ.Base` blueprint
+folder `src/blueprints/EnergyIQ.Base/seed-data/`, everything else from `data/`; on shared tenants install
+the blueprint instead, see "EnergyIQ.Base blueprint" below):
+- **Archives and MeshBoards** - stream-data archives, rollups, dashboards and their queries
 - **Adapter** - Mesh Adapter configuration
 - **Pipelines** - Simulation pipeline for demo data
 - **Queries** - Predefined queries
@@ -168,6 +171,10 @@ demo-energy-iq/
 │   ├── construction-kit.md    # CK Specification
 │   └── standards-reference.md # IFC & VDI 3814 Details
 ├── src/
+│   ├── blueprints/
+│   │   └── EnergyIQ.Base/     # Blueprint: boards, queries, archives, rollups (AB#7996)
+│   │       ├── blueprint.yaml
+│   │       └── seed-data/     # archives/, ui/, queries/ - the only copy of these files
 │   └── EnergyIqCkModel/
 │       └── ConstructionKit/   # CK definitions (YAML)
 │           ├── ckModel.yaml   # Model metadata
@@ -181,8 +188,7 @@ demo-energy-iq/
 │   │   └── rt-firmianstrasse.yaml
 │   ├── _pipelines/            # Simulation adapters
 │   │   └── rt-simulation-adapters.yaml
-│   ├── _general/              # General adapters
-│   └── _queries/              # Predefined queries
+│   └── _general/              # Adapters, Loxone/MQTT/AI configurations (tenant data)
 ├── scripts/                   # Setup scripts
 │   ├── om_login_local.ps1     # OctoMesh login
 │   ├── om_create_tenants.ps1  # Create tenant
@@ -243,7 +249,7 @@ list grows from 6 to 28 states ([runbook](docs/fusch-loxone-runbook.md) section 
 
 ## MeshBoards: site selector (AB#7692)
 
-The boards **Energie** and **Energiebilanz** (`data/_general/rt-meshboards-energyiq.yaml`) have one visible selector
+The boards **Energie** and **Energiebilanz** (`src/blueprints/EnergyIQ.Base/seed-data/ui/rt-meshboards-energyiq.yaml`) have one visible selector
 **Standort** in the toolbar. It lists the electrical DistributionSystems of the tenant — one per site (Firmianstraße;
 Fusch only where `data/bim/rt-fusch.yaml` is imported, e.g. prod-1, not by the local import scripts) — and defaults to
 Firmianstraße. Hidden selectors follow it (`followsSelectorId`), each resolves the picked system to the
@@ -278,6 +284,57 @@ the tiles show the empty state there.
 **Adding a site** (these three boards): Site → Building → BuildingStorey → Space, with sensors (`SpaceSensors`),
 luminaires and blinds (`SpaceElements`) on the rooms and plant (`ParentChild`) in a room, as in `rt-firmianstrasse.yaml`.
 The heat-pump meter needs `EquipmentMeters` → its HeatPump (EnergyIQ 2.14.0).
+
+## EnergyIQ.Base blueprint (AB#7996)
+
+The product content every EnergyIQ tenant shares ships as the blueprint **`EnergyIQ.Base`**
+(`src/blueprints/EnergyIQ.Base/`): 19 RawArchives, 14 RollupArchives, the 5 MeshBoards with their
+37 widgets and 33 queries, the `_trees` query and the Runtime Browser tree navigation. It depends on
+`EnergyIQ-[2.15.0,3.0)` and lists `Basic-2.5.0` / `Basic.Energy-1.10.0` explicitly (transitive CK
+dependencies are not resolved on install). No pipelines in 1.0.0.
+
+**One copy of each file.** The seed YAML lives only in `seed-data/` (each file listed in
+`seedDataPaths`; a blueprint cannot read files outside its folder, `../data/...` passes pack and fails at
+install). `scripts/om_importrt.ps1` imports the same files for the local dev loop.
+`scripts/check_energyiq_blueprint_seed.py` (run by CI) enforces this and the content rule below.
+
+**What stays tenant data** (in `data/`, imported per tenant, never in the blueprint): sites and their
+digital twin (`data/bim/*`, including the site price and CO2 values), adapters and deployment sites,
+Loxone/MQTT/AI configurations, anything with a secret, and pipelines (every current pipeline is bound to
+a site's rtIds or to the Loxone CK).
+
+**Install / update**
+
+```powershell
+octo-cli -c EnableCommunication
+octo-cli -c EnableStreamData
+octo-cli -c InstallBlueprint -b EnergyIQ.Base-1.0.0          # new tenant, or adopts existing ImportRt content (same rtIds)
+octo-cli -c PreviewBlueprintUpdate -tv EnergyIQ.Base-<new>   # always look at the diff first
+octo-cli -c UpdateBlueprint -tv EnergyIQ.Base-<new>
+octo-cli -c ListBlueprintInstallations
+```
+
+**Post-install, manual until AB#7991:** activate every archive once, RawArchives first, then the
+RollupArchives (`octo-cli -c ActivateArchive -id <rtId>`; the list of rtIds is in `scripts/om_importrt.ps1`);
+optionally `octo-cli -c BackfillRollup -id <rollupRtId>` for history. Then import a site
+(e.g. `data/bim/rt-firmianstrasse.yaml`); without a site the boards show their empty state.
+A re-apply keeps an activated archive activated (`Archive.Status` is runtime state).
+
+**Rule for archive changes.** `Archive.Columns` is seed-owned, so a blueprint update writes the column
+list of an existing archive without any CrateDB DDL or backfill. Until the platform can do that through the
+seed path, do **not** change the columns of an existing archive or an existing RollupArchive definition
+(bucket, aggregations, sources) in this blueprint: columns on an active archive wait for AB#7997 (ingested
+and computed columns via blueprint update) and AB#8002 (background backfill), rollup changes for
+AB#7992/AB#7993. Until then such a change is a new archive with a new rtId (or a manual
+`AddComputedColumn` on the tenant, as AB#7925 did). For the same reason the blueprint is **not installed on
+energyiq** (test-2, prod-1) yet: their GridConnection/BatteryStorage archives lack the four computed columns
+of AB#7925, and an install would write the definitions without the columns (AB#7996 AC 3 waits for
+AB#7997 + AB#8002).
+
+**Release.** Every seed change needs a version bump in `blueprint.yaml` (CI fails with OCTO-BP100
+otherwise). A push to `main` publishes to the private catalog (test-2). staging-1 and prod-1 install only from
+an `r*` tag (private + public catalog) and only with **Gerald's go per cluster**, with `DumpTenant` before
+and entity counts per in-scope type before/after. No `ImportRt` of the blueprint files against staging or prod.
 
 ## CI/CD (Azure DevOps)
 

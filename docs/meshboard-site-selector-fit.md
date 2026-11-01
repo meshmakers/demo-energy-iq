@@ -1,6 +1,6 @@
 # MeshBoards: can one site selector drive every widget? (AB#7692)
 
-Analysis of the five boards in `data/_general/rt-meshboards-energyiq.yaml` against the
+Analysis of the five boards in `data/_general/rt-meshboards-energyiq.yaml` (since AB#7996 `src/blueprints/EnergyIQ.Base/seed-data/ui/rt-meshboards-energyiq.yaml`) against the
 octo-meshboard entity selector (`EntitySelectorConfig`, `EntitySelectorChildScope`,
 `PersistentQueryDataSource.entitySelectorId`). Result on 2026-10-28: **not with data configuration alone**
 (platform gaps below). The gaps were closed in octo-frontend-libraries by Feature AB#7719 (AB#7721-AB#7725,
