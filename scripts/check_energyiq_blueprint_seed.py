@@ -36,12 +36,16 @@ ALLOWED_CK_TYPES = {
     "System/GroupingAggregationSdQuery",
 }
 
-SECRET_ATTRIBUTE = re.compile(
-    r"^\s*-?\s*id:\s*\S*/(\S*\.)?(Password|ClientSecret|ApiKey|AccessToken|Token|Secret)(-\d+)?\s*$",
-    re.IGNORECASE,
-)
-CK_TYPE = re.compile(r"^\s*-?\s*ckTypeId:\s*['\"]?([A-Za-z0-9_.]+/[A-Za-z0-9_.]+?)(-\d+)?['\"]?\s*$")
-RT_ID = re.compile(r"^\s*-\s*rtId:\s*['\"]?([0-9a-fA-F]{24})['\"]?\s*$")
+# The checker is stdlib-only (no YAML parser on the agents), so it is FAIL-CLOSED: a line that
+# carries one of the keys below but does not match the one accepted form is an error, never skipped.
+# Accepted forms allow optional quotes and a trailing comment.
+_TAIL = r"['\"]?\s*(#.*)?$"
+CK_TYPE_KEY = re.compile(r"^\s*(-\s*)?['\"]?ckTypeId['\"]?\s*:")
+CK_TYPE = re.compile(r"^\s*(-\s*)?ckTypeId:\s*['\"]?([A-Za-z0-9_.]+/[A-Za-z0-9_.]+?)(-\d+)?" + _TAIL)
+RT_ID_KEY = re.compile(r"^\s*(-\s*)?['\"]?rtId['\"]?\s*:")
+RT_ID = re.compile(r"^\s*(-\s*)?rtId:\s*['\"]?([0-9a-fA-F]{24})" + _TAIL)
+SECRET_NAME = re.compile(r"(Password|ClientSecret|ApiKey|AccessToken|Token|Secret)", re.IGNORECASE)
+ATTRIBUTE_ID_KEY = re.compile(r"^\s*(-\s*)?['\"]?id['\"]?\s*:\s*(.*)$")
 
 
 def seed_data_paths(blueprint_text: str) -> list[str]:
@@ -66,31 +70,45 @@ def main() -> int:
         errors.append("blueprint.yaml has no seedDataPaths entries")
 
     for p in listed:
-        if p.startswith("/") or ".." in Path(p).parts or "." in Path(p).parts or any(c in p for c in "*?["):
+        parts = Path(p).parts
+        if p.startswith("/") or ".." in parts or "." in parts or any(c in p for c in "*?["):
             errors.append(f"seedDataPaths entry '{p}' must be a plain path inside the blueprint folder")
+        elif not p.startswith("seed-data/") or Path(p).suffix not in (".yaml", ".yml"):
+            errors.append(f"seedDataPaths entry '{p}' must be a .yaml/.yml file under seed-data/")
         elif not (BP_DIR / p).is_file():
             errors.append(f"seedDataPaths entry '{p}' does not exist")
 
-    on_disk = sorted(str(f.relative_to(BP_DIR)) for f in SEED_DIR.rglob("*.yaml"))
+    on_disk = sorted(
+        str(f.relative_to(BP_DIR)) for f in SEED_DIR.rglob("*") if f.is_file() and f.suffix in (".yaml", ".yml")
+    )
     for f in on_disk:
         if f not in listed:
             errors.append(f"{f} is under seed-data/ but not listed in seedDataPaths")
 
+    # Scan every declared file AND every file on disk, so nothing that install would read escapes the checks.
+    to_scan = sorted(set(on_disk) | {p for p in listed if (BP_DIR / p).is_file()})
     seen_rt_ids: dict[str, str] = {}
     entity_count = 0
-    for f in on_disk:
+    for f in to_scan:
         for no, line in enumerate((BP_DIR / f).read_text(encoding="utf-8").splitlines(), 1):
             if line.lstrip().startswith("#"):
                 continue
-            m = CK_TYPE.match(line)
-            if m and m.group(1) not in ALLOWED_CK_TYPES:
-                errors.append(f"{f}:{no}: ckTypeId {m.group(1)} is not product content (allow-list)")
-            if SECRET_ATTRIBUTE.match(line):
+            if CK_TYPE_KEY.match(line):
+                m = CK_TYPE.match(line)
+                if not m:
+                    errors.append(f"{f}:{no}: ckTypeId in a form the check cannot verify: {line.strip()}")
+                elif m.group(2) not in ALLOWED_CK_TYPES:
+                    errors.append(f"{f}:{no}: ckTypeId {m.group(2)} is not product content (allow-list)")
+            a = ATTRIBUTE_ID_KEY.match(line)
+            if a and SECRET_NAME.search(a.group(2).split("#", 1)[0]):
                 errors.append(f"{f}:{no}: secret attribute in the seed: {line.strip()}")
-            r = RT_ID.match(line)
-            if r:
+            if RT_ID_KEY.match(line):
+                r = RT_ID.match(line)
+                if not r:
+                    errors.append(f"{f}:{no}: rtId in a form the check cannot verify: {line.strip()}")
+                    continue
                 entity_count += 1
-                rt_id = r.group(1).lower()
+                rt_id = r.group(2).lower()
                 if rt_id in seen_rt_ids:
                     errors.append(f"{f}:{no}: rtId {rt_id} already used in {seen_rt_ids[rt_id]}")
                 seen_rt_ids[rt_id] = f"{f}:{no}"
@@ -102,7 +120,7 @@ def main() -> int:
         errors.append(f"om_importrt.ps1 imports {sorted(imported)} from the blueprint, expected {sorted(expected)}")
 
     seed_names = {Path(p).name for p in listed}
-    for dup in (ROOT / "data").rglob("*.yaml"):
+    for dup in (p for p in (ROOT / "data").rglob("*") if p.suffix in (".yaml", ".yml")):
         if dup.name in seed_names:
             errors.append(f"{dup.relative_to(ROOT)} duplicates a blueprint seed file")
 
@@ -110,7 +128,7 @@ def main() -> int:
         for e in errors:
             print(f"ERROR: {e}", file=sys.stderr)
         return 1
-    print(f"EnergyIQ.Base seed OK: {len(on_disk)} files, {entity_count} entities, allow-listed types only, no secrets")
+    print(f"EnergyIQ.Base seed OK: {len(to_scan)} files, {entity_count} entities, allow-listed types only, no secrets")
     return 0
 
 

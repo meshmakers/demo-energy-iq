@@ -263,8 +263,8 @@ navigation from the blueprint `src/blueprints/EnergyIQ.Base/`, not from `ImportR
 - **Archives:** activation is a manual post-install step until AB#7991 (`ActivateArchive`, RawArchives
   first). `Archive.Columns` is seed-owned: do not change the columns of an existing archive or an existing
   RollupArchive definition through the blueprint until AB#7997 + AB#8002 (columns) and AB#7992/AB#7993
-  (rollups) - add a new archive/rollup with a new rtId instead. Not installed on energyiq (test-2/prod-1)
-  until AB#7997 + AB#8002, because their archives lack the AB#7925 computed columns.
+  (rollups) - add a new archive/rollup with a new rtId instead. Do not install on a tenant whose active
+  archives lack the AB#7925 computed columns (energyiq on test-2/prod-1) until AB#7997 + AB#8002.
 - **Release:** `main` publishes to the private catalog (test-2). staging-1/prod-1 only from an `r*` tag and
   with Gerald's go per cluster in the session; `DumpTenant` first, entity counts per in-scope type
   before/after. No `ImportRt` of these files against staging or prod.

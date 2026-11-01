@@ -11,7 +11,8 @@
   `EnergyIQ-[2.15.0,3.0)`, `Basic-[2.5.0,3.0)`, `Basic.Energy-[1.10.0,2.0)`, System/StreamData/UI 2.3. No pipelines,
   no site data, no adapters/configurations/secrets; the new CI check `scripts/check_energyiq_blueprint_seed.py`
   enforces it. Archive activation stays manual until AB#7991; column/rollup changes through the blueprint wait for
-  AB#7997/AB#8002 and AB#7992/AB#7993. Not installed on energyiq yet (its archives lack the AB#7925 computed columns).
+  AB#7997/AB#8002 and AB#7992/AB#7993. Do not install on a tenant whose active archives lack the AB#7925 computed columns (energyiq on test-2/prod-1)
+  until AB#7997 + AB#8002.
   staging/prod only from an `r*` tag with Gerald's go per cluster.
 
 - AB#7925: **Energiebilanz kWh tiles show the real energy for every site.** The six tiles are stream-data **Integral**

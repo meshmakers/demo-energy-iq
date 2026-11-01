@@ -326,10 +326,10 @@ seed path, do **not** change the columns of an existing archive or an existing R
 (bucket, aggregations, sources) in this blueprint: columns on an active archive wait for AB#7997 (ingested
 and computed columns via blueprint update) and AB#8002 (background backfill), rollup changes for
 AB#7992/AB#7993. Until then such a change is a new archive with a new rtId (or a manual
-`AddComputedColumn` on the tenant, as AB#7925 did). For the same reason the blueprint is **not installed on
-energyiq** (test-2, prod-1) yet: their GridConnection/BatteryStorage archives lack the four computed columns
-of AB#7925, and an install would write the definitions without the columns (AB#7996 AC 3 waits for
-AB#7997 + AB#8002).
+`AddComputedColumn` on the tenant, as AB#7925 did). For the same reason, **do not install the blueprint on a tenant
+whose active GridConnection/BatteryStorage archives lack the four AB#7925 computed columns** (the energyiq
+tenants on test-2 and prod-1) until AB#7997 + AB#8002 are done: an install would write the column
+definitions without the columns.
 
 **Release.** Every seed change needs a version bump in `blueprint.yaml` (CI fails with OCTO-BP100
 otherwise). A push to `main` publishes to the private catalog (test-2). staging-1 and prod-1 install only from
