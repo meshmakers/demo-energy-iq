@@ -1,6 +1,6 @@
 $schema: https://schemas.meshmakers.cloud/runtime-model.schema.json
 dependencies:
-  - EnergyIQ-2.0.0
+  - EnergyIQ-[2.15,3.0)
 entities:
   # ============================================================
   # SITE - Grundstück Firmianstraße 31A
@@ -23,6 +23,7 @@ entities:
       # AB#7947 (EnergyIQ 2.15.0): demo values, not taken from a supply contract.
       # EnergyPrice = EUR/kWh net (excl. VAT), energy component only; Co2Factor = kg CO2-eq/kWh.
       # Defaults when empty: docs/construction-kit.md "Energy price and CO2 factor".
+      # TenantOwned: initial values only - a re-import (-r) keeps values the site admin changed.
       - id: EnergyIQ/EnergyPrice
         value: 0.2345
       - id: EnergyIQ/Co2Factor

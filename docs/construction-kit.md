@@ -81,7 +81,7 @@ Children: `Building`, `ExternalSpace` via inherited `ParentChild`.
 Defaults decided on AB#7947 (2026-11-01).
 
 `EnergyPrice` and `Co2Factor` are the data basis of the site comparison (cost and CO2) on the Energiebilanz
-board. Both are optional and maintained per site by the site admin in Refinery Studio. An **empty attribute
+board. Both are optional, `TenantOwned` and maintained per site by the site admin in Refinery Studio. An **empty attribute
 means "use the default below"**; the CK deliberately sets no `defaultValues`, so a later change of the default
 reaches every site that never set its own value. Consumers (queries, boards) apply the default themselves.
 
@@ -101,6 +101,9 @@ Rules:
   default stays the national supply mix.
 - The seed values in `data/bim/rt-firmianstrasse.yaml` (0.2345 EUR/kWh) and `data/bim/rt-fusch.yaml`
   (0.1987 EUR/kWh, both net) are demo values, not taken from a supply contract; both use the default CO2 factor 0.152.
+- Both attributes are `ownership: TenantOwned` (AB#5187): the site admin owns the value. A re-import of the seed
+  files (`ImportRt -r`) or a blueprint re-apply keeps a value that already exists on the site; the seed value is
+  only the initial value of a new site or of a site without a value. The values are still exported (`ExportRt`).
 
 ---
 
