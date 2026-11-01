@@ -1272,7 +1272,7 @@ entities:
         value: ''
       - id: System.UI/DashboardWidget.Config
         value: |-
-          {"valueAttribute": "", "valueMode": "formula", "formula": "max(0, ${pvEnergyKwh} - ${gridExportKwh})", "suffix": " kWh", "decimalPlaces": 1, "comparisonText": "PV-Erzeugung − Einspeisung"}
+          {"valueAttribute": "", "valueMode": "formula", "formula": "max(0, $pvEnergyKwh - $gridExportKwh)", "suffix": " kWh", "decimalPlaces": 1, "comparisonText": "PV-Erzeugung − Einspeisung"}
 
   - rtId: 6a4aaf1922664f2b26c67ecf
     ckTypeId: System.UI/DashboardWidget
