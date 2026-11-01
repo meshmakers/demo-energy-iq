@@ -7,6 +7,8 @@ Checks:
 2. The seed holds product content only: every entity's ckTypeId is on the allow-list
    (archives, rollups, boards, widgets, queries, tree navigation). Site/BIM entities,
    adapters, deployment sites, pipelines and Loxone/MQTT/AI configurations fail the check.
+2a. Block style only: a flow-style list item (`- {...}`, `- [...]`) or an inline `entities: [...]`
+   fails, because its keys would escape the line checks.
 3. No secret attribute values (Password, ClientSecret, ApiKey, Token, Secret).
 4. No rtId appears twice across the seed files.
 5. scripts/om_importrt.ps1 imports exactly the seed files from the blueprint folder
@@ -45,6 +47,10 @@ CK_TYPE = re.compile(r"^\s*(-\s*)?ckTypeId:\s*['\"]?([A-Za-z0-9_.]+/[A-Za-z0-9_.
 RT_ID_KEY = re.compile(r"^\s*(-\s*)?['\"]?rtId['\"]?\s*:")
 RT_ID = re.compile(r"^\s*(-\s*)?rtId:\s*['\"]?([0-9a-fA-F]{24})" + _TAIL)
 SECRET_NAME = re.compile(r"(Password|ClientSecret|ApiKey|AccessToken|Token|Secret)", re.IGNORECASE)
+# Flow-style list items or an inline entities list would hide entity keys from the line checks
+# above; the runtime-model seed files use block style only, so these forms are rejected outright.
+# (JSON inside quoted string values, e.g. the dashboard selector blobs, is not affected.)
+FLOW_STYLE = re.compile(r"^\s*(-\s*[\{\[]|entities\s*:\s*[\{\[])")
 ATTRIBUTE_ID_KEY = re.compile(r"^\s*(-\s*)?['\"]?id['\"]?\s*:\s*(.*)$")
 
 
@@ -93,6 +99,8 @@ def main() -> int:
         for no, line in enumerate((BP_DIR / f).read_text(encoding="utf-8").splitlines(), 1):
             if line.lstrip().startswith("#"):
                 continue
+            if FLOW_STYLE.match(line):
+                errors.append(f"{f}:{no}: flow-style list/entity syntax is not allowed in the seed: {line.strip()[:80]}")
             if CK_TYPE_KEY.match(line):
                 m = CK_TYPE.match(line)
                 if not m:
