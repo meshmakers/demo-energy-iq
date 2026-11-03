@@ -1,5 +1,5 @@
 $schema: https://schemas.meshmakers.cloud/blueprint-meta.schema.json
-blueprintId: EnergyIQ.Base-1.2.0
+blueprintId: EnergyIQ.Base-1.3.0
 description: |
   EnergyIQ product content for building energy monitoring - the boards, queries,
   stream-data archives and rollups every EnergyIQ tenant shares (AB#7996).
@@ -14,7 +14,7 @@ description: |
   - 14 RollupArchives (5-minute AVG/MIN/MAX, 1-hour grid rollup) the
     resolution-aware line charts and the heatmaps need
   - 5 MeshBoards (Raumtemperaturen, Energie, Energiebilanz, Heizung & Kuehlung,
-    Beschattung & Beleuchtung) with 39 widgets and 42 persistent queries; every
+    Beschattung & Beleuchtung) with 41 widgets and 42 persistent queries; every
     board picks its site through the "Standort" selector
   - the process diagram "Energiefluss live" (grid, PV, battery, wallbox, devices) of
     the Energie board (AB#7941)

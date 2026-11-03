@@ -1462,7 +1462,7 @@ entities:
   # rt-archives-energyiq.yaml) — the sign split is never a field filter (a filter drops rows
   # and breaks the step integral). The PV, Einspeisung, Netzbezug and battery KPIs publish their
   # value as board variables (pvEnergyKwh, gridExportKwh, gridImportKwh, batteryChargeKwh,
-  # batteryDischargeKwh) for the Eigenverbrauch formula and later gauges (AB#7943).
+  # batteryDischargeKwh) for the Eigenverbrauch formula and the Autarkie / Eigenverbrauchsquote gauges (AB#7943).
   # The PV columns SelfConsumption/GridFeedIn are simulator-only and not read by this board.
   # Formulas, clamp and the measured cross-check: docs/meshboard-site-selector-fit.md,
   # section "Energiebilanz kWh".
@@ -1474,7 +1474,7 @@ entities:
         value: Energiebilanz
       - id: System/Description
         value: |-
-          Kumulierte Energiebilanz des gewählten Standorts über den gewählten Zeitraum: PV-Erzeugung, Eigenverbrauch, Einspeisung, Netzbezug sowie geladene/entladene Batterie-Energie. Werte in kWh = zeitgewichtetes Integral der Leistung über den Zeitraum (jeder Messwert zählt so lange, bis der nächste kommt); Eigenverbrauch = PV-Erzeugung − Einspeisung. Ohne Daten im Zeitraum zeigt eine Kachel „–“.
+          Kumulierte Energiebilanz des gewählten Standorts über den gewählten Zeitraum: PV-Erzeugung, Eigenverbrauch, Einspeisung, Netzbezug sowie geladene/entladene Batterie-Energie. Werte in kWh = zeitgewichtetes Integral der Leistung über den Zeitraum (jeder Messwert zählt so lange, bis der nächste kommt); Eigenverbrauch = PV-Erzeugung − Einspeisung. Zwei Tachos zeigen Autarkie (1 − Netzbezug / Verbrauch) und Eigenverbrauchsquote ((PV − Einspeisung) / PV) in %; Verbrauch = Netzbezug − Einspeisung + PV + Batterie entladen − Batterie geladen. Ohne Daten im Zeitraum zeigt eine Kachel „–“.
           ---MESHBOARD_VARIABLES---
           {"timeFilter": {"enabled": true, "selection": {"type": "relative", "relativeValue": 24, "relativeUnit": "hours"}}, "autoRefreshSeconds": 300, "entitySelectors": [{"id": "standort", "label": "Standort", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [{"attributePath": "name", "variableName": "standortName"}], "showInToolbar": true, "defaultRtId": "6789a00000000000006000d3", "filters": [{"attributePath": "systemType", "operator": "EQUALS", "comparisonValue": "ELECTRICAL"}]}, {"id": "netz", "label": "Netzanschluss", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"targetCkTypeId": "EnergyIQ/GridConnection", "roleId": "EnergyIQ/SystemMembers", "direction": "out"}}, {"id": "pv", "label": "PV-Anlage", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"targetCkTypeId": "EnergyIQ/PhotovoltaicSystem", "roleId": "EnergyIQ/SystemMembers", "direction": "out"}}, {"id": "batterie", "label": "Batterie", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"path": [{"roleId": "EnergyIQ/SystemMembers", "direction": "out", "targetCkTypeId": "EnergyIQ/PhotovoltaicSystem"}, {"roleId": "EnergyIQ/SystemMembers", "direction": "out", "targetCkTypeId": "EnergyIQ/BatteryStorage"}]}}]}
       - id: System.UI/Dashboard.Columns
@@ -1657,6 +1657,70 @@ entities:
       - id: System.UI/DashboardWidget.Config
         value: |-
           {"valueAttribute": "_queryValue", "queryMode": "aggregation", "queryValueField": "dischargepower_integral", "valueMultiplier": 1, "suffix": " kWh", "decimalPlaces": 1, "outputVariableName": "batteryDischargeKwh", "queryName": "Batterie entladen Energie", "queryRtId": "6a4aaddc22664f2b26c67ec9", "queryFamily": "streamData", "entitySelectorId": "batterie"}
+
+  # Autarkie / Eigenverbrauchsquote gauges (AB#7943): formula gauges (AB#7950) over the board variables the
+  # kWh tiles publish. Consumption = Import - Export + PV + Discharge - Charge (energy balance of the site).
+  #   Autarkie       = 1 - Import / Consumption
+  #   Eigenverbrauch = (PV - Export) / PV
+  # Shown in % without decimals, clamped to 0-100; a denominator <= 0 gives 1/0 = Infinity, which the gauge shows
+  # as '-' (never 0 and never NaN). No second set of kWh queries.
+  - rtId: 6a4aaf1922664f2b26c67ed3
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4aaf1922664f2b26c67ecc
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Autarkie
+      - id: System.UI/DashboardWidget.Type
+        value: gauge
+      - id: System.UI/DashboardWidget.Col
+        value: 1
+      - id: System.UI/DashboardWidget.Row
+        value: 7
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 6
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 6
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: static
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: ''
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"gaugeType": "arc", "valueAttribute": "", "valueMode": "formula", "formula": "if(($gridImportKwh - $gridExportKwh + $pvEnergyKwh + $batteryDischargeKwh - $batteryChargeKwh) > 0, round(max(0, min(100, (1 - $gridImportKwh / ($gridImportKwh - $gridExportKwh + $pvEnergyKwh + $batteryDischargeKwh - $batteryChargeKwh)) * 100))), 1 / 0)", "min": 0, "max": 100, "suffix": " %", "showLabel": true}
+
+  - rtId: 6a4aaf1922664f2b26c67ed4
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4aaf1922664f2b26c67ecc
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Eigenverbrauchsquote
+      - id: System.UI/DashboardWidget.Type
+        value: gauge
+      - id: System.UI/DashboardWidget.Col
+        value: 7
+      - id: System.UI/DashboardWidget.Row
+        value: 7
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 6
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 6
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: static
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: ''
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"gaugeType": "arc", "valueAttribute": "", "valueMode": "formula", "formula": "if($pvEnergyKwh > 0, round(max(0, min(100, ($pvEnergyKwh - $gridExportKwh) / $pvEnergyKwh * 100))), 1 / 0)", "min": 0, "max": 100, "suffix": " %", "showLabel": true}
 
   # Integral (AggregationType 7) of the PV power: kW x h = kWh.
   - rtId: 6a4aaddc22664f2b26c67ec4

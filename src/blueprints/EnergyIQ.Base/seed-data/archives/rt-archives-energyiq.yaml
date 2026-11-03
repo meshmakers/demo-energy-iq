@@ -417,9 +417,9 @@ entities:
           # Computed (AB#4189/AB#7925): discharging power in kW, >= 0, for both conventions — the
           # negative part of a signed ChargingPower (simulator) or the positive DischargingPower
           # (live Loxone). Integral(DischargePower) = Batterie entladen kWh.
-          # An archive that was activated before DischargingPower was added has no such column
-          # (no ingested-column add on an active archive yet, AB#7997); there the column is added
-          # with the simulator-only formula 'if(chargingpower < 0, -chargingpower, 0)'.
+          # coalesce() makes a NULL operand count 0 (a Loxone row that carries only one of the two
+          # power attributes), AB#8060. On an already activated archive the formula is changed with
+          # UpdateComputedColumnFormula (backfill), AB#7943.
           - ckRecordId: System.StreamData/CkArchiveColumn
             attributes:
               - id: System.StreamData/CkArchiveColumn.Path
@@ -429,7 +429,7 @@ entities:
               - id: System.StreamData/CkArchiveColumn.Name
                 value: DischargePower
               - id: System.StreamData/CkArchiveColumn.Formula
-                value: 'if(chargingpower < 0, -chargingpower, if(dischargingpower > 0, dischargingpower, 0))'
+                value: 'if(coalesce(chargingpower, 0) < 0, -chargingpower, if(coalesce(dischargingpower, 0) > 0, dischargingpower, 0))'
               - id: System.StreamData/CkArchiveColumn.ResultType
                 value: 3
               - id: System.StreamData/CkArchiveColumn.Indexed

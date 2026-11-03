@@ -14,6 +14,10 @@ Checks:
 2c. Every System.StreamData/CkArchiveColumn record declares Path and Required (computed: Path '').
 3. No secret attribute values (Password, ClientSecret, ApiKey, Token, Secret).
 4. No rtId appears twice across the seed files.
+5a. Every KPI/gauge formula widget ("valueMode": "formula") references only variables that exist: the
+   outputVariableName of a KPI or a variable of an entity selector (AB#7943: the Autarkie /
+   Eigenverbrauchsquote gauges read the kWh variables the tiles publish; a renamed output would
+   silently turn the gauge into "-").
 5. scripts/om_importrt.ps1 imports exactly the seed files from the blueprint folder
    (one copy) and nothing in data/ duplicates a seed file name.
 
@@ -58,6 +62,11 @@ FLOW_STYLE = re.compile(r"^\s*(-\s*[\{\[]|entities\s*:\s*[\{\[])")
 # name ("Unknown blueprint variable"). MeshBoard formulas and variable references therefore use the
 # $name form in the seed; only blueprint variables (${octo.*}) may use the braces (AB#7996).
 BRACED_REFERENCE = re.compile(r"\$\{\s*([\w.]+)\s*\}")
+OUTPUT_VARIABLE = re.compile(r'"outputVariableName":\s*"([^"]+)"')
+SELECTOR_VARIABLE = re.compile(r'"variableName":\s*"([^"]+)"')
+SELECTOR_ID = re.compile(r'\{"id":\s*"([^"]+)",\s*"label"')
+FORMULA_FIELD = re.compile(r'"formula":\s*"((?:[^"\\]|\\.)*)"')
+FORMULA_REFERENCE = re.compile(r"\$([A-Za-z_]\w*)")
 ATTRIBUTE_ID_KEY = re.compile(r"^\s*(-\s*)?['\"]?id['\"]?\s*:\s*(.*)$")
 
 
@@ -154,6 +163,26 @@ def main() -> int:
             for attr in ("CkArchiveColumn.Path", "CkArchiveColumn.Required"):
                 if attr not in text:
                     errors.append(f"{f}:{start + 1}: archive column record without {attr} (computed columns: Path '')")
+
+    # 5a: formula widgets only reference variables that something defines.
+    defined: set[str] = set()
+    formulas: list[tuple[str, int, str]] = []
+    for f in to_scan:
+        for no, line in enumerate((BP_DIR / f).read_text(encoding="utf-8").splitlines(), 1):
+            if line.lstrip().startswith("#"):
+                continue
+            defined.update(OUTPUT_VARIABLE.findall(line))
+            defined.update(SELECTOR_VARIABLE.findall(line))
+            for sel in SELECTOR_ID.findall(line):
+                defined.update({f"{sel}_rtId", f"{sel}_rtCkTypeId"})
+            if '"valueMode": "formula"' in line:
+                m = FORMULA_FIELD.search(line)
+                if m:
+                    formulas.append((f, no, m.group(1)))
+    for f, no, formula in formulas:
+        for name in sorted(set(FORMULA_REFERENCE.findall(formula))):
+            if name not in defined:
+                errors.append(f"{f}:{no}: formula references ${name}, which no KPI outputVariableName or entity-selector variable defines")
 
     script = IMPORT_SCRIPT.read_text(encoding="utf-8")
     imported = set(re.findall(r'Join-Path \$seedPath "([^"]+)"', script))

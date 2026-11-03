@@ -2,6 +2,20 @@
 
 ## Unreleased
 
+- AB#7943: **Energiebilanz gauges "Autarkie" and "Eigenverbrauchsquote"** (EnergyIQ.Base **1.3.0**). Two formula gauges
+  (octo-meshboard AB#7950, widgets `…ed3` / `…ed4`, 0-100 %, no decimals) below the kWh tiles, computed from the board
+  variables the tiles publish (no second set of kWh queries): *Autarkie* = 1 − `$gridImportKwh` / Verbrauch,
+  *Eigenverbrauchsquote* = (`$pvEnergyKwh` − `$gridExportKwh`) / `$pvEnergyKwh`, with Verbrauch = Import − Export + PV +
+  Entladen − Geladen (energy balance of the site). Clamped to 0-100; a denominator ≤ 0 gives `1 / 0`, which the gauge
+  shows as "-" (never 0, never NaN). A site without battery publishes no battery variables, so the gauge shows "-" for
+  Autarkie there until Studio can default an unpublished widget variable (open, see docs). The seed check now also
+  requires every formula widget to reference only defined variables.
+  The `DischargePower` computed column of the BatteryStorageArchive uses `coalesce` (AB#8060):
+  `if(coalesce(chargingpower, 0) < 0, -chargingpower, if(coalesce(dischargingpower, 0) > 0, dischargingpower, 0))`, so
+  Firmianstraße (Loxone, separate `DischargingPower`) no longer shows 0 kWh discharged. On an activated archive switch it
+  with `UpdateComputedColumnFormula` (backfill). Formulas, edge cases and measurements:
+  `docs/meshboard-site-selector-fit.md`, "Energiebilanz gauges".
+
 - AB#7941: **Energie board "Energiefluss live"** (EnergyIQ.Base **1.2.0**). A process widget at the top of the board shows
   the current power of grid (+ Bezug / − Einspeisung), PV, battery (Laden, Entladen, Ladezustand), wallboxes and devices
   around the house for the picked site, in kW (de-AT) with an arrow per flow direction. New process diagram `…0d01`
