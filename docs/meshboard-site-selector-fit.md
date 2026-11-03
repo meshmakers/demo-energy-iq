@@ -257,7 +257,7 @@ column names:
 | GridConnectionArchive `…0007` | `ImportPower` | `if(activepower > 0, activepower, 0)` |
 | GridConnectionArchive `…0007` | `ExportPower` | `if(activepower < 0, -activepower, 0)` |
 | BatteryStorageArchive `…000d` | `ChargePower` | `if(chargingpower > 0, chargingpower, 0)` |
-| BatteryStorageArchive `…000d` | `DischargePower` | `if(chargingpower < 0, -chargingpower, if(dischargingpower > 0, dischargingpower, 0))` |
+| BatteryStorageArchive `…000d` | `DischargePower` | `if(coalesce(chargingpower, 0) < 0, -chargingpower, if(coalesce(dischargingpower, 0) > 0, dischargingpower, 0))` (`coalesce`: NULL operand = 0, AB#8060; AB#7943) |
 
 Never a field filter for the sign: a filter drops rows, and the step integral would carry the last positive value
 across an export period. A NULL power counts 0 for its interval; a window without rows yields null.
@@ -265,10 +265,12 @@ across an export period. A NULL power counts 0 for its interval; a window withou
 **Two battery conventions.** The simulator writes a signed `ChargingPower` (− = discharging). Loxone Firmianstraße
 writes `ChargingPower` ≥ 0 and a separate `DischargingPower` ≥ 0 (`rt-pipelines-loxone.yaml`, `em-battery` /
 `em-battery-discharge`). `DischargePower` covers both, so the seed adds the ingested column `DischargingPower` to the
-BatteryStorageArchive. An archive that was activated before that column existed (test-2, prod-1) cannot get an ingested
-column yet (AB#7997); there `DischargePower` is added with the simulator-only formula `if(chargingpower < 0,
--chargingpower, 0)` and **"Batterie entladen" shows 0 kWh for Firmianstraße until AB#7997** — then add the column and
-switch the formula with `UpdateComputedColumnFormula`.
+BatteryStorageArchive. Until AB#8060 (NULL operands in computed-column formulas) an archive activated before that column
+existed carried the simulator-only formula `if(chargingpower < 0, -chargingpower, 0)` and "Batterie entladen" showed 0 kWh
+for Firmianstraße. Since AB#7943 the seed formula is the `coalesce` form above; on an already activated archive it is
+switched with `octo-cli -c UpdateComputedColumnFormula -id 6a0e000000000000000a000d -n DischargePower -f '<formula>'`
+(the old values stay readable while the background backfill runs, then the column switches atomically; ~950 000 rows take
+about 30-50 minutes on test-2, the existing NULL cells are recomputed by the backfill).
 
 **Empty state and clamp.** A query KPI whose Integral is null (empty window, empty scope — Fusch has no battery) shows
 "–" (octo-meshboard AB#7921) and publishes no variable. The formula KPI is "–" while one of its variables is missing, so
@@ -325,6 +327,79 @@ test of the platform (`StreamDataIntegralIntegrationTests`).
   `mutation { runtime { systemAggregationSdQuerys { update(entities: [{rtId: "6a4aaddc22664f2b26c67ec7", item: {fieldFilter: []}}, {rtId: "6a4aaddc22664f2b26c67ec8", item: {fieldFilter: []}}, {rtId: "6a4aaddc22664f2b26c67ec9", item: {fieldFilter: []}}]) { rtId } } } }`
 - Delete the orphaned query `…ec5` on tenants that have it.
 - Staging/prod only through the EnergyIQ blueprint, each step with Gerald's go.
+
+## Energiebilanz gauges: Autarkie and Eigenverbrauchsquote (AB#7943, 2026-11-03)
+
+Two formula gauges (octo-meshboard AB#7950; widgets `…ed3` "Autarkie" and `…ed4` "Eigenverbrauchsquote", row 7, six
+columns each, `arc`, scale 0-100, suffix " %") sit below the six kWh tiles of the Energiebilanz board. They are static
+widgets with `valueMode: formula` and read the board variables the tiles publish (`pvEnergyKwh`, `gridExportKwh`,
+`gridImportKwh`, `batteryChargeKwh`, `batteryDischargeKwh`) - there is **no second set of kWh queries**; window and site
+come from the board (time filter, `standort`), so a change of either recomputes both gauges as soon as the tiles
+reload. Do not rename the variables; the seed check (`scripts/check_energyiq_blueprint_seed.py`, 5a) fails a formula
+widget that references an undefined variable.
+
+| Gauge | Formula (board variables, kWh over the window) |
+|-------|-----------------------------------------------|
+| Verbrauch (not shown) | `C = Import − Export + PV + Entladen − Geladen` (energy balance of the site) |
+| Autarkie | `if(C > 0, round(max(0, min(100, (1 − Import / C) * 100))), 1 / 0)` |
+| Eigenverbrauchsquote | `if(PV > 0, round(max(0, min(100, (PV − Export) / PV * 100))), 1 / 0)` |
+
+In the seed the operands are written `$gridImportKwh`, `$gridExportKwh`, `$pvEnergyKwh`, `$batteryDischargeKwh`,
+`$batteryChargeKwh`. `round(...)` gives whole percent. `1 / 0` is `Infinity`; a gauge shows a non-finite formula result as
+"-" with a tooltip (AB#7950), never 0 and never NaN.
+
+**Edge cases** (evaluated with `expr-eval-fork`, the engine the board uses):
+
+| Case | Operands | Autarkie | Eigenverbrauchsquote |
+|------|----------|----------|----------------------|
+| PV = 0 (night) | PV 0, Export 0 | by balance | "-" (`1 / 0`) |
+| Consumption = 0 | all 0 | "-" | "-" |
+| Consumption < 0 (export larger than supply, noise) | Import 1, Export 5 | "-" | — |
+| Import > Consumption (measurement noise) | Import 10, others 0 + Export 0 | 0 (clamped, never negative) | — |
+| Export > PV (meters out of sync) | PV 1, Export 1.2 | — | 0 (clamped) |
+| A referenced variable has no value (empty window, no battery) | — | "-" (pending) | "-" if PV or Export is missing |
+
+**Known gap: sites without battery.** A site without a BatteryStorage (Fusch) resolves an empty `batterie` scope; the two
+battery tiles show "-" and publish no variable, and a formula with an unpublished variable is "pending" ("-"). So
+*Autarkie* shows "-" for Fusch although the balance is `Import − Export + PV` there. A board-configured variable with
+default 0 does not help (a configured variable of the same name wins over the widget variable). It needs a Studio
+change (a configured default for an unpublished widget variable, or an option on the query KPI to publish 0 for an empty
+scope); *Eigenverbrauchsquote* is not affected (PV and Export only).
+
+### Measured, full day 2026-11-02 (Europe/Vienna, `[2026-11-01T23:00Z, 2026-11-02T23:00Z)`)
+
+"Platform" = the persistent Integral queries `…ec4`/`…ec6`/`…ec7`/`…ec8`/`…ec9` on test-2/energyiq (the values the tiles
+show); "rows" = an independent step integral (LOCF, NULL = 0, same sign rules) computed with a script from the rows
+exported with `ExportArchiveData`. Neither site has a meter-register history in the archive (the GridConnectionArchive
+stores `ActivePower` only, Firmianstraße has no register at all, Fusch `TotalEnergyProduced` reads 0), so a register
+delta over a full past day cannot be reconstructed; the register check of AB#7925 (Fusch, 46.7 min, −0.7 %) still
+stands, a full-day register check needs a register snapshot at the start of a day.
+
+| Site | Figure | Platform | Rows | Gauge |
+|------|--------|----------|------|-------|
+| Firmianstraße (test-2) | PV | 11.389 kWh | 11.389 | |
+| Firmianstraße (test-2) | Einspeisung | 0.054 kWh | 0.054 | |
+| Firmianstraße (test-2) | Netzbezug | 51.658 kWh | 51.658 | |
+| Firmianstraße (test-2) | Batterie geladen | 1.268 kWh | 1.268 | |
+| Firmianstraße (test-2) | Batterie entladen | 2.388 kWh (`dischargepower__v1_integral`, see Bug AB#8236) | 2.388 | |
+| Firmianstraße (test-2) | Verbrauch | 64.112 kWh | 64.112 | |
+| Firmianstraße (test-2) | Autarkie | | 19.4 % | **19 %** |
+| Firmianstraße (test-2) | Eigenverbrauchsquote | | 99.5 % | **100 %** |
+| Fusch (prod-1, read-only) | PV / Einspeisung / Netzbezug | no Integral queries on prod-1 yet | 6.558 / 0.000 / 4.620 kWh | |
+| Fusch (prod-1, read-only) | Verbrauch (no battery) | | 11.178 kWh | |
+| Fusch (prod-1, read-only) | Autarkie / Eigenverbrauchsquote | | 58.7 % / 100.0 % | "-" (known gap) / **100 %** |
+
+The gauge rows are the formulas above evaluated with `expr-eval-fork` on the platform values (19 / 100 for
+Firmianstraße); they equal the hand calculation from the independent rows within 0.5 percentage points.
+
+### DischargePower on test-2 (AB#7943)
+
+`UpdateComputedColumnFormula` with the `coalesce` formula on BatteryStorageArchive `…000d` (backfill job
+`6ae98b8db32755804fde7263`, 948 559 rows, 48 min, Completed). Firmianstraße discharged 2.388 kWh on 2026-11-02
+(before: 0). Side effect: the changed column is returned as `dischargepower__v1_integral`, which the tile "Batterie
+entladen" and the variable `batteryDischargeKwh` do not match - Bug AB#8236. A fresh tenant that installs the blueprint
+gets the column with its logical name and is not affected; a second formula change on an activated archive is not
+recommended before AB#8236 is fixed.
 
 ## Part 3: room boards (AB#7693, 2026-10-30)
 
