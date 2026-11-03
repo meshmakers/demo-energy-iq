@@ -1,5 +1,5 @@
 $schema: https://schemas.meshmakers.cloud/blueprint-meta.schema.json
-blueprintId: EnergyIQ.Base-1.1.0
+blueprintId: EnergyIQ.Base-1.2.0
 description: |
   EnergyIQ product content for building energy monitoring - the boards, queries,
   stream-data archives and rollups every EnergyIQ tenant shares (AB#7996).
@@ -14,8 +14,10 @@ description: |
   - 14 RollupArchives (5-minute AVG/MIN/MAX, 1-hour grid rollup) the
     resolution-aware line charts and the heatmaps need
   - 5 MeshBoards (Raumtemperaturen, Energie, Energiebilanz, Heizung & Kuehlung,
-    Beschattung & Beleuchtung) with 38 widgets and 37 persistent queries; every
+    Beschattung & Beleuchtung) with 39 widgets and 42 persistent queries; every
     board picks its site through the "Standort" selector
+  - the process diagram "Energiefluss live" (grid, PV, battery, wallbox, devices) of
+    the Energie board (AB#7941)
   - the _trees query and the Runtime Browser tree navigation (role labels,
     "Systems" perspective on DistributionSystem)
 
@@ -67,6 +69,7 @@ ckModelDependencies:
 # same files for the dev loop - there is exactly one copy of each file.
 seedDataPaths:
 - seed-data/archives/rt-archives-energyiq.yaml
+- seed-data/ui/rt-process-diagrams-energyiq.yaml
 - seed-data/ui/rt-meshboards-energyiq.yaml
 - seed-data/ui/rt-tree-navigation.yaml
 - seed-data/queries/_trees.yaml

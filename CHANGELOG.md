@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- AB#7941: **Energie board "Energiefluss live"** (EnergyIQ.Base **1.2.0**). A process widget at the top of the board shows
+  the current power of grid (+ Bezug / − Einspeisung), PV, battery (Laden, Entladen, Ladezustand), wallboxes and devices
+  around the house for the picked site, in kW (de-AT) with an arrow per flow direction. New process diagram `…0d01`
+  (`seed-data/ui/rt-process-diagrams-energyiq.yaml`), five runtime queries `…0a01`–`…0a05` (one binding per selector
+  follower, wallboxes and devices summed per site), widget `…0b01`; the other Energie widgets moved down 9 rows. A node the
+  site does not have (Fusch: battery) shows "–", never 0. Needs the Studio build with AB#7954. The seed check allows
+  `System.UI/ProcessDiagram`. Layout, properties, bindings and sign conventions: `docs/meshboard-site-selector-fit.md`,
+  Part 6.
+
 - AB#7944: **Energie board "Tagesprofil – womit wird der Verbrauch gedeckt?"** (EnergyIQ.Base **1.1.0**). A stacked
   area chart (widget `…e001`) splits the site's consumption per time bucket of the board window into *direkt aus PV*
   = `max(0, $PV - $Export - $Charge)`, *aus Batterie* = `$Discharge` and *aus Netz* = `$Import`, with *PV-Erzeugung* as
