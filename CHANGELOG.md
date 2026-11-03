@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-- AB#7943: **Energiebilanz gauges "Autarkie" and "Eigenverbrauchsquote"** (EnergyIQ.Base **1.2.0**). Two formula gauges
+- AB#7943: **Energiebilanz gauges "Autarkie" and "Eigenverbrauchsquote"** (EnergyIQ.Base **1.3.0**). Two formula gauges
   (octo-meshboard AB#7950, widgets `…ed3` / `…ed4`, 0-100 %, no decimals) below the kWh tiles, computed from the board
   variables the tiles publish (no second set of kWh queries): *Autarkie* = 1 − `$gridImportKwh` / Verbrauch,
   *Eigenverbrauchsquote* = (`$pvEnergyKwh` − `$gridExportKwh`) / `$pvEnergyKwh`, with Verbrauch = Import − Export + PV +
@@ -15,6 +15,15 @@
   Firmianstraße (Loxone, separate `DischargingPower`) no longer shows 0 kWh discharged. On an activated archive switch it
   with `UpdateComputedColumnFormula` (backfill). Formulas, edge cases and measurements:
   `docs/meshboard-site-selector-fit.md`, "Energiebilanz gauges".
+
+- AB#7941: **Energie board "Energiefluss live"** (EnergyIQ.Base **1.2.0**). A process widget at the top of the board shows
+  the current power of grid (+ Bezug / − Einspeisung), PV, battery (Laden, Entladen, Ladezustand), wallboxes and devices
+  around the house for the picked site, in kW (de-AT) with an arrow per flow direction. New process diagram `…0d01`
+  (`seed-data/ui/rt-process-diagrams-energyiq.yaml`), five runtime queries `…0a01`–`…0a05` (one binding per selector
+  follower, wallboxes and devices summed per site), widget `…0b01`; the other Energie widgets moved down 9 rows. A node the
+  site does not have (Fusch: battery) shows "–", never 0. Needs the Studio build with AB#7954. The seed check allows
+  `System.UI/ProcessDiagram`. Layout, properties, bindings and sign conventions: `docs/meshboard-site-selector-fit.md`,
+  Part 6.
 
 - AB#7944: **Energie board "Tagesprofil – womit wird der Verbrauch gedeckt?"** (EnergyIQ.Base **1.1.0**). A stacked
   area chart (widget `…e001`) splits the site's consumption per time bucket of the board window into *direkt aus PV*

@@ -35,6 +35,7 @@ selector drive it with data configuration only.
 | Batteriespeicher | SimpleSdQuery, BatteryStorageArchive (stream) | BatteryStorage rtIds | no: two hops DS -> PV -> Battery (F6) |
 | Aktuelle Leistungen | SimpleRtQuery EnergyIQ/Meter (runtime) | Meters of the site | no: runtime query (F3) |
 | Tagesprofil (AB#7944) | 5 SimpleSdQuery series (PV, grid, battery archives) + 3 formula series | PV, GridConnection, BatteryStorage rtIds | yes since AB#7951: each query series follows its own selector (`pv`, `netz`, `batterie`); see Part 5 |
+| Energiefluss live (AB#7941) | 5 SimpleRtQuery (GridConnection, PhotovoltaicSystem, BatteryStorage, ChargingStation, Appliance), process widget | one binding per follower: `netz`, `pv`, `batterie`, `wallboxen`, `geraete` | yes since AB#7954 (several bindings per process widget, aggregate sum/avg); see Part 6 |
 
 A polymorphic scope (`childScope` target `EnergyIQ/Meter`, base of GridConnection, ChargingStation,
 Appliance) would fan out rtIds that have no rows in the queried per-type archive and produce ghost
@@ -647,7 +648,80 @@ wireframe need. No workaround in this repo (Frigg, 2026-11-01):
   formula that uses it is a gap.
 - *aus Batterie* for a live Loxone battery (Firmianstraße) needs `DischargePower` with the `DischargingPower` branch
   (AB#7997). With the simulator-only fallback formula `if(chargingpower < 0, -chargingpower, 0)` (see "Two battery
-  conventions" above) the battery share shows 0 for Firmianstraße and its discharge lands in no stack.
+  conventions" above) the battery share shows 0 for Firmianstraße and its discharge lands in no stack. Since EnergyIQ.Base 1.3.0 (AB#7943) the blueprint formula uses `coalesce` and covers the
+  `DischargingPower` branch; an already activated archive keeps the old formula until it is switched (AB#8236 open).
 - Checks per change: `scripts/check_energyiq_blueprint_seed.py`, `octo-bpm -c validate` and `-c validateVersion`.
   The per-bucket 1 % check (stacks vs Import − Export + PV + Discharge − Charge, two sample days) and the test-2
   evidence are attached to the pull request of AB#7944.
+
+## Part 6: Energiefluss live (AB#7941, 2026-11-03)
+
+Process widget at the top of the Energie board (widget `…0b01`, full width, rows 1-9; the other Energie widgets moved down
+by 9 rows). It shows, for the site picked in `standort`, the current power of **Netz**, **PV-Anlage**, **Batterie**
+(state of charge and charging/discharging power), **Wallbox** and **Geräte** around the **Haus**, in kW with one decimal
+(de-AT; SoC in % without decimals) and an arrow per flow. The unit kW is in the widget title and in every value.
+The widget needs the Studio build of AB#7954 (process diagrams with live values, several bindings, aggregates;
+octo-meshboard AB#8022-AB#8025).
+
+### Diagram
+
+Process diagram `…0d01` "Energiefluss live" (`seed-data/ui/rt-process-diagrams-energyiq.yaml`, canvas 980 x 480): five
+node boxes (text and rectangle primitives), seven number properties and bindings from the properties to text and arrow
+primitives. The diagram names no site and no rtId.
+
+| Property | Unit | Drives |
+|----------|------|--------|
+| `grid` | kW | value text `abs(value)`; label "Bezug" (`value > 0.05`) or "Einspeisung" (`value < -0.05`); arrow Netz → Haus (import) or Haus → Netz (feed-in) |
+| `pv` | kW | value text; arrow PV → Haus (`value > 0.05`) |
+| `battSoc` | % | value text, no decimals |
+| `battCharge` | kW | text "Laden" (`max(value, 0)`); arrow Haus → Batterie (`value > 0.05`) |
+| `battDischarge` | kW | text "Entladen"; arrow Batterie → Haus (`value > 0.05`) |
+| `wallbox` | kW | value text; arrow Haus → Wallbox (`value > 0.05`) |
+| `devices` | kW | value text; arrow Haus → Geräte (`value > 0.05`) |
+
+The threshold 0.05 kW is half of the displayed resolution: a value that shows as "0,0 kW" draws no arrow.
+
+**Sign conventions.** `GridConnection.ActivePower`: positive = import (Bezug), negative = export (Einspeisung); the grid
+text shows the magnitude and the label/arrow carry the direction (measured: Fusch net −18.4 kWh over 2026-10-31 =
+export, see "Cross-check" above). The battery follows the Loxone convention of Firmianstraße: `ChargingPower` ≥ 0 and
+`DischargingPower` ≥ 0, each with its own arrow. The simulator's signed `ChargingPower` (negative = discharging) is not
+interpreted: a negative value draws no arrow and "Laden" shows 0.
+
+### Bindings
+
+One binding per selector follower, each a runtime query (`SimpleRtQuery`, no site named) the widget scopes with
+`rtId IN <follower rtIds>`; a mapping reduces the rows to one value (`aggregate`).
+
+| Binding / follower | Query | Column → property (aggregate) |
+|--------------------|-------|-------------------------------|
+| `netz` | `…0a01` GridConnection | `activePower` → `grid` (sum) |
+| `pv` | `…0a02` PhotovoltaicSystem | `totalCurrentPower` → `pv` (sum) |
+| `batterie` (DS → PV → BatteryStorage) | `…0a03` BatteryStorage | `chargingPower` → `battCharge` (sum), `dischargingPower` → `battDischarge` (sum), `stateOfCharge` → `battSoc` (avg) |
+| `wallboxen` | `…0a04` ChargingStation | `activePower` → `wallbox` (sum over the site's wallboxes) |
+| `geraete` | `…0a05` Appliance | `activePower` → `devices` (sum over the site's appliances) |
+
+**Empty state.** A site without a node has an empty follower scope (Fusch: no battery, no appliance); the binding sends
+no query and has no value, so the node text shows "–" (never 0, never a value of another site) and its arrows stay
+hidden. A node that exists with the value 0 (Fusch wallbox idle) shows "0,0 kW". A site with an appliance that has no
+`ActivePower` yet also shows "–".
+
+**Refresh.** The process widget reloads with the board (`autoRefreshSeconds` 300 on Energie), like every other widget
+of the board.
+
+### Checks (test-2 scratch tenant `scratch-eiq-7941-a`)
+
+Blueprint `EnergyIQ.Base-1.1.0` installed, then both seed files imported twice with `-r` (no error, no duplicate:
+1 ProcessDiagram, 5 EnergyIQ dashboards, 39 EnergyIQ widgets), Firmianstraße and Fusch site data imported, test values
+written to the entities. The five queries run with `rtId IN` scopes resolved like the board's followers:
+
+| Node | Firmianstraße | Fusch |
+|------|---------------|-------|
+| Netz | 2.149 (import) | −1.25 (export) |
+| PV | 0.6 | 3.4 |
+| Batterie | SoC 29, laden 1.8, entladen 0 | no row: "–" |
+| Wallbox | 7.3 = 3.2 + 4.1 (sum of both wallboxes) | 0 (one wallbox) |
+| Geräte | 1.9 = 0.8 + 1.1 (sum of both appliances) | no row: "–" |
+
+The diagram and the widget configuration run through the real octo-frontend-libraries code (`sanitizeProcessDiagram`:
+no issue; `validateProcessWidgetBindings`: no issue; `evaluateTextValue` with `ExpressionEvaluatorService`: "2,1 kW",
+"29 %", "–" without a value).

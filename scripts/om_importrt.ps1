@@ -61,6 +61,7 @@ octo-cli -c ImportRt -f (Join-Path $seedPath "queries/_trees.yaml")
 # rollups are required by the resolution-aware line charts). -r/Upsert so
 # re-runs update the boards in place. The rollups are activated below like the
 # raw archives; backfill of pre-existing history is optional (BackfillRollup).
+octo-cli -c ImportRt -f (Join-Path $seedPath "ui/rt-process-diagrams-energyiq.yaml") -w -r   # Energiefluss live diagram (AB#7941)
 octo-cli -c ImportRt -f (Join-Path $seedPath "ui/rt-meshboards-energyiq.yaml") -w -r
 octo-cli -c ActivateArchive -id 6a4a9fe67e487162fbe3860f  # TemperatureSensorRollup5m
 octo-cli -c ActivateArchive -id 6a4aa4cc22664f2b26c67e65  # GridConnectionRollup5m

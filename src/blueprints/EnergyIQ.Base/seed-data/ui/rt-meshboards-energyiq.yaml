@@ -55,6 +55,11 @@ $schema: https://schemas.meshmakers.cloud/runtime-model.schema.json
 # The `raum` picker on Raumtemperaturen stays visible and independent until the dependent picker
 # (AB#7893) is used there (AB#7926).
 #
+# "Energiefluss live" (AB#7941): the first widget of Energie is a process widget (diagram rtId 6a4b79410000000000000d01,
+# seed-data/ui/rt-process-diagrams-energyiq.yaml) with five runtime-query bindings, one per selector follower
+# (netz, pv, batterie, wallboxen, geraete); wallboxes and devices are summed per site. Docs: Part 6 of
+# docs/meshboard-site-selector-fit.md.
+#
 # Imported as Status=Created; om_importrt.ps1 activates the rollups after import
 # (provisions the CrateDB tables). Backfill of pre-existing history is optional:
 #   octo-cli -c BackfillRollup -id <rollupRtId>
@@ -343,7 +348,7 @@ entities:
         value: Energie
       - id: System/Description
         value: |-
-          Energieübersicht des gewählten Standorts: Netzbezug, PV-Produktion, Wallboxen, Geräte und Batteriespeicher aus den Stream-Data-Archiven + aktuelle Leistungen der Zähler des Standorts. Tagesprofil: womit der Verbrauch je Zeitabschnitt gedeckt wird (direkt aus PV, aus Batterie, aus Netz, gestapelt) mit der PV-Erzeugung als Linie – für einen Tag den Zeitraum oben auf diesen Tag setzen. Heatmap "Netzbezug – Stunde × Tag": mittlere Netzleistung je Stunde der letzten 30 Tage (eigenes Zeitfenster, unabhängig vom Zeitraum oben).
+          Energieübersicht des gewählten Standorts. Energiefluss live (oben): aktuelle Leistung von Netz (+ Bezug, − Einspeisung), PV, Batterie (Laden/Entladen, Ladezustand), Wallboxen und Geräten (Summe je Standort) in kW; ein Knoten, den der Standort nicht hat (z. B. Batterie in Fusch), zeigt –. Darunter: Netzbezug, PV-Produktion, Wallboxen, Geräte und Batteriespeicher aus den Stream-Data-Archiven + aktuelle Leistungen der Zähler des Standorts. Tagesprofil: womit der Verbrauch je Zeitabschnitt gedeckt wird (direkt aus PV, aus Batterie, aus Netz, gestapelt) mit der PV-Erzeugung als Linie – für einen Tag den Zeitraum oben auf diesen Tag setzen. Heatmap "Netzbezug – Stunde × Tag": mittlere Netzleistung je Stunde der letzten 30 Tage (eigenes Zeitfenster, unabhängig vom Zeitraum oben).
           ---MESHBOARD_VARIABLES---
           {"timeFilter": {"enabled": true, "selection": {"type": "relative", "relativeValue": 24, "relativeUnit": "hours"}}, "autoRefreshSeconds": 300, "entitySelectors": [{"id": "standort", "label": "Standort", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [{"attributePath": "name", "variableName": "standortName"}], "showInToolbar": true, "defaultRtId": "6789a00000000000006000d3", "filters": [{"attributePath": "systemType", "operator": "EQUALS", "comparisonValue": "ELECTRICAL"}]}, {"id": "netz", "label": "Netzanschluss", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"targetCkTypeId": "EnergyIQ/GridConnection", "roleId": "EnergyIQ/SystemMembers", "direction": "out"}}, {"id": "pv", "label": "PV-Anlage", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"targetCkTypeId": "EnergyIQ/PhotovoltaicSystem", "roleId": "EnergyIQ/SystemMembers", "direction": "out"}}, {"id": "wallboxen", "label": "Wallboxen", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"targetCkTypeId": "EnergyIQ/ChargingStation", "roleId": "EnergyIQ/SystemMembers", "direction": "out"}}, {"id": "geraete", "label": "Geräte", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"targetCkTypeId": "EnergyIQ/Appliance", "roleId": "EnergyIQ/SystemMembers", "direction": "out"}}, {"id": "batterie", "label": "Batterie", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"path": [{"roleId": "EnergyIQ/SystemMembers", "direction": "out", "targetCkTypeId": "EnergyIQ/PhotovoltaicSystem"}, {"roleId": "EnergyIQ/SystemMembers", "direction": "out", "targetCkTypeId": "EnergyIQ/BatteryStorage"}]}}, {"id": "zaehler", "label": "Zähler", "ckTypeId": "EnergyIQ/DistributionSystem", "attributeMappings": [], "showInToolbar": false, "followsSelectorId": "standort", "childScope": {"targetCkTypeId": "EnergyIQ/Meter", "roleId": "EnergyIQ/SystemMembers", "direction": "out"}}]}
       - id: System.UI/Dashboard.Columns
@@ -352,6 +357,125 @@ entities:
         value: 50
       - id: System.UI/Dashboard.Gap
         value: 8
+
+  - rtId: 6a4b79410000000000000a01
+    ckTypeId: System/SimpleRtQuery
+    attributes:
+      - id: System/Name
+        value: Energiefluss Netz (aktuell)
+      - id: System/Description
+        value: >-
+          Current values of the GridConnection entities for the "Energiefluss live" process widget (AB#7941). The widget
+          scopes it to the site's entities through the selector follower `netz`; no site is named here.
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/GridConnection
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/Query.Columns
+        value:
+          - activePower
+
+  - rtId: 6a4b79410000000000000a02
+    ckTypeId: System/SimpleRtQuery
+    attributes:
+      - id: System/Name
+        value: Energiefluss PV (aktuell)
+      - id: System/Description
+        value: >-
+          Current values of the PhotovoltaicSystem entities for the "Energiefluss live" process widget (AB#7941). The widget
+          scopes it to the site's entities through the selector follower `pv`; no site is named here.
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/PhotovoltaicSystem
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/Query.Columns
+        value:
+          - totalCurrentPower
+
+  - rtId: 6a4b79410000000000000a03
+    ckTypeId: System/SimpleRtQuery
+    attributes:
+      - id: System/Name
+        value: Energiefluss Batterie (aktuell)
+      - id: System/Description
+        value: >-
+          Current values of the BatteryStorage entities for the "Energiefluss live" process widget (AB#7941). The widget
+          scopes it to the site's entities through the selector follower `batterie`; no site is named here.
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/BatteryStorage
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/Query.Columns
+        value:
+          - chargingPower
+          - dischargingPower
+          - stateOfCharge
+
+  - rtId: 6a4b79410000000000000a04
+    ckTypeId: System/SimpleRtQuery
+    attributes:
+      - id: System/Name
+        value: Energiefluss Wallboxen (aktuell)
+      - id: System/Description
+        value: >-
+          Current values of the ChargingStation entities for the "Energiefluss live" process widget (AB#7941). The widget
+          scopes it to the site's entities through the selector follower `wallboxen`; no site is named here.
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/ChargingStation
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/Query.Columns
+        value:
+          - activePower
+
+  - rtId: 6a4b79410000000000000a05
+    ckTypeId: System/SimpleRtQuery
+    attributes:
+      - id: System/Name
+        value: Energiefluss Geräte (aktuell)
+      - id: System/Description
+        value: >-
+          Current values of the Appliance entities for the "Energiefluss live" process widget (AB#7941). The widget
+          scopes it to the site's entities through the selector follower `geraete`; no site is named here.
+      - id: System/Query.CkTypeId
+        value: EnergyIQ/Appliance
+      - id: System/Query.NavigationFilterMode
+        value: 0
+      - id: System/Query.Columns
+        value:
+          - activePower
+
+  # Process widget "Energiefluss live" (AB#7941): five runtime-query bindings, each scoped by one selector follower of
+  # the board (netz, pv, batterie, wallboxen, geraete); wallboxes and devices are summed per site (aggregate sum).
+  # A site without a node (Fusch: battery) has an empty scope: the node shows "–", never 0 and never another site's value.
+  - rtId: 6a4b79410000000000000b01
+    ckTypeId: System.UI/DashboardWidget
+    associations:
+      - roleId: System/ParentChild
+        targetRtId: 6a4aa4fa22664f2b26c67e7c
+        targetCkTypeId: System.UI/Dashboard
+    attributes:
+      - id: System/Name
+        value: Energiefluss live (kW)
+      - id: System.UI/DashboardWidget.Type
+        value: process
+      - id: System.UI/DashboardWidget.Col
+        value: 1
+      - id: System.UI/DashboardWidget.Row
+        value: 1
+      - id: System.UI/DashboardWidget.ColSpan
+        value: 12
+      - id: System.UI/DashboardWidget.RowSpan
+        value: 9
+      - id: System.UI/DashboardWidget.DataSourceType
+        value: static
+      - id: System.UI/DashboardWidget.DataSourceCkTypeId
+        value: ''
+      - id: System.UI/DashboardWidget.DataSourceRtId
+        value: ''
+      - id: System.UI/DashboardWidget.Config
+        value: |-
+          {"processDiagramRtId": "6a4b79410000000000000d01", "fitToBounds": true, "allowZoom": false, "allowPan": false, "showToolbar": false, "initialZoom": 1, "propertyMappings": [{"propertyId": "grid", "sourceType": "column", "sourcePath": "activePower", "bindingName": "netz", "aggregate": "sum"}, {"propertyId": "pv", "sourceType": "column", "sourcePath": "totalCurrentPower", "bindingName": "pv", "aggregate": "sum"}, {"propertyId": "battCharge", "sourceType": "column", "sourcePath": "chargingPower", "bindingName": "batterie", "aggregate": "sum"}, {"propertyId": "battDischarge", "sourceType": "column", "sourcePath": "dischargingPower", "bindingName": "batterie", "aggregate": "sum"}, {"propertyId": "battSoc", "sourceType": "column", "sourcePath": "stateOfCharge", "bindingName": "batterie", "aggregate": "avg"}, {"propertyId": "wallbox", "sourceType": "column", "sourcePath": "activePower", "bindingName": "wallboxen", "aggregate": "sum"}, {"propertyId": "devices", "sourceType": "column", "sourcePath": "activePower", "bindingName": "geraete", "aggregate": "sum"}], "bindings": [{"name": "netz", "mode": "persistentQuery", "queryRtId": "6a4b79410000000000000a01", "queryName": "Energiefluss Netz (aktuell)", "queryFamily": "runtime", "entitySelectorId": "netz"}, {"name": "pv", "mode": "persistentQuery", "queryRtId": "6a4b79410000000000000a02", "queryName": "Energiefluss PV (aktuell)", "queryFamily": "runtime", "entitySelectorId": "pv"}, {"name": "batterie", "mode": "persistentQuery", "queryRtId": "6a4b79410000000000000a03", "queryName": "Energiefluss Batterie (aktuell)", "queryFamily": "runtime", "entitySelectorId": "batterie"}, {"name": "wallboxen", "mode": "persistentQuery", "queryRtId": "6a4b79410000000000000a04", "queryName": "Energiefluss Wallboxen (aktuell)", "queryFamily": "runtime", "entitySelectorId": "wallboxen"}, {"name": "geraete", "mode": "persistentQuery", "queryRtId": "6a4b79410000000000000a05", "queryName": "Energiefluss Geräte (aktuell)", "queryFamily": "runtime", "entitySelectorId": "geraete"}]}
 
   - rtId: 6a4aa4fa22664f2b26c67e7d
     ckTypeId: System.UI/DashboardWidget
@@ -367,7 +491,7 @@ entities:
       - id: System.UI/DashboardWidget.Col
         value: 1
       - id: System.UI/DashboardWidget.Row
-        value: 1
+        value: 10
       - id: System.UI/DashboardWidget.ColSpan
         value: 6
       - id: System.UI/DashboardWidget.RowSpan
@@ -396,7 +520,7 @@ entities:
       - id: System.UI/DashboardWidget.Col
         value: 7
       - id: System.UI/DashboardWidget.Row
-        value: 1
+        value: 10
       - id: System.UI/DashboardWidget.ColSpan
         value: 6
       - id: System.UI/DashboardWidget.RowSpan
@@ -425,7 +549,7 @@ entities:
       - id: System.UI/DashboardWidget.Col
         value: 1
       - id: System.UI/DashboardWidget.Row
-        value: 7
+        value: 16
       - id: System.UI/DashboardWidget.ColSpan
         value: 6
       - id: System.UI/DashboardWidget.RowSpan
@@ -454,7 +578,7 @@ entities:
       - id: System.UI/DashboardWidget.Col
         value: 7
       - id: System.UI/DashboardWidget.Row
-        value: 7
+        value: 16
       - id: System.UI/DashboardWidget.ColSpan
         value: 6
       - id: System.UI/DashboardWidget.RowSpan
@@ -483,7 +607,7 @@ entities:
       - id: System.UI/DashboardWidget.Col
         value: 1
       - id: System.UI/DashboardWidget.Row
-        value: 13
+        value: 22
       - id: System.UI/DashboardWidget.ColSpan
         value: 6
       - id: System.UI/DashboardWidget.RowSpan
@@ -512,7 +636,7 @@ entities:
       - id: System.UI/DashboardWidget.Col
         value: 7
       - id: System.UI/DashboardWidget.Row
-        value: 13
+        value: 22
       - id: System.UI/DashboardWidget.ColSpan
         value: 6
       - id: System.UI/DashboardWidget.RowSpan
@@ -546,7 +670,7 @@ entities:
       - id: System.UI/DashboardWidget.Col
         value: 1
       - id: System.UI/DashboardWidget.Row
-        value: 28
+        value: 37
       - id: System.UI/DashboardWidget.ColSpan
         value: 12
       - id: System.UI/DashboardWidget.RowSpan
@@ -585,7 +709,7 @@ entities:
       - id: System.UI/DashboardWidget.Col
         value: 1
       - id: System.UI/DashboardWidget.Row
-        value: 19
+        value: 28
       - id: System.UI/DashboardWidget.ColSpan
         value: 12
       - id: System.UI/DashboardWidget.RowSpan

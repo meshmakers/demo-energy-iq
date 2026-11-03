@@ -37,6 +37,7 @@ ALLOWED_CK_TYPES = {
     "System.StreamData/RollupArchive",
     "System.UI/Dashboard",
     "System.UI/DashboardWidget",
+    "System.UI/ProcessDiagram",
     "System.UI/TreeNavigationConfiguration",
     "System/SimpleRtQuery",
     "System/SimpleSdQuery",
