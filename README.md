@@ -274,8 +274,9 @@ DistributionSystem does not reach at every site. Followers walk **Site → Build
 the room to the room sensors, heat pump, storage tanks, pump, luminaires or blinds; the outdoor sensor is found through
 an ExternalSpace directly under the Site. Every site must model storeys — a room directly under a Building is not found
 (Fusch: storeys UG/EG/OG, AB#7889); a site without an entity of a type (Fusch: heat pump, tanks, pump, outdoor sensor)
-shows the widget's empty state. The room pickers ("Raum", "Raum (Licht)", "Raum (Beschattung)") stay as they were and are
-not limited to the picked site: the per-room charts show the picked room whatever the site.
+shows the widget's empty state. The room picker "Raum" on Raumtemperaturen lists only the rooms of the picked site
+(AB#7926, dependent picker `scopeSource` of octo-meshboard AB#7893, path Site → Building → BuildingStorey → Space); when
+the site changes, a room outside the new site is cleared, or replaced by the default room if that belongs to the site.
 The five tiles "Wärmepumpe – …" (AB#7888) read the heat-pump meter of the picked site: the follower goes one hop
 further, from the heat pump to the meter that measures it (EnergyIQ 2.14.0 `EquipmentMeters`, inbound `MeteredBy`) —
 Site → Building → BuildingStorey → Space → HeatPump → Meter, 5 hops, the MeshBoard maximum. Fusch has no heat pump, so

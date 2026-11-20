@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+- AB#7926: **Raumtemperaturen room picker lists only the rooms of the picked site** (EnergyIQ.Base **1.3.1**). The `raum`
+  selector gets `scopeSource { selectorId: standort, path Site → Building → BuildingStorey → Space }` (octo-meshboard
+  AB#7893), so with Fusch picked only Fusch rooms are listed and a Firmianstraße room is cleared (the default room is a
+  Firmianstraße room, so it applies only there). The board description no longer says the room does not follow the
+  site. Needs a Studio build with octo-meshboard AB#7915/AB#7916. "Raum (Licht)" / "Raum (Beschattung)" no longer exist (AB#7693).
+
 - AB#7943: **Energiebilanz gauges "Autarkie" and "Eigenverbrauchsquote"** (EnergyIQ.Base **1.3.0**). Two formula gauges
   (octo-meshboard AB#7950, widgets `…ed3` / `…ed4`, 0-100 %, no decimals) below the kWh tiles, computed from the board
   variables the tiles publish (no second set of kWh queries): *Autarkie* = 1 − `$gridImportKwh` / Verbrauch,

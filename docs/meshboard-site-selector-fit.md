@@ -460,7 +460,7 @@ no valve widget, and `raumsensoren` follows `SpaceSensors` only.
 
 | Board | Widget | Query (family) | Selector | Fusch |
 |-------|--------|----------------|----------|-------|
-| Raumtemperaturen | Raumtemperatur – Verlauf | SimpleSdQuery TemperatureSensorArchive | `raum` (room picker, unchanged) | the picked room |
+| Raumtemperaturen | Raumtemperatur – Verlauf | SimpleSdQuery TemperatureSensorArchive | `raum` (room picker, rooms of the picked site, AB#7926) | the picked Fusch room |
 | Raumtemperaturen | Aktuelle Raumtemperaturen | SimpleRtQuery TemperatureSensor (runtime) | `raumsensoren` | room sensors |
 | Raumtemperaturen | Außentemperatur – Verlauf | SimpleSdQuery TemperatureSensorArchive, pin removed | `aussensensor` | empty |
 | Heizung & Kühlung | Wärmepumpe – aktuell | SimpleRtQuery HeatPump (runtime) | `waermepumpe` | empty |
@@ -473,8 +473,8 @@ no valve widget, and `raumsensoren` follows `SpaceSensors` only.
 | Beschattung & Beleuchtung | Aktuelle Beschattung | SimpleRtQuery ShadingDevice (runtime) | `raffstores` | blinds |
 | Beschattung & Beleuchtung | Licht-Einschaltquote, Licht-Schaltvorgänge, Brenndauer je Leuchte | GroupingAggregationSdQuery LuminaireStatusArchive | `leuchten` | luminaires |
 | Beschattung & Beleuchtung | Ø Beschattung je Raffstore | GroupingAggregationSdQuery ShadingDeviceStatusArchive | `raffstores` | blinds |
-| Beschattung & Beleuchtung | Licht – Einschaltgrad Verlauf | SimpleSdQuery LuminaireArchive | `lichtraum` (room picker, unchanged) | the picked room |
-| Beschattung & Beleuchtung | Beschattung – Position Verlauf | SimpleSdQuery ShadingDeviceArchive | `beschattungsraum` (room picker, unchanged) | the picked room |
+| Beschattung & Beleuchtung | Licht – Schaltvorgänge je Stunde (heatmap; replaced the per-room "Licht – Einschaltgrad Verlauf" and its picker `lichtraum`) | SimpleSdQuery LuminaireArchive | `leuchten` | luminaires |
+| Beschattung & Beleuchtung | Beschattung – Bewegungen je Stunde (heatmap; replaced the per-room "Beschattung – Position Verlauf" and its picker `beschattungsraum`) | SimpleSdQuery ShadingDeviceArchive | `raffstores` | blinds |
 
 ### Open points and gaps
 
@@ -487,11 +487,16 @@ no valve widget, and `raumsensoren` follows `SpaceSensors` only.
    … → Space → HeatPump → Meter (5 hops).
 2. **Heizpuffer in the Warmwasserspeicher chart.** `speicher` yields both tanks; the Heizpuffer `…63f4` has no live feed,
    so the chart shows it as an empty legend entry (accepted). The storage table lists both tanks, as before.
-3. **Room pickers are not site-scoped (platform gap: dependent picker).** A follower has no picker, and a picker filter
-   compares the listed entity's own attributes only and does not reset a pick that no longer matches (AB#7724 contract).
-   So "Raum", "Raum (Licht)" and "Raum (Beschattung)" stay independent pickers over all rooms of the tenant, and the three
-   per-room line charts show the picked room whatever the site. Each board therefore has two or three visible selectors.
-   A picker that lists the rooms of the leader's scope and resets on a leader change would close this.
+3. **Room pickers were not site-scoped (platform gap: dependent picker) — closed.** A follower has no picker, and a
+   picker filter compares the listed entity's own attributes only and does not reset a pick that no longer matches
+   (AB#7724 contract). So "Raum", "Raum (Licht)" and "Raum (Beschattung)" were independent pickers over all rooms of the
+   tenant, and the three per-room line charts showed the picked room whatever the site.
+   **Closed (AB#7926, EnergyIQ.Base 1.3.1):** "Raum (Licht)" and "Raum (Beschattung)" were removed with their per-room
+   line charts; Beschattung & Beleuchtung shows site-wide heatmaps on `leuchten` / `raffstores` instead (AB#7693, PR #25)
+   and has no room picker. "Raum" on Raumtemperaturen carries `scopeSource { selectorId: standort, path Site → Building →
+   BuildingStorey → Space }` (octo-meshboard AB#7893), so it lists only the rooms of the picked site and a room outside a
+   newly picked site is cleared (or replaced by the default room if that is in scope). Raumtemperaturen has two visible
+   selectors ("Standort", "Raum"), the other two room boards one ("Standort").
 4. **ImportRt keeps attributes that a file leaves out.** Upsert (`-r`) merges attributes; the removed
    `StreamDataQuery.RtIds` pins of `…38618` and `…e205` stay in a tenant that had them, and an empty list in the file is
    ignored too. The widgets are not affected (a scoped widget overrides the persisted rtIds; an empty scope sends no
