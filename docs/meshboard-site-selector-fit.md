@@ -460,7 +460,7 @@ no valve widget, and `raumsensoren` follows `SpaceSensors` only.
 
 | Board | Widget | Query (family) | Selector | Fusch |
 |-------|--------|----------------|----------|-------|
-| Raumtemperaturen | Raumtemperatur – Verlauf | SimpleSdQuery TemperatureSensorArchive | `raum` (room picker, unchanged) | the picked room |
+| Raumtemperaturen | Raumtemperatur – Verlauf | SimpleSdQuery TemperatureSensorArchive | `raum` (room picker, rooms of the picked site, AB#7926) | the picked Fusch room |
 | Raumtemperaturen | Aktuelle Raumtemperaturen | SimpleRtQuery TemperatureSensor (runtime) | `raumsensoren` | room sensors |
 | Raumtemperaturen | Außentemperatur – Verlauf | SimpleSdQuery TemperatureSensorArchive, pin removed | `aussensensor` | empty |
 | Heizung & Kühlung | Wärmepumpe – aktuell | SimpleRtQuery HeatPump (runtime) | `waermepumpe` | empty |
@@ -492,6 +492,10 @@ no valve widget, and `raumsensoren` follows `SpaceSensors` only.
    So "Raum", "Raum (Licht)" and "Raum (Beschattung)" stay independent pickers over all rooms of the tenant, and the three
    per-room line charts show the picked room whatever the site. Each board therefore has two or three visible selectors.
    A picker that lists the rooms of the leader's scope and resets on a leader change would close this.
+   **Closed (AB#7926, EnergyIQ.Base 1.3.1):** "Raum (Licht)" and "Raum (Beschattung)" were replaced by site-wide
+   heatmaps (AB#7693, PR #25); "Raum" carries `scopeSource { selectorId: standort, path Site → Building →
+   BuildingStorey → Space }` (octo-meshboard AB#7893), so it lists only the rooms of the picked site and a room outside a
+   newly picked site is cleared (or replaced by the default room if that is in scope).
 4. **ImportRt keeps attributes that a file leaves out.** Upsert (`-r`) merges attributes; the removed
    `StreamDataQuery.RtIds` pins of `…38618` and `…e205` stay in a tenant that had them, and an empty list in the file is
    ignored too. The widgets are not affected (a scoped widget overrides the persisted rtIds; an empty scope sends no
